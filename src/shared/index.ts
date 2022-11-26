@@ -5,6 +5,7 @@ import { combineReducers, createStore } from 'redux'
 import storage from 'redux-persist/lib/storage' 
 import { rootSlice } from './slices/rootSlice';
 import { authentificationSlice } from './slices/Auth/AuthSlice';
+import { DevicesSlice } from './slices/Devices/DevicesSlice';
 
 const persistConfig = {
   key: 'root',
@@ -14,6 +15,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   root: rootSlice.reducer,
   authentication: authentificationSlice.reducer,
+  devices: DevicesSlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

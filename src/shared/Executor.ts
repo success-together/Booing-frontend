@@ -46,6 +46,8 @@ export function Executor(config: ExecutorInterface): Promise<any> {
         !config.isSilent && store.dispatch(setRootLoading(false));
       })
       .catch((err: any) => {
+        console.log(err);
+        
         if (
           err?.response?.status === 400 &&
           err?.response?.data?.msg &&
