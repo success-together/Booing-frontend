@@ -1,24 +1,22 @@
-import React, { useEffect, useState } from "react";
-import { Switch, Text, View } from "react-native";
-import { Pressable, StyleSheet } from "react-native";
-import { store } from "../../../shared";
-import AccountHeader from "./AccountHeader/AcountHeader";
-import Entypo from "react-native-vector-icons/Entypo";
-import  EvilIcons from "react-native-vector-icons/EvilIcons";
-import  FontAwesome5 from "react-native-vector-icons/FontAwesome5";
-import  MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import  MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import Octicons  from "react-native-vector-icons/Octicons";
+import React, {useEffect, useState} from 'react';
+import {Switch, Text, View} from 'react-native';
+import {Pressable, StyleSheet} from 'react-native';
+import {store} from '../../../../shared/index'
+import Entypo from 'react-native-vector-icons/Entypo';
+import EvilIcons from 'react-native-vector-icons/EvilIcons';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Octicons from 'react-native-vector-icons/Octicons';
 
-const Account = ({ navigation }: {navigation : any}) => {
+const RegistredDevices = ({navigation}: {navigation: any}) => {
   const [isEnabled, setIsEnabled] = useState(false);
-  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
- 
+  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
   return (
     <View style={styles.container}>
       <View style={styles.containerHeader}>
-        <AccountHeader />
+        
       </View>
       <View style={styles.containerBody}>
         <View style={styles.sectionView}>
@@ -26,9 +24,8 @@ const Account = ({ navigation }: {navigation : any}) => {
           <View>
             <Pressable
               style={styles.button}
-              onPress={() => navigation.navigate("UpdateProfile")}
-            >
-              <View style={{ flexDirection: "row" }}>
+              onPress={() => navigation.navigate('UpdateProfile')}>
+              <View style={{flexDirection: 'row'}}>
                 <FontAwesome5
                   style={styles.icon}
                   name="user"
@@ -39,7 +36,7 @@ const Account = ({ navigation }: {navigation : any}) => {
               </View>
 
               <MaterialIcons
-                style={{ marginRight: 8 }}
+                style={{marginRight: 8}}
                 name="arrow-forward-ios"
                 size={20}
                 color="#CED5D8"
@@ -47,9 +44,8 @@ const Account = ({ navigation }: {navigation : any}) => {
             </Pressable>
             <Pressable
               style={styles.button}
-              onPress={() => navigation.navigate("UpdatePassword")}
-            >
-              <View style={{ flexDirection: "row" }}>
+              onPress={() => navigation.navigate('UpdatePassword')}>
+              <View style={{flexDirection: 'row'}}>
                 <MaterialCommunityIcons
                   style={styles.icon}
                   name="security"
@@ -60,7 +56,7 @@ const Account = ({ navigation }: {navigation : any}) => {
               </View>
 
               <MaterialIcons
-                style={{ marginRight: 8 }}
+                style={{marginRight: 8}}
                 name="arrow-forward-ios"
                 size={20}
                 color="#CED5D8"
@@ -71,7 +67,7 @@ const Account = ({ navigation }: {navigation : any}) => {
         <View style={styles.sectionView}>
           <Text style={styles.title}>Synchronization</Text>
           <Pressable style={styles.button}>
-            <View style={{ flexDirection: "row" }}>
+            <View style={{flexDirection: 'row'}}>
               <MaterialCommunityIcons
                 style={styles.icon}
                 name="dots-square"
@@ -81,15 +77,15 @@ const Account = ({ navigation }: {navigation : any}) => {
               <Text style={styles.text}>Smart sync</Text>
             </View>
             <Switch
-              trackColor={{ false: "#767577", true: "#33a1f9" }}
-              thumbColor={isEnabled ? "#33a1f9" : "#f4f3f4"}
+              trackColor={{false: '#767577', true: '#33a1f9'}}
+              thumbColor={isEnabled ? '#33a1f9' : '#f4f3f4'}
               ios_backgroundColor="#33a1f9"
               onValueChange={toggleSwitch}
               value={isEnabled}
             />
           </Pressable>
-          <Pressable style={styles.button} onPress={()=> navigation.navigate("RegistredDevices")}>
-            <View style={{ flexDirection: "row" }}>
+          <Pressable style={styles.button}>
+            <View style={{flexDirection: 'row'}}>
               <Octicons
                 style={styles.icon}
                 name="device-mobile"
@@ -102,16 +98,15 @@ const Account = ({ navigation }: {navigation : any}) => {
               style={{
                 marginRight: 10,
                 fontSize: 16,
-                fontWeight: "bold",
-                color: "#CED5D8",
-              }}
-            >
-              {" "}
-              3{" "}
+                fontWeight: 'bold',
+                color: '#CED5D8',
+              }}>
+              {' '}
+              3{' '}
             </Text>
           </Pressable>
           <Pressable style={styles.button}>
-            <View style={{ flexDirection: "row" }}>
+            <View style={{flexDirection: 'row'}}>
               <Entypo
                 style={styles.icon}
                 name="icloud"
@@ -122,7 +117,7 @@ const Account = ({ navigation }: {navigation : any}) => {
             </View>
 
             <MaterialIcons
-              style={{ marginRight: 8 }}
+              style={{marginRight: 8}}
               name="arrow-forward-ios"
               size={20}
               color="#CED5D8"
@@ -130,9 +125,9 @@ const Account = ({ navigation }: {navigation : any}) => {
           </Pressable>
         </View>
         <View style={styles.sectionView}>
-          <Text style={styles.title}>Account information</Text>
+          <Text style={styles.title}>RegistredDevices information</Text>
           <Pressable style={styles.button}>
-            <View style={{ flexDirection: "row" }}>
+            <View style={{flexDirection: 'row'}}>
               <MaterialIcons
                 style={styles.icon}
                 name="compare-arrows"
@@ -143,7 +138,7 @@ const Account = ({ navigation }: {navigation : any}) => {
             </View>
 
             <MaterialIcons
-              style={{ marginRight: 8 }}
+              style={{marginRight: 8}}
               name="arrow-forward-ios"
               size={20}
               color="#CED5D8"
@@ -158,63 +153,63 @@ const Account = ({ navigation }: {navigation : any}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F6F7",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
+    backgroundColor: '#F2F6F7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
     // flexWrap: "wrap",
     // flexDirecton: "row",
   },
   containerHeader: {
-    backgroundColor: "#33a1f9",
-    width: "100%",
+    backgroundColor: '#33a1f9',
+    width: '100%',
     flex: 0.5,
   },
   containerBody: {
-    width: "100%",
+    width: '100%',
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 2,
   },
   sectionView: {
-    width: "100%",
+    width: '100%',
     padding: 8,
   },
   syncronisationView: {
     flex: 0.5,
   },
   button: {
-    flexDirection: "row",
+    flexDirection: 'row',
     marginTop: 2,
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "95%",
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '95%',
     height: 54,
     marginRight: 10,
     marginLeft: 10,
     borderRadius: 4,
     elevation: 3,
-    backgroundColor: "white",
+    backgroundColor: 'white',
   },
   title: {
     fontSize: 16,
     lineHeight: 21,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     letterSpacing: 0.25,
-    color: "#8F9395",
+    color: '#8F9395',
     // marginTop: 5,
     marginBottom: 8,
     marginLeft: 8,
     // marginRight: 70,
-    textAlign: "left",
+    textAlign: 'left',
   },
   text: {
     fontSize: 14,
     lineHeight: 21,
     letterSpacing: 0.25,
-    fontWeight: "bold",
-    color: "black",
+    fontWeight: 'bold',
+    color: 'black',
     marginLeft: 14,
   },
   icon: {
@@ -222,4 +217,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Account;
+export default RegistredDevices;
