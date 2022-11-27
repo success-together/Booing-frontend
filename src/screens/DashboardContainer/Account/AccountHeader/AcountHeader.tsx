@@ -57,8 +57,8 @@ const styles = StyleSheet.create({
   },
   logoView: {
     position: "absolute",
-    top: 40,
-    left: 40,
+    top: 55,
+    left: 35,
   },
   profileImage: {
     padding: 20,

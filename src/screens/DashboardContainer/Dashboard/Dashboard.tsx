@@ -181,7 +181,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               onAnimationComplete={() => console.log('onAnimationComplete')}
               backgroundColor="green">
               {fill => (
-                <Text>
+                <Text style={{color:"#33a1f9"}}>
                   {((freeDiskStorage / totalDiskStorage) * 100).toFixed(0)}%
                 </Text>
               )}
@@ -336,6 +336,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
+    color: "black",
   },
   containerFolder: {
     flexDirection: 'row',

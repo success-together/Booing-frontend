@@ -1,9 +1,9 @@
 import React from 'react'
-import { Text, View , StyleSheet} from 'react-native';
+import { Text, View, StyleSheet, ScrollView } from 'react-native';
 import TransactionsHeader from './TransactionHeader/TransactionHeader';
-import  Ionicons from 'react-native-vector-icons/Ionicons';
-import  FontAwesome  from 'react-native-vector-icons/FontAwesome';
-import SimpleLineIcons  from 'react-native-vector-icons/SimpleLineIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 
 
 const Transactions = () => {
@@ -12,89 +12,97 @@ const Transactions = () => {
       <View style={styles.containerImage}>
         <TransactionsHeader />
       </View>
-      <View style={{marginLeft:10}}>
+      <ScrollView style={styles.scrollView}>
+        <View style={{ padding: 4, marginTop: 20 }}>
+          <View style={{ marginLeft: 10, marginTop: 4 }}>
             <Text style={styles.title} >Today</Text>
-      </View>
-      <View style={styles.list}>
-        <View style={styles.card}>
-          <Ionicons name="arrow-down-circle-sharp" size={50} color="#07FA93" />
-          <View style={styles.Storage1}>
-              <View><Text  style={styles.Storage2}>Received</Text></View>
-              <View><Text  style={styles.Storage3}>March 05.2022</Text></View>
           </View>
-        </View>
-        <View style={styles.Storage11}>
-            <View><Text  style={styles.Storage22}>01.000Boo</Text></View>
-            <View><Text  style={styles.Storage3}>TX_D: 40.000.000</Text></View>
-        </View>
-      </View>
-      <View style={styles.list}>
-        <View style={styles.card}>
-          <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
-          <View style={styles.Storage1}>
-              <View><Text  style={styles.Storage2}>Sent</Text></View>
-              <View><Text  style={styles.Storage3}>March 05.2022</Text></View>
+          <View style={styles.list}>
+            <View style={styles.card}>
+              <Ionicons name="arrow-down-circle-sharp" size={50} color="#07FA93" />
+              <View style={styles.Storage1}>
+                <View><Text style={styles.Storage2}>Received</Text></View>
+                <View><Text style={styles.Storage3}>March 05.2022</Text></View>
+              </View>
+            </View>
+            <View style={styles.Storage11}>
+              <View><Text style={styles.Storage22}>01.000Boo</Text></View>
+              <View><Text style={styles.Storage3}>TX_D: 40.000.000</Text></View>
+            </View>
           </View>
-        </View>
-        <View style={styles.Storage11}>
-            <View><Text  style={styles.Storage222}>01.000Boo</Text></View>
-            <View><Text  style={styles.Storage3}>TX_D: 40.000.000</Text></View>
-        </View>
-      </View>
+          <View style={styles.list}>
+            <View style={styles.card}>
+              <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
+              <View style={styles.Storage1}>
+                <View><Text style={styles.Storage2}>Sent</Text></View>
+                <View><Text style={styles.Storage3}>March 05.2022</Text></View>
+              </View>
+            </View>
+            <View style={styles.Storage11}>
+              <View><Text style={styles.Storage222}>01.000Boo</Text></View>
+              <View><Text style={styles.Storage3}>TX_D: 40.000.000</Text></View>
+            </View>
+          </View>
 
-      <View style={{marginLeft:10}}>
+          <View style={{ marginLeft: 10, marginTop: 4 }}>
             <Text style={styles.title} >Yesterday</Text>
-      </View>
-      <View style={styles.list}>
-        <View style={styles.card}>
-          <Ionicons name="arrow-down-circle-sharp" size={50} color="#07FA93" />
-          <View style={styles.Storage1}>
-              <View><Text  style={styles.Storage2}>Received</Text></View>
-              <View><Text  style={styles.Storage3}>March 05.2022</Text></View>
           </View>
-        </View>
-        <View style={styles.Storage11}>
-            <View><Text  style={styles.Storage22}>01.000Boo</Text></View>
-            <View><Text  style={styles.Storage3}>TX_D: 40.000.000</Text></View>
-        </View>
-      </View>
-      <View style={styles.list}>
-        <View style={styles.card}>
-          <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
-          <View style={styles.Storage1}>
-              <View><Text  style={styles.Storage2}>Sent</Text></View>
-              <View><Text  style={styles.Storage3}>March 05.2022</Text></View>
+          <View style={styles.list}>
+            <View style={styles.card}>
+              <Ionicons name="arrow-down-circle-sharp" size={50} color="#07FA93" />
+              <View style={styles.Storage1}>
+                <View><Text style={styles.Storage2}>Received</Text></View>
+                <View><Text style={styles.Storage3}>March 05.2022</Text></View>
+              </View>
+            </View>
+            <View style={styles.Storage11}>
+              <View><Text style={styles.Storage22}>01.000Boo</Text></View>
+              <View><Text style={styles.Storage3}>TX_D: 40.000.000</Text></View>
+            </View>
           </View>
-        </View>
-        <View style={styles.Storage11}>
-            <View><Text  style={styles.Storage222}>01.000Boo</Text></View>
-            <View><Text  style={styles.Storage3}>TX_D: 40.000.000</Text></View>
-        </View>
-      </View>
+          <View style={styles.list}>
+            <View style={styles.card}>
+              <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
+              <View style={styles.Storage1}>
+                <View><Text style={styles.Storage2}>Sent</Text></View>
+                <View><Text style={styles.Storage3}>March 05.2022</Text></View>
+              </View>
+            </View>
+            <View style={styles.Storage11}>
+              <View><Text style={styles.Storage222}>01.000Boo</Text></View>
+              <View><Text style={styles.Storage3}>TX_D: 40.000.000</Text></View>
+            </View>
+          </View>
 
-      <View style={{marginLeft:10}}>
+          <View style={{ marginLeft: 10, marginTop: 4 }}>
             <Text style={styles.title} >This Week</Text>
-      </View>
-      <View style={styles.list}>
-        <View style={styles.card}>
-          <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
-          <View style={styles.Storage1}>
-              <View><Text  style={styles.Storage2}>Sent</Text></View>
-              <View><Text  style={styles.Storage3}>March 05.2022</Text></View>
+          </View>
+          <View style={styles.list}>
+            <View style={styles.card}>
+              <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
+              <View style={styles.Storage1}>
+                <View><Text style={styles.Storage2}>Sent</Text></View>
+                <View><Text style={styles.Storage3}>March 05.2022</Text></View>
+              </View>
+            </View>
+            <View style={styles.Storage11}>
+              <View><Text style={styles.Storage222}>01.000Boo</Text></View>
+              <View><Text style={styles.Storage3}>TX_D: 40.000.000</Text></View>
+            </View>
           </View>
         </View>
-        <View style={styles.Storage11}>
-            <View><Text  style={styles.Storage222}>01.000Boo</Text></View>
-            <View><Text  style={styles.Storage3}>TX_D: 40.000.000</Text></View>
-        </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    marginHorizontal: 0,
+  },
   card: {
-    height:60,
+    height: 60,
     flexDirection: "row"
   },
   secondScreenContainer: {
@@ -112,7 +120,7 @@ const styles = StyleSheet.create({
     color: "#33a1f9",
   },
   container: {
-    flex: 0.95,
+    flex: 1,
     // backgroundColor: "#33a1f9",
     // alignItems: "center",
     color: "#33a1f9",
@@ -125,7 +133,7 @@ const styles = StyleSheet.create({
   containerImage: {
     backgroundColor: "#33a1f9",
     width: "100%",
-    flex: 1,
+    flex: 0.35,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -184,7 +192,7 @@ const styles = StyleSheet.create({
   list: {
     marginRight: 10,
     marginLeft: 10,
-    marginBottom: 10,
+    marginTop: 10,
     backgroundColor: "white",
     alignItems: "center",
     justifyContent: "space-between",
@@ -206,37 +214,36 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
     color: "black",
     justifyContent: "space-evenly",
-    textAlign:"left",
+    textAlign: "left",
     marginLeft: 5,
-    marginBottom:10,
-    marginTop:10,
   },
-  Storage:{
-    flexDirection:"row",
+  Storage: {
+    flexDirection: "row",
   },
-  Storage1:{
-    flexDirection:"column",
+  Storage1: {
+    flexDirection: "column",
     marginTop: 10,
-    alignItems:"flex-start",
+    alignItems: "flex-start",
   },
-  Storage11:{
-    flexDirection:"column",
-    alignItems:"flex-end",
+  Storage11: {
+    flexDirection: "column",
+    alignItems: "flex-end",
   },
-  Storage2:{
-    fontWeight:"bold",
-    color:"grey",
+  Storage2: {
+    fontWeight: "bold",
+    color: "grey",
   },
-  Storage3:{
-    fontSize:10,
+  Storage3: {
+    fontSize: 10,
+    color: "grey"
   },
-  Storage22:{
-    fontWeight:"bold",
-    color:"#07FA93",
+  Storage22: {
+    fontWeight: "bold",
+    color: "#07FA93",
   },
-  Storage222:{
-    fontWeight:"bold",
-    color:"red",
+  Storage222: {
+    fontWeight: "bold",
+    color: "red",
   },
 });
 export default Transactions
