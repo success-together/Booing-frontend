@@ -6,13 +6,13 @@ import {
   Pressable,
 } from "react-native";
 import { FilesHeader } from "../../exports";
-import AntDesign   from "react-native-vector-icons/AntDesign";
-import Feather from "react-native-vector-icons/AntDesign";
-import FontAwesome from "react-native-vector-icons/AntDesign";
-import  Entypo from "react-native-vector-icons/AntDesign";
+import AntDesign from "react-native-vector-icons/AntDesign";
+import Feather from "react-native-vector-icons/Feather";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
+import Entypo from "react-native-vector-icons/Entypo";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons"
 
-
-const Files = ({navigation}: {navigation : any}) => {
+const Files = ({ navigation }: { navigation: any }) => {
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
@@ -20,9 +20,9 @@ const Files = ({navigation}: {navigation : any}) => {
       </View>
 
       <View style={styles.recentFilesContainer}>
-        <Pressable style={styles.button} onPress={ () =>{ navigation.navigate("Uploads")}}>
+        <Pressable style={styles.button} onPress={() => { navigation.navigate("Uploads") }}>
           <Feather
-            name="file-plus"
+            name="folder-plus"
             size={24}
             color="grey"
             style={{ marginRight: 10 }}
@@ -44,11 +44,22 @@ const Files = ({navigation}: {navigation : any}) => {
           flexDirection: "column",
         }}
       >
-        <View style={styles.row3}>
-          {/* <Text style={styles.row4}>Essentials</Text> */}
-          <Entypo name="text" size={24} color="black" />
-          <Feather name="arrow-down" size={24} color="black" />
+        <View style={{
+          flexDirection: "row",
+          justifyContent: "space-between", marginTop: 14,
+          marginBottom: 10,
+          padding:8
+        }}>
+          <View style={{flexDirection: "row",}}>
+          <Text style={styles.title} >Essentials</Text>
+            <MaterialCommunityIcons name="menu-down" size={24} color="black"/>
+          </View>
+          <View style={{flexDirection: "row",justifyContent:"space-between"}}>
+            <Entypo style={{marginRight:10}} name="text" size={24} color="black" />
+            <Feather style={{marginRight:10}} name="arrow-down" size={24} color="black" />
+          </View>
         </View>
+
       </View>
 
       <View style={styles.list}>
@@ -217,15 +228,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     marginLeft: 20,
   },
-  txtStorage: {
-    fontSize: 20,
+  title: {
+    fontSize: 18,
     lineHeight: 21,
     letterSpacing: 0.25,
     fontWeight: "bold",
-    color: "#33a1f9",
+    color: "black",
+    marginLeft:10
   },
   container: {
-    flex: 1.1,
+    flex: 1,
     // backgroundColor: "#33a1f9",
     // alignItems: "center",
     color: "#33a1f9",
@@ -282,17 +294,14 @@ const styles = StyleSheet.create({
   },
 
   row3: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 20,
-    marginBottom: 10,
+
   },
 
-  row4: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    marginTop: 30,
-  },
+  // row4: {
+  //   flexDirection: "row",
+  //   justifyContent: "flex-start",
+  //   marginTop: 30,
+  // },
 
   list: {
     marginRight: 10,

@@ -45,9 +45,11 @@ const RegistredDevices = ({ navigation }: { navigation: any }) => {
         </View>
       </View>
       <View style={styles.containerBody}>
+      <Text style={styles.title}>Registred Devices</Text>
         <View style={styles.sectionView}>
-          <Text style={styles.title}>Registred Devices</Text>
+          
           <View>
+          
             {devices[0].name !== "" && devices[0].type !== "" &&
               devices.map((device) => {
                 return (
@@ -109,14 +111,14 @@ const styles = StyleSheet.create({
   },
   containerBody: {
     width: '100%',
-    flex: 1,
-    alignItems: 'center',
+    // flex: 1,
+    // alignItems: 'center',
     justifyContent: 'center',
-    padding: 2,
+    paddingTop: 40,
   },
   sectionView: {
     width: '100%',
-    padding: 8,
+    padding: 0,
   },
   syncronisationView: {
     flex: 0.5,
@@ -144,7 +146,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginLeft: 8,
     // marginRight: 70,
-    textAlign: 'left',
+    // textAlign: 'left',
   },
   text: {
     fontSize: 14,
