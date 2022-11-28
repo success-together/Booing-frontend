@@ -43,6 +43,9 @@ export const mailVerification = (data: any) => {
 };
 
 export const updateProfile = (data:  {name?: string; phone?: string} ) => {
+  console.log({dataToUpdatE: data})
+
+
   return Executor({
     method: "post",
     url: BaseUrl + "/logged-in-user/updateProfile",

@@ -20,6 +20,7 @@ import { Toast } from "react-native-toast-message/lib/src/Toast";
 const Stack = createBottomTabNavigator();
 
 const DashboardContainer = () => {
+
   return (
     <>
       <NavigationContainer independent={true}>

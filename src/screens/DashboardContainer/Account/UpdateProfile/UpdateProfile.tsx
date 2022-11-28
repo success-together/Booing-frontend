@@ -50,7 +50,6 @@ const UpdateProfile = ({ navigation }: any) => {
   };
 
   const onSubmit = async () => {
-    console.log(isDisabled);
     if (!isDisabled) {
       if (formUpdateUser.name !== "" && formUpdateUser.phone !== "")
         await updateProfile(formUpdateUser).then(() => {
@@ -61,7 +60,7 @@ const UpdateProfile = ({ navigation }: any) => {
           navigation.navigate("Account");
         });
       else if (formUpdateUser.phone === "")
-        await updateProfile({ name: formUpdateUser.phone }).then(() => {
+        await updateProfile({ name: formUpdateUser.name }).then(() => {
           navigation.navigate("Account");
         });
     }

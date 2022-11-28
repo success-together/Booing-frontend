@@ -12,6 +12,10 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import  MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {getFSInfo} from 'react-native-fs';
+import bytes from 'bytes';
+
+
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
@@ -19,23 +23,33 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeSpacePerCent, setFreeSpacePerCent] = useState<number>(0);
 
   useEffect(() => {
-    console.log(Device.brand);
-    if (Device.isDevice && Device.brand) {
-      getFreeDiskStorageAsync().then(freeDiskStorage => {
-        setFreeDiskSotrage(
-          Number((freeDiskStorage / Math.pow(1024, 3)).toFixed(2)),
-        );
-      });
-      getTotalDiskCapacityAsync().then(totalDiskStorage => {
-        setTotalDiskStorage(
-          Number((totalDiskStorage / Math.pow(1024, 3)).toFixed(2)),
-        );
-        setFreeSpacePerCent(
-          Number(((freeDiskStorage / totalDiskStorage) * 100).toFixed(0)),
-        );
-      });
-    }
+    (async () => {
+      const {freeSpace, totalSpace} = await getFSInfo();
+      setFreeDiskSotrage(freeSpace);
+      setTotalDiskStorage(totalSpace);
+      setFreeSpacePerCent(freeSpace * 100 / totalSpace);
+    })();
   }, []);
+
+
+  // useEffect(() => {
+  //   console.log(Device.brand);
+  //   if (Device.isDevice && Device.brand) {
+  //     getFreeDiskStorageAsync().then(freeDiskStorage => {
+  //       setFreeDiskSotrage(
+  //         Number((freeDiskStorage / Math.pow(1024, 3)).toFixed(2)),
+  //       );
+  //     });
+  //     getTotalDiskCapacityAsync().then(totalDiskStorage => {
+  //       setTotalDiskStorage(
+  //         Number((totalDiskStorage / Math.pow(1024, 3)).toFixed(2)),
+  //       );
+  //       setFreeSpacePerCent(
+  //         Number(((freeDiskStorage / totalDiskStorage) * 100).toFixed(0)),
+  //       );
+  //     });
+  //   }
+  // }, []);
 
   return (
     <View style={styles.container}>
@@ -54,21 +68,19 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               onAnimationComplete={() => console.log('onAnimationComplete')}
               backgroundColor="green">
               {fill => (
-                <Text>
-                  {((freeDiskStorage / totalDiskStorage) * 100).toFixed(0)}%
-                </Text>
+                <Text>{fill.toFixed(2) + '%'}</Text>
               )}
             </AnimatedCircularProgress>
           </>
           <View style={styles.storageInfoContainer}>
             <Text style={styles.txtStorage}>Storage Details</Text>
             <Text style={styles.createAccount}>
-              {freeDiskStorage} GB of {totalDiskStorage} GB
+              {bytes(freeDiskStorage)} of {bytes(totalDiskStorage)}
             </Text>
           </View>
           <Pressable
             style={styles.scanContainer}
-            // onPress={() => navigation.navigate("ClearData")}
+            onPress={() => navigation.navigate("ClearData", {freeDiskStorage})}
           >
             <MaterialIcons name="cleaning-services" size={24} color="white" />
             <Text style={{color: 'white'}}>Scan</Text>
