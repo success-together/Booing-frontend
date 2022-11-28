@@ -13,7 +13,7 @@ function VerificationCode({ route, navigation }: { route: any;navigation: any })
   const submit = async () => {
     if (code > 999 && userId) {
       // setRootLoading(true);
-      await mailVerification({ user_id: userId, code: code }).then((res) => {
+      await mailVerification({ user_id: userId, code: code, isSignup: true }).then((res) => {
         navigation.navigate("Login");
       });
     }
