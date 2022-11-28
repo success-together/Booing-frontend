@@ -34,6 +34,9 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
   >(undefined);
 
   const changePassword = async () => {
+    console.log(updatePasswordForm);
+    console.log(loggedInUser?._id);
+    
     if (
       updatePasswordForm.confirmPassword !== '' &&
       updatePasswordForm.currentPassword !== '' &&

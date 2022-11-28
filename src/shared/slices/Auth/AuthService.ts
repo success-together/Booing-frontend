@@ -42,7 +42,7 @@ export const mailVerification = (data: any) => {
   });
 };
 
-export const updateProfile = (data:  {name?: string; phone?: string} ) => {
+export const updateProfile = (data:  {name?: string; phone?: string,user_id : string} ) => {
   return Executor({
     method: "post",
     url: BaseUrl + "/logged-in-user/updateProfile",

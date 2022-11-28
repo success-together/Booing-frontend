@@ -50,19 +50,25 @@ const UpdateProfile = ({ navigation }: any) => {
   };
 
   const onSubmit = async () => {
-    console.log(isDisabled);
-    if (!isDisabled) {
+    
+    if (!isDisabled && loggedInUser?._id) {
       if (formUpdateUser.name !== "" && formUpdateUser.phone !== "")
-        await updateProfile(formUpdateUser).then(() => {
-          navigation.navigate("Account");
+        await updateProfile({phone: formUpdateUser.phone,name : formUpdateUser.name , user_id: loggedInUser?._id}).then(() => {
+          navigation.navigate('Account');
         });
       else if (formUpdateUser.name === "")
-        await updateProfile({ phone: formUpdateUser.phone }).then(() => {
-          navigation.navigate("Account");
+        await updateProfile({
+          phone: formUpdateUser.phone,
+          user_id: loggedInUser?._id,
+        }).then(() => {
+          navigation.navigate('Account');
         });
       else if (formUpdateUser.phone === "")
-        await updateProfile({ name: formUpdateUser.phone }).then(() => {
-          navigation.navigate("Account");
+        await updateProfile({
+          name: formUpdateUser.name,
+          user_id: loggedInUser?._id,
+        }).then(() => {
+          navigation.navigate('Account');
         });
     }
   };

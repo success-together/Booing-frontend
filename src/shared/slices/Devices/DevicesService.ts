@@ -28,9 +28,9 @@ export const addDevice = async (data: {
   return Executor({
     method: 'post',
     url: BaseUrl + '/logged-in-user/addDevice',
-    isSilent: false,
+    isSilent: true,
     data,
-    withoutToast: false,
+    withoutToast: true,
   });
 };
 
@@ -43,8 +43,8 @@ export const updateGeoLocation = async (data: {
   return Executor({
     method: 'post',
     url: BaseUrl + '/booing/logged-in-user/updateGeoLocation',
-    isSilent: false,
-    withoutToast: false,
+    isSilent: true,
+    withoutToast: true,
     data,
   });
 };
