@@ -5,7 +5,6 @@ import {CachesDirectoryPath, ExternalDirectoryPath ,ExternalCachesDirectoryPath 
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import ManageApps from "../../../../utils/manageApps";
-import RNInstalledApplication from 'react-native-installed-application';
 import bytes from "bytes";
 import FilesList from "../FilesList/FilesList";
 import { randomId } from "../../../../utils/util-functions";
