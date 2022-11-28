@@ -23,3 +23,4 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 export const store = createStore(persistedReducer)
 export const persistor = persistStore(store)
 export const BaseUrl = "https://booing-app.onrender.com/booing";
+// export const BaseUrl = "http://localhost:3001/booing";

@@ -20,10 +20,12 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
 
   const getDevices = async () => {
     try {
-      await GetDevicesService().then(res => {
-        setDevices(res.data);
-        console.log(res.data);
-      });
+      let user: any = store.getState().authentication.loggedInUser;
+      if (user?._id)
+        await GetDevicesService({user_id : user?._id}).then(res => {
+          console.log(res);
+          setDevices(res.data);
+        });
     } catch (error) {
       console.log(error);
     }
@@ -49,11 +51,10 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
         </View>
       </View>
       <View style={styles.containerBody}>
-      <Text style={styles.title}>Registred Devices</Text>
+        <Text style={styles.title}>Registred Devices</Text>
         <View style={styles.sectionView}>
-          
           <View>
-            {devices[0].name !== '' &&
+            {/* {devices[0].name !== '' &&
               devices[0].type !== '' &&
               devices.map(device => {
                 return (
@@ -67,16 +68,9 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
                       />
                       <Text style={styles.text}>{device.name}</Text>
                     </View>
-
-                    {/* <MaterialIcons
-                style={{marginRight: 8}}
-                name="arrow-forward-ios"
-                size={20}
-                color="#CED5D8"
-              /> */}
                   </Pressable>
                 );
-              })}
+              })} */}
           </View>
         </View>
       </View>

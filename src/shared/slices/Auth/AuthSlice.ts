@@ -39,10 +39,10 @@ export const authentificationSlice = createSlice({
 
     disconnect: (state: any): void => {
       state.isLoggedIn = false;
-      state.loggedInUser = undefined;
-      state.profile = undefined;
-      state.errorMessage = "";
-      state.userId = undefined;
+      // state.loggedInUser = undefined;
+      // state.profile = undefined;
+      // state.errorMessage = "";
+      // state.userId = undefined;
     },
 
     setErrorMessage: (state: any, action: PayloadAction<any>) => {

@@ -68,12 +68,12 @@ const Dashboard = ({navigation}: {navigation: any}) => {
           buttonPositive: 'OK',
         },
       );
-      console.log('granted', granted);
+      // console.log('granted', granted);
       if (granted === 'granted') {
-        console.log('You can use Geolocation');
+        // console.log('You can use Geolocation');
         return true;
       } else {
-        console.log('You cannot use Geolocation');
+        // console.log('You cannot use Geolocation');
         return false;
       }
     } catch (err) {
@@ -84,11 +84,11 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   const getLocation = () => {
     const result = requestLocationPermission();
     result.then(res => {
-      console.log('res is:', res);
+      // console.log('res is:', res);
       if (res) {
         Geolocation.getCurrentPosition(
           position => {
-            console.log(position);
+            // console.log(position);
             setPosition({
               lat: position.coords.latitude,
               lon: position.coords.longitude,
@@ -108,15 +108,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
     setLoggedUser(store.getState().authentication.loggedInUser);
   };
 
-  const addNewDevice = async (data: {
-    device_ref: string;
-    created_at?: Date;
-    type: string;
-    name: string;
-    user_id?: string;
-    lat?: number;
-    lon?: number;
-  }) => {
+  const addNewDevice = async (data : any) => {
+    console.log(data);
+    
     await addDevice(data);
     if (data.lat && data.lon)
       await updateGeoLocation({
@@ -133,34 +127,55 @@ const Dashboard = ({navigation}: {navigation: any}) => {
     } catch (error) {
       console.log(error);
     }
+
+    let totalStorage = 0;
     let isEmulator = DeviceInfo.isEmulator();
     // if (!isEmulator) {
     DeviceInfo.getTotalDiskCapacity().then(capacity => {
+      totalStorage = capacity;
       setTotalDiskStorage(Number((capacity / Math.pow(1024, 3)).toFixed(2)));
     });
     DeviceInfo.getFreeDiskStorage().then(freeDiskStorage => {
-      console.log(freeDiskStorage);
-      setFreeSpacePerCent(
+      setFreeDiskSotrage(
         Number((freeDiskStorage / Math.pow(1024, 3)).toFixed(2)),
       );
+
+      setFreeSpacePerCent(
+        Number(((freeDiskStorage / totalStorage) * 100).toFixed(0)),
+      );
     });
-    setFreeSpacePerCent(
-      Number(((freeDiskStorage / totalDiskStorage) * 100).toFixed(0)),
-    );
+
+    let deviceId: string;
+    let system: string;
+    let userData: any = store.getState().authentication.loggedInUser;
+
     DeviceInfo.getUniqueId().then(uniqueId => {
+      deviceId = uniqueId;
       setDeviceInfo({...deviceInfo, deviceId: uniqueId});
-    });
-    DeviceInfo.getDeviceName().then(deviceName => {
-      setDeviceInfo({...deviceInfo, deviceName: deviceName});
-      setDeviceInfo({...deviceInfo, system: DeviceInfo.getSystemName()});
-    });
-    addNewDevice({
-      user_id: loggedInUser?._id,
-      device_ref: deviceInfo.deviceId,
-      lat: position?.lat,
-      lon: position?.lon,
-      name: deviceInfo.deviceName,
-      type: deviceInfo.system,
+
+      DeviceInfo.getDeviceName().then(deviceName => {
+        system = DeviceInfo.getSystemName();
+        setDeviceInfo({...deviceInfo, deviceName: deviceName});
+        setDeviceInfo({...deviceInfo, system: DeviceInfo.getSystemName()});
+
+        console.log({
+          user_id: userData?._id,
+          device_ref: deviceId,
+          lat: position?.lat,
+          lon: position?.lon,
+          name: deviceName,
+          type: system,
+        });
+
+        addNewDevice({
+          user_id: userData?._id,
+          device_ref: deviceId,
+          lat: position?.lat,
+          lon: position?.lon,
+          name: deviceName,
+          type: system,
+        });
+      });
     });
   }, []);
 
@@ -178,12 +193,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               width={10}
               fill={freeSpacePerCent}
               tintColor="#33a1f9"
-              onAnimationComplete={() => console.log('onAnimationComplete')}
               backgroundColor="green">
               {fill => (
-                <Text style={{color:"#33a1f9"}}>
-                  {((freeDiskStorage / totalDiskStorage) * 100).toFixed(0)}%
-                </Text>
+                <Text style={{color: '#33a1f9'}}>{freeSpacePerCent}%</Text>
               )}
             </AnimatedCircularProgress>
           </>
@@ -336,7 +348,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
-    color: "black",
+    color: 'black',
   },
   containerFolder: {
     flexDirection: 'row',

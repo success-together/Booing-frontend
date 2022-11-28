@@ -1,9 +1,6 @@
-import { useNavigation } from "@react-navigation/native";
 import React from "react";
-import { Button, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {  Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Logo } from "../../images/export";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 function Home({navigation} :{navigation: any}) {
   return (
