@@ -37,12 +37,12 @@ export const authentificationSlice = createSlice({
       state.token = action.payload;
     },
 
-    disconnect: (state: any): void => {
+    disconnect: (state: {isLoggedIn:boolean}): void => {
       state.isLoggedIn = false;
-      state.loggedInUser = undefined;
-      state.profile = undefined;
-      state.errorMessage = "";
-      state.userId = undefined;
+      // state.loggedInUser = undefined;
+      // state.profile = undefined;
+      // state.errorMessage = "";
+      // state.userId = undefined;
     },
 
     setErrorMessage: (state: any, action: PayloadAction<any>) => {
