@@ -1,33 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { Switch, Text, View } from 'react-native';
-import { Pressable, StyleSheet } from 'react-native';
-import { store } from '../../../../shared/index'
+import React, {useEffect, useState} from 'react';
+import {Switch, Text, View} from 'react-native';
+import {Pressable, StyleSheet} from 'react-native';
+import {store} from '../../../../shared/index';
 import Entypo from 'react-native-vector-icons/Entypo';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Octicons from 'react-native-vector-icons/Octicons';
-import Ionicons from "react-native-vector-icons/Ionicons";
-import { GetDevicesService } from '../../../../shared/slices/Devices/DevicesService';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {GetDevicesService} from '../../../../shared/slices/Devices/DevicesService';
 
-const RegistredDevices = ({ navigation }: { navigation: any }) => {
+const RegistredDevices = ({navigation}: {navigation: any}) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-  const [devices, setDevices] = useState<Array<{ name: string, type: string }>>([{ name: "", type: "" }])
+  const [devices, setDevices] = useState<Array<{name: string; type: string}>>([
+    {name: '', type: ''},
+  ]);
 
   const getDevices = async () => {
-    await GetDevicesService().then((res) => {
-      setDevices(res.data)
-      console.log(res.data);
-    })
-  }
+    try {
+      let user: any = store.getState().authentication.loggedInUser;
+      if (user?._id)
+        await GetDevicesService({user_id : user?._id}).then(res => {
+          console.log(res);
+          setDevices(res.data);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
-    getDevices()
-    
-    
-  }, [])
+    getDevices();
+  }, []);
 
   return (
     <View>
@@ -45,17 +51,15 @@ const RegistredDevices = ({ navigation }: { navigation: any }) => {
         </View>
       </View>
       <View style={styles.containerBody}>
-      <Text style={styles.title}>Registred Devices</Text>
+        <Text style={styles.title}>Registred Devices</Text>
         <View style={styles.sectionView}>
-          
           <View>
-          
-            {devices[0].name !== "" && devices[0].type !== "" &&
-              devices.map((device) => {
+            {/* {devices[0].name !== '' &&
+              devices[0].type !== '' &&
+              devices.map(device => {
                 return (
-                  <Pressable
-                    style={styles.button}>
-                    <View style={{ flexDirection: 'row' }}>
+                  <Pressable style={styles.button}>
+                    <View style={{flexDirection: 'row'}}>
                       <Octicons
                         style={styles.icon}
                         name="device-mobile"
@@ -64,20 +68,11 @@ const RegistredDevices = ({ navigation }: { navigation: any }) => {
                       />
                       <Text style={styles.text}>{device.name}</Text>
                     </View>
-
-                    {/* <MaterialIcons
-                style={{marginRight: 8}}
-                name="arrow-forward-ios"
-                size={20}
-                color="#CED5D8"
-              /> */}
                   </Pressable>
-                )
-              })
-            }
+                );
+              })} */}
           </View>
         </View>
-
       </View>
     </View>
   );
@@ -86,12 +81,12 @@ const RegistredDevices = ({ navigation }: { navigation: any }) => {
 const styles = StyleSheet.create({
   DashboardHeader: {
     padding: 40,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#33a1f9",
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#33a1f9',
   },
   logoView: {
-    position: "absolute",
+    position: 'absolute',
     top: 40,
     left: 40,
   },

@@ -1,15 +1,11 @@
-import { createSlice } from "@reduxjs/toolkit";
+import {createSlice} from '@reduxjs/toolkit';
 
-export interface InitialState {
-  
-}
+export interface InitialState {}
 
-export const initialState: InitialState = {
- 
-};
+export const initialState: InitialState = {};
 
 export const DevicesSlice = createSlice({
-    name: "devices",
+  name: 'devices',
   initialState: initialState,
-  reducers: {}
-})
+  reducers: {},
+});

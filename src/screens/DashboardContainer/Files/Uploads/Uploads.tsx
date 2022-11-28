@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Text, View, StyleSheet, Pressable, TextInput, ScrollView } from "react-native";
 import FilesHeader from "../FilesHeader/FilesHeader";
 import AntDesign from "react-native-vector-icons/AntDesign";
@@ -7,8 +7,32 @@ import FontAwesome from "react-native-vector-icons/FontAwesome";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import SimpleLineIcons from "react-native-vector-icons/SimpleLineIcons";
-import EvilIcons from "react-native-vector-icons/EvilIcons"
+import EvilIcons from "react-native-vector-icons/EvilIcons";
+import DeviceInfo from 'react-native-device-info';
+
 const Uploads = ({ navigation }: { navigation: any }) => {
+  const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
+  const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
+  
+  useEffect(() => {
+     let totalStorage = 0;
+     let isEmulator = DeviceInfo.isEmulator();
+     // if (!isEmulator) {
+     DeviceInfo.getTotalDiskCapacity().then(capacity => {
+       totalStorage = capacity;
+       setTotalDiskStorage(Number((capacity / Math.pow(1024, 3)).toFixed(2)));
+     });
+     DeviceInfo.getFreeDiskStorage().then(freeDiskStorage => {
+      //  console.log(Number((freeDiskStorage / Math.pow(1024, 3)).toFixed(2)));
+       setFreeDiskSotrage(
+         Number((freeDiskStorage / Math.pow(1024, 3)).toFixed(2)),
+       );
+      //  console.log('total : ' + (freeDiskStorage / totalStorage) * 100);
+
+      
+     });
+  }, [])
+
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
@@ -88,7 +112,7 @@ const Uploads = ({ navigation }: { navigation: any }) => {
                 <Text style={styles.Storage2}>Internal Storage</Text>
               </View>
               <View>
-                <Text style={styles.Storage3}>49.97 GB / 64.00 GB</Text>
+                <Text style={styles.Storage3}>{freeDiskStorage} GB / {totalDiskStorage} GB</Text>
               </View>
             </View>
           </View>

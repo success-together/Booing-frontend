@@ -22,11 +22,15 @@ export default function App() {
   useEffect(() => {
     setTimeout(() => {
       store.subscribe(() => {
+        // console.log(store.getState().root.isLoading);
         setIsLoading(store.getState().root.isLoading);
         setIsLoggedIn(store.getState().authentication.isLoggedIn);
       });
     }, 1000);
-  }, []);
+  }, [
+    store.getState().root.isLoading,
+    store.getState().authentication.isLoggedIn,
+  ]);
 
   return (
     <>

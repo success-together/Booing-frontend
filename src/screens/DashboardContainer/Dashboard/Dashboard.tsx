@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {
+  NativeModules,
+  PermissionsAndroid,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {Image, Input} from 'react-native-elements';
 import {DashboardHeader} from '../../exports';
@@ -7,34 +14,169 @@ import {
   getFreeDiskStorageAsync,
   getTotalDiskCapacityAsync,
 } from 'expo-file-system';
-import * as Device from 'expo-device';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
-import  MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Geolocation from 'react-native-geolocation-service';
+import DeviceInfo from 'react-native-device-info';
+import {
+  addDevice,
+  updateGeoLocation,
+} from '../../../shared/slices/Devices/DevicesService';
+import {store} from '../../../shared';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
   const [freeSpacePerCent, setFreeSpacePerCent] = useState<number>(0);
+  const [position, setPosition] = useState<{lat: number; lon: number}>();
+  const [loggedInUser, setLoggedUser] = useState<
+    | {
+        name: string;
+        email: string;
+        phone: string;
+        accountVerified?: true;
+        code?: 0;
+        created_at?: string;
+        last_login?: string;
+        password?: string;
+        __v?: number;
+        _id?: string;
+      }
+    | undefined
+  >(undefined);
+  const [deviceInfo, setDeviceInfo] = useState<{
+    deviceName: string;
+    deviceId: string;
+    system: string;
+  }>({
+    deviceId: '',
+    deviceName: '',
+    system: '',
+  });
+
+  const requestLocationPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Geolocation Permission',
+          message: 'Can we access your location?',
+          // buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      // console.log('granted', granted);
+      if (granted === 'granted') {
+        // console.log('You can use Geolocation');
+        return true;
+      } else {
+        // console.log('You cannot use Geolocation');
+        return false;
+      }
+    } catch (err) {
+      return false;
+    }
+  };
+
+  const getLocation = () => {
+    const result = requestLocationPermission();
+    result.then(res => {
+      // console.log('res is:', res);
+      if (res) {
+        Geolocation.getCurrentPosition(
+          position => {
+            // console.log(position);
+            setPosition({
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+            });
+          },
+          error => {
+            // See error code charts below.
+            console.log(error.code, error.message);
+          },
+          {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+        );
+      }
+    });
+  };
+
+  const getUserData = () => {
+    setLoggedUser(store.getState().authentication.loggedInUser);
+  };
+
+  const addNewDevice = async (data : any) => {
+    console.log(data);
+    
+    await addDevice(data);
+    if (data.lat && data.lon)
+      await updateGeoLocation({
+        device_ref: data.device_ref,
+        lat: data.lat,
+        lon: data.lon,
+      });
+  };
 
   useEffect(() => {
-    console.log(Device.brand);
-    if (Device.isDevice && Device.brand) {
-      getFreeDiskStorageAsync().then(freeDiskStorage => {
-        setFreeDiskSotrage(
-          Number((freeDiskStorage / Math.pow(1024, 3)).toFixed(2)),
-        );
-      });
-      getTotalDiskCapacityAsync().then(totalDiskStorage => {
-        setTotalDiskStorage(
-          Number((totalDiskStorage / Math.pow(1024, 3)).toFixed(2)),
-        );
-        setFreeSpacePerCent(
-          Number(((freeDiskStorage / totalDiskStorage) * 100).toFixed(0)),
-        );
-      });
+    getLocation();
+    try {
+      getUserData();
+    } catch (error) {
+      console.log(error);
     }
+
+    let totalStorage = 0;
+    let isEmulator = DeviceInfo.isEmulator();
+    // if (!isEmulator) {
+    DeviceInfo.getTotalDiskCapacity().then(capacity => {
+      totalStorage = capacity;
+      setTotalDiskStorage(Number((capacity / Math.pow(1024, 3)).toFixed(2)));
+    });
+    DeviceInfo.getFreeDiskStorage().then(freeDiskStorage => {
+      setFreeDiskSotrage(
+        Number((freeDiskStorage / Math.pow(1024, 3)).toFixed(2)),
+      );
+
+      setFreeSpacePerCent(
+        Number(((freeDiskStorage / totalStorage) * 100).toFixed(0)),
+      );
+    });
+
+    let deviceId: string;
+    let system: string;
+    let userData: any = store.getState().authentication.loggedInUser;
+
+    DeviceInfo.getUniqueId().then(uniqueId => {
+      deviceId = uniqueId;
+      setDeviceInfo({...deviceInfo, deviceId: uniqueId});
+
+      DeviceInfo.getDeviceName().then(deviceName => {
+        system = DeviceInfo.getSystemName();
+        setDeviceInfo({...deviceInfo, deviceName: deviceName});
+        setDeviceInfo({...deviceInfo, system: DeviceInfo.getSystemName()});
+
+        console.log({
+          user_id: userData?._id,
+          device_ref: deviceId,
+          lat: position?.lat,
+          lon: position?.lon,
+          name: deviceName,
+          type: system,
+        });
+
+        addNewDevice({
+          user_id: userData?._id,
+          device_ref: deviceId,
+          lat: position?.lat,
+          lon: position?.lon,
+          name: deviceName,
+          type: system,
+        });
+      });
+    });
   }, []);
 
   return (
@@ -51,12 +193,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               width={10}
               fill={freeSpacePerCent}
               tintColor="#33a1f9"
-              onAnimationComplete={() => console.log('onAnimationComplete')}
               backgroundColor="green">
               {fill => (
-                <Text style={{color:"#33a1f9"}}>
-                  {((freeDiskStorage / totalDiskStorage) * 100).toFixed(0)}%
-                </Text>
+                <Text style={{color: '#33a1f9'}}>{freeSpacePerCent}%</Text>
               )}
             </AnimatedCircularProgress>
           </>
@@ -209,7 +348,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
-    color: "black",
+    color: 'black',
   },
   containerFolder: {
     flexDirection: 'row',
