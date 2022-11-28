@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     letterSpacing: 0.25,
     marginBottom: 50,
+    color: "#8F9395",
   },
   containerSocialMedia: {
     flexDirection: "row",

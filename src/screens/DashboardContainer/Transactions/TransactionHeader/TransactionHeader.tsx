@@ -5,10 +5,10 @@ import { Input } from "react-native-elements";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Entypo from "react-native-vector-icons/Entypo";
-import  Feather from "react-native-vector-icons/Feather";
-import  Ionicons from "react-native-vector-icons/Ionicons";
-import  MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import   MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import Feather from "react-native-vector-icons/Feather";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 const TransactionsHeader = () => {
   return (
@@ -22,44 +22,41 @@ const TransactionsHeader = () => {
           <Feather
             name="search"
             size={20}
-            color="white"
+            color="grey"
             style={{ marginLeft: 1 }}
           />
-          <TextInput style={styles.input} placeholder="Search" />
-          <MaterialIcons name="filter-list" size={24} color="white" />
-          <MaterialIcons name="arrow-downward" size={24} color="white" />
+          <TextInput style={styles.input} placeholder="Search" placeholderTextColor="grey" backgroundColor="white" />
         </View>
+        <MaterialIcons name="filter-list" size={24} color="white" />
+        <MaterialIcons name="arrow-downward" size={24} color="white" />
       </View>
     </View>
   );
 };
 const styles = StyleSheet.create({
   input: {
-    width: 250,
-    height: 40,
-    margin: 12,
+    marginLeft: 0,
     borderWidth: 1,
     padding: 10,
-    borderRadius: 10,
     borderColor: "white",
-    backgroundColor: "white",
     marginRight: 50,
+    width: "58%",
+    height: 60
   },
   TransactionsHeader: {
     position: "absolute",
-    top: 10,
+    top: 35,
+    flex:1
   },
   topBar: {
     flexDirection: "row",
-    marginTop: 35,
+    marginTop: 20,
     marginBottom: 20,
-    justifyContent: "flex-start",
   },
   image: {
     width: 35,
     height: 20,
-    marginRight: 75,
-    marginLeft: 20,
+    marginLeft: 8
   },
   title: {
     fontSize: 16,
@@ -67,8 +64,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 0.25,
     color: "white",
-    justifyContent: "space-evenly",
+    justifyContent: "center",
     textAlign: "center",
+    marginLeft: 60,
   },
   coins: {
     alignContent: "center",
@@ -79,9 +77,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 10,
+    width: "75%",
+    height: 60,
   },
   bottomBar: {
     justifyContent: "space-between",
+    alignItems: "center",
     flexDirection: "row",
     marginTop: 20,
   },

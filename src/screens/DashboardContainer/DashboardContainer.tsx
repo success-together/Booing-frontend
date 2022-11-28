@@ -16,6 +16,9 @@ import {
 import { small_logo } from "../../images/export";
 import Ionicons  from "react-native-vector-icons/Ionicons";
 import { Toast } from "react-native-toast-message/lib/src/Toast";
+import RegistredDevices from "./Account/RegistredDevices/RegistredDevices";
+import { store } from "../../shared";
+import { disconnect } from "../../shared/slices/Auth/AuthSlice";
 
 const Stack = createBottomTabNavigator();
 
@@ -26,23 +29,23 @@ const DashboardContainer = () => {
       <NavigationContainer independent={true}>
         <Stack.Navigator
           initialRouteName="Dashboard"
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
+          screenOptions={({route}) => ({
+            tabBarIcon: ({focused, color, size}) => {
               let iconName;
               let rn: string = route.name;
               switch (rn) {
-                case "Files":
-                  iconName = focused ? "folder" : "folder-outline";
+                case 'Files':
+                  iconName = focused ? 'folder' : 'folder-outline';
                   break;
-                case "Dashboard" || "ClearData":
-                  iconName = focused ? "ios-home" : "ios-home-outline";
+                case 'Dashboard' || 'ClearData':
+                  iconName = focused ? 'ios-home' : 'ios-home-outline';
                   break;
-                case "Account":
-                  iconName = focused ? "lock-closed" : "lock-closed-outline";
+                case 'Account':
+                  iconName = focused ? 'lock-closed' : 'lock-closed-outline';
                   break;
               }
               // You can return any component that you like here!
-              if (iconName == "Booingcoin") {
+              if (iconName == 'Booingcoin') {
                 return <Image style={styles.image} source={small_logo} />;
               }
               return (
@@ -52,22 +55,21 @@ const DashboardContainer = () => {
             headerShown: false,
           })}
           tabBarOptions={{
-            activeTintColor: "white",
-            inactiveTintColor: "whitesmoke",
-            inactiveBackgroundColor: "#33a1f9",
-            activeBackgroundColor: "#33a1f9",
+            activeTintColor: 'white',
+            inactiveTintColor: 'whitesmoke',
+            inactiveBackgroundColor: '#33a1f9',
+            activeBackgroundColor: '#33a1f9',
             labelStyle: {
               paddingBottom: 3,
               fontSize: 12,
             },
-            style: { padding: 30, backgroundColor: "#33a1f9" },
-          }}
-        >
+            style: {padding: 30, backgroundColor: '#33a1f9'},
+          }}>
           <Stack.Screen name="Dashboard" component={Dashboard} />
           <Stack.Screen
             name="ClearData"
             component={ClearData}
-            options={{ tabBarItemStyle: { display: "none" } }}
+            options={{tabBarItemStyle: {display: 'none'}}}
           />
           <Stack.Screen name="Files" component={Files} />
           <Stack.Screen
@@ -75,7 +77,7 @@ const DashboardContainer = () => {
             component={Uploads}
             options={{
               // headerShown: false,
-              tabBarItemStyle: { display: "none" },
+              tabBarItemStyle: {display: 'none'},
             }}
           />
           <Stack.Screen name="Booingcoin" component={Transactions} />
@@ -85,24 +87,27 @@ const DashboardContainer = () => {
             component={UpdateProfile}
             options={{
               // headerShown: false,
-              tabBarItemStyle: { display: "none" },
-            }}
-          ></Stack.Screen>
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
           <Stack.Screen
             name="UpdatePassword"
             component={UpdatePassword}
             options={{
               // headerShown: false,
-              tabBarItemStyle: { display: "none" },
-            }}
-          ></Stack.Screen>
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
           <Stack.Screen
             name="Images"
             component={Images}
             options={{
-              tabBarItemStyle: { display: "none" },
-            }}
-          ></Stack.Screen>
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
+          <Stack.Screen
+            name="RegistredDevices"
+            component={RegistredDevices}
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />

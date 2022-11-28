@@ -61,6 +61,7 @@ export const updateProfile = (data:  {name?: string; phone?: string} ) => {
 export const updatePassword = (data: {
   currentPassword: string;
   newPassword: string;
+  user_id : string
 }) => { 
   return Executor({
     method: "post",

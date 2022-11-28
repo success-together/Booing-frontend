@@ -16,3 +16,4 @@ export { default as ClearData } from "./DashboardContainer/Dashboard/ClearData/C
 export { default as UpdateProfile } from "./DashboardContainer/Account/UpdateProfile/UpdateProfile";
 export { default as UpdatePassword } from "./DashboardContainer/Account/UpdatePassword/UpdatePassword";
 export { default as Images } from "./DashboardContainer/Files/Uploads/Images/Images";
+export {default as RegistredDevives} from "./DashboardContainer/Account/RegistredDevices/RegistredDevices"
