@@ -8,15 +8,8 @@ import {
   View,
 } from 'react-native';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
-import {Image, Input} from 'react-native-elements';
 import {DashboardHeader} from '../../exports';
-import {
-  getFreeDiskStorageAsync,
-  getTotalDiskCapacityAsync,
-} from 'expo-file-system';
 import Entypo from 'react-native-vector-icons/Entypo';
-import Feather from 'react-native-vector-icons/Feather';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Geolocation from 'react-native-geolocation-service';
 import DeviceInfo from 'react-native-device-info';
@@ -108,21 +101,23 @@ const Dashboard = ({navigation}: {navigation: any}) => {
     setLoggedUser(store.getState().authentication.loggedInUser);
   };
 
-  const addNewDevice = async (data : any) => {
+  const addNewDevice = async (data: any) => {
     console.log(data);
-    
+
     await addDevice(data);
-    if (data.lat && data.lon)
+
+    console.log(position);
+    if (position?.lat && position?.lon)
       await updateGeoLocation({
         device_ref: data.device_ref,
-        lat: data.lat,
-        lon: data.lon,
+        lat: position?.lat,
+        lon: position?.lon,
       });
   };
 
   useEffect(() => {
-    getLocation();
     try {
+      getLocation();
       getUserData();
     } catch (error) {
       console.log(error);
@@ -158,22 +153,43 @@ const Dashboard = ({navigation}: {navigation: any}) => {
         setDeviceInfo({...deviceInfo, deviceName: deviceName});
         setDeviceInfo({...deviceInfo, system: DeviceInfo.getSystemName()});
 
-        console.log({
-          user_id: userData?._id,
-          device_ref: deviceId,
-          lat: position?.lat,
-          lon: position?.lon,
-          name: deviceName,
-          type: system,
-        });
+        const result = requestLocationPermission();
+        result.then(res => {
+          // console.log('res is:', res);
+          if (res) {
+            Geolocation.getCurrentPosition(
+              position => {
+                // console.log(position);
+                setPosition({
+                  lat: position.coords.latitude,
+                  lon: position.coords.longitude,
+                });
 
-        addNewDevice({
-          user_id: userData?._id,
-          device_ref: deviceId,
-          lat: position?.lat,
-          lon: position?.lon,
-          name: deviceName,
-          type: system,
+                console.log({
+                  user_id: userData?._id,
+                  device_ref: deviceId,
+                  lat: position.coords.latitude,
+                  lon: position.coords.longitude,
+                  name: deviceName,
+                  type: system,
+                });
+
+                addNewDevice({
+                  user_id: userData?._id,
+                  device_ref: deviceId,
+                  lat: position.coords.latitude,
+                  lon: position.coords.longitude,
+                  name: deviceName,
+                  type: system,
+                });
+              },
+              error => {
+                // See error code charts below.
+                console.log(error.code, error.message);
+              },
+              {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+            );
+          }
         });
       });
     });
