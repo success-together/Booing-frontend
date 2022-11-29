@@ -18,6 +18,7 @@ import {
   updateGeoLocation,
 } from '../../../shared/slices/Devices/DevicesService';
 import {store} from '../../../shared';
+import bytes from 'bytes';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
@@ -102,7 +103,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   };
 
   const addNewDevice = async (data: any) => {
-    console.log(data);
+    // console.log(data);
 
     await addDevice(data);
 
@@ -238,7 +239,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
           <View style={styles.storageInfoContainer}>
             <Text style={styles.txtStorage}>Storage Details</Text>
             <Text style={styles.createAccount}>
-              {bytes(freeDiskStorage)} of {bytes(totalDiskStorage)}
+              {freeDiskStorage} of {totalDiskStorage}
             </Text>
           </View>
           <Pressable

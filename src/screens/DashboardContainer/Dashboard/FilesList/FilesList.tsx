@@ -115,23 +115,30 @@ export default function FilesList({data, label, removeDeletedItems}: FilesListPr
             setShowDeleteBtn(false);
         }
         
+        return () => {
+        if(selectedFilesIds.length === 0 && showDeleteBtn) {
+            setShowDeleteBtn(false);
+        }
+        }
     }, [selectedFilesIds]);
 
     const onDeleteAppsPress = async () => {
 
-        // const apps = selectedFilesIds.reduce<any[]>((acc, id) => {
-        //     const item = data.find((e: RenderFileData['item']) => e.id === id);
-        //     if(item) {
-        //         acc.push(item);
-        //         return acc;
-        //     }
-        //     return acc;
-        // }, []);
+        const apps = selectedFilesIds.reduce<any[]>((acc, id) => {
+            const item = data.find((e: RenderFileData['item']) => e.id === id);
+            if(item) {
+                acc.push(item);
+                return acc;
+            }
+            return acc;
+        }, []);
 
 
-        // await ManageApps.uninstallApp(apps[0].packageName);
-        // request(PERMISSIONS.ANDROID.RUN)
-        // await ManageApps.manageUnusedApps();
+        const deleted = await ManageApps.deleteAppCache(apps[0].packageName);
+
+        Toast.show({
+            text1: typeof deleted === 'string' ? deleted: deleted ? "cache deleted !" : "cannot delete cache"
+        });
     }
     
     return (

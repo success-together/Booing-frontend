@@ -9,7 +9,7 @@ import bytes from "bytes";
 import FilesList from "../FilesList/FilesList";
 import { randomId } from "../../../../utils/util-functions";
 import { nanoid } from "@reduxjs/toolkit";
-import {checkMultiple, PERMISSIONS, request, requestMultiple, RESULTS} from 'react-native-permissions';
+import {checkMultiple, Permission, PERMISSIONS, request, requestMultiple, RESULTS} from 'react-native-permissions';
 
 
 export interface IImage extends ReadDirItem {
@@ -57,23 +57,25 @@ function ClearData({route, navigation}: {navigation: any, route: any}) {
 
   useEffect(() => {
     (async () => {
+      try {
       const granted = await requestMultiple([PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE, PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE]);
-      if(Object.values(granted).every(v => v === RESULTS.GRANTED)) {
+      if(Object.values(granted).every(v => v === RESULTS.GRANTED || v === RESULTS.BLOCKED)) {
         console.log({granted})
         setShowData(true);
         let images = await ManageApps.getImages();
         images = await Promise.all(images.map(async(img: any) => Object.assign(img, {logo:await readFile(img.path, 'base64'), id: nanoid(10)})));
         setImages(images);
         setVideos(addId(await ManageApps.getVideos()));
-        setDownloads(addId(await ManageApps.getDownloads()));
         setMusic(addId(await ManageApps.getAudios()));
         setApps(addId(await ManageApps.getAllInstalledApps()));
+      } 
+         }catch(e: any) {
+        console.log(e.stack)
       }
     })();
   }, [])
 
   const removeDeletedItems = (ids: string[], label: string) => {
-    console.log({ids, label})
     const removeItems = (setFn: Function) => {
       setFn((arr: []) => arr.filter((item: any) => !ids.includes(item.id)));
     }
@@ -111,10 +113,6 @@ function ClearData({route, navigation}: {navigation: any, route: any}) {
         {showData && <>
         <FilesList data={images as []}
                    label='Pictures'     
-                   removeDeletedItems={removeDeletedItems}
-              />
-         <FilesList data={downloads as []}
-                   label='Downloads'     
                    removeDeletedItems={removeDeletedItems}
               />
         <FilesList data={videos as []}
