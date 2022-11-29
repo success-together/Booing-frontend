@@ -195,6 +195,26 @@ const Dashboard = ({navigation}: {navigation: any}) => {
     });
   }, []);
 
+
+  // useEffect(() => {
+  //   console.log(Device.brand);
+  //   if (Device.isDevice && Device.brand) {
+  //     getFreeDiskStorageAsync().then(freeDiskStorage => {
+  //       setFreeDiskSotrage(
+  //         Number((freeDiskStorage / Math.pow(1024, 3)).toFixed(2)),
+  //       );
+  //     });
+  //     getTotalDiskCapacityAsync().then(totalDiskStorage => {
+  //       setTotalDiskStorage(
+  //         Number((totalDiskStorage / Math.pow(1024, 3)).toFixed(2)),
+  //       );
+  //       setFreeSpacePerCent(
+  //         Number(((freeDiskStorage / totalDiskStorage) * 100).toFixed(0)),
+  //       );
+  //     });
+  //   }
+  // }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
@@ -218,12 +238,12 @@ const Dashboard = ({navigation}: {navigation: any}) => {
           <View style={styles.storageInfoContainer}>
             <Text style={styles.txtStorage}>Storage Details</Text>
             <Text style={styles.createAccount}>
-              {freeDiskStorage} GB of {totalDiskStorage} GB
+              {bytes(freeDiskStorage)} of {bytes(totalDiskStorage)}
             </Text>
           </View>
           <Pressable
             style={styles.scanContainer}
-            // onPress={() => navigation.navigate("ClearData")}
+            onPress={() => navigation.navigate("ClearData", {freeDiskStorage})}
           >
             <MaterialIcons name="cleaning-services" size={24} color="white" />
             <Text style={{color: 'white'}}>Scan</Text>
