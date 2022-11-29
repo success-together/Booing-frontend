@@ -33,9 +33,18 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.storage.StorageManager;
 import android.provider.MediaStore;
 
 
+import androidx.activity.ComponentActivity;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultCaller;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.ActivityResultRegistry;
+import androidx.activity.result.ActivityResultRegistryOwner;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import org.json.JSONException;
 import java.io.File;
@@ -53,7 +62,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
         return "ManageApps";
     }
 
-
+    // get media files and downloads
     @ReactMethod
     public void getImages(Promise promise) {
         Uri uri;
@@ -144,7 +153,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
         promise.resolve(listOfAudios);
     }
 
-
     @ReactMethod
     public void getAllDownloads(Promise promise) {
 
@@ -203,6 +211,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
         return arr;
     }
 
+    // delete media files
     @ReactMethod
     public void deleteImages(ReadableArray paths, Promise promise) throws IntentSender.SendIntentException {
         ArrayList<Uri> filesUris = new ArrayList<>();
@@ -249,6 +258,28 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 promise.resolve(true);
             }else {
                 promise.resolve(false);
+            }
+        }
+    }
+    public static Uri getImageContentUri(Context context, File imageFile) {
+        String filePath = imageFile.getAbsolutePath();
+        Cursor cursor = context.getContentResolver().query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                new String[] { MediaStore.Images.Media._ID },
+                MediaStore.Images.Media.DATA + "=? ",
+                new String[] { filePath }, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
+            cursor.close();
+            return Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "" + id);
+        } else {
+            if (imageFile.exists()) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Images.Media.DATA, filePath);
+                return context.getContentResolver().insert(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            } else {
+                return null;
             }
         }
     }
@@ -302,6 +333,28 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
+    public static Uri getVideoContentUri(Context context, File videoFile) {
+        String filePath = videoFile.getAbsolutePath();
+        Cursor cursor = context.getContentResolver().query(
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                new String[] { MediaStore.Video.Media._ID },
+                MediaStore.Video.Media.DATA + "=? ",
+                new String[] { filePath }, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
+            cursor.close();
+            return Uri.withAppendedPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "" + id);
+        } else {
+            if (videoFile.exists()) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Video.Media.DATA, filePath);
+                return context.getContentResolver().insert(
+                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+            } else {
+                return null;
+            }
+        }
+    }
 
     @ReactMethod
     public void deleteAudios(ReadableArray paths, Promise promise) throws IntentSender.SendIntentException {
@@ -352,31 +405,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
-
-
-    public static Uri getVideoContentUri(Context context, File videoFile) {
-        String filePath = videoFile.getAbsolutePath();
-        Cursor cursor = context.getContentResolver().query(
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                new String[] { MediaStore.Video.Media._ID },
-                MediaStore.Video.Media.DATA + "=? ",
-                new String[] { filePath }, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
-            cursor.close();
-            return Uri.withAppendedPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "" + id);
-        } else {
-            if (videoFile.exists()) {
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Video.Media.DATA, filePath);
-                return context.getContentResolver().insert(
-                        MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
-            } else {
-                return null;
-            }
-        }
-    }
-
     public static Uri getAudioContentUri(Context context, File audioFile) {
         String filePath = audioFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -400,28 +428,65 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-    public static Uri getImageContentUri(Context context, File imageFile) {
-        String filePath = imageFile.getAbsolutePath();
-        Cursor cursor = context.getContentResolver().query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                new String[] { MediaStore.Images.Media._ID },
-                MediaStore.Images.Media.DATA + "=? ",
-                new String[] { filePath }, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
-            cursor.close();
-            return Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "" + id);
+    // delete cache files
+    @ReactMethod
+    public void deleteAppCache(String packageName, Promise promise) throws PackageManager.NameNotFoundException {
+        Context packageContext = getReactApplicationContext().createPackageContext(packageName, 0);
+        List<File> directories = new ArrayList<>();
+        // collect all cache files
+        directories.add(packageContext.getCacheDir());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Collections.addAll(directories, packageContext.getExternalCacheDirs());
         } else {
-            if (imageFile.exists()) {
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Images.Media.DATA, filePath);
-                return context.getContentResolver().insert(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-            } else {
-                return null;
+            directories.add(packageContext.getExternalCacheDir());
+        }
+
+        ArrayList<Uri> arr = new ArrayList<>();
+        for(int i = 0; i < directories.size(); i++) {
+            arr.add(getFileContentUri(packageContext, directories.get(i)));
+        }
+
+
+        try {
+            for(int i = 0; i < arr.size(); i++) {
+                getReactApplicationContext().getContentResolver().delete(
+                        arr.get(i), null, null
+                );
+            }
+
+            promise.resolve(true);
+        }catch(SecurityException e) {
+            PendingIntent pendingIntent = null;
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                pendingIntent = MediaStore.createDeleteRequest(
+                        getReactApplicationContext().getContentResolver(),
+                        arr
+                );
+            }else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    if(e instanceof RecoverableSecurityException) {
+                        RecoverableSecurityException exception = (RecoverableSecurityException) e;
+                        pendingIntent = exception.getUserAction().getActionIntent();
+                    }
+                }
+            }
+
+            if(pendingIntent != null) {
+                try {
+                    IntentSender intentSender = pendingIntent.getIntentSender();
+                    getReactApplicationContext().getCurrentActivity().startIntentSenderForResult(
+                            intentSender, 100, null, 0, 0, 0
+                    );
+                    promise.resolve(true);
+                }catch(IntentSender.SendIntentException err){
+                    promise.resolve("send intent expection");
+                }
+            }else {
+                promise.resolve(false);
             }
         }
     }
+
 
 
     public static Uri getFileContentUri(Context context, File file) {
@@ -557,68 +622,34 @@ public class ManageApps extends ReactContextBaseJavaModule {
 //            }
     }
 
-//    public boolean delete(File imageFile) {
-//        String[] projection = { MediaStore.Images.Media._ID };
-//
-//        // Match on the file path
-//        String selection = MediaStore.Images.Media.DATA + " = ?";
-//        String[] selectionArgs = new String[] { imageFile.getAbsolutePath() };
-//
-//        // Query for the ID of the media matching the file path
-//        Uri queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-//        ContentResolver contentResolver = getReactApplicationContext().getContentResolver();
-//
-//        Cursor c = contentResolver.query(queryUri, projection, selection, selectionArgs, null);
-//
-//        if (c != null) {
-//            if (c.moveToFirst()) {
-//                // We found the ID. Deleting the item via the content provider will also remove the file
-//                long id = c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media._ID));
-//                Uri deleteUri = ContentUris.withAppendedId(queryUri, id);
-//                contentResolver.delete(deleteUri, null, null);
-//                return true;
-//            }
-//            c.close();
-//            return false;
-//        }
-//        return false;
-//    }
-
-//    void delete(File f) throws IOException {
-//        if (f.isDirectory()) {
-//            for (File c : f.listFiles())
-//                delete(c);
-//        }
-//
-//        if (!f.delete())
-//            throw new FileNotFoundException("Failed to delete file: " + f);
-//    }
-@ReactMethod
-public void removeAppCache(String packageName, Promise promise) {
-    try {
-        Context packageContext = getReactApplicationContext().createPackageContext(packageName, 0);
-        List<File> directories = new ArrayList<>();
-        // collect all cache files
-        directories.add(packageContext.getCacheDir());
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Collections.addAll(directories, packageContext.getExternalCacheDirs());
-        } else {
-            directories.add(packageContext.getExternalCacheDir());
-        }
-
-        // remove cache files
-        int num = 0;
-        for(File f :directories) {
-            boolean isDeleted = deleteDir(f);
-            if(isDeleted) {
-                num++;
+    @ReactMethod
+    public void removeAppCache(String packageName, Promise promise) {
+        try {
+            Context packageContext = getReactApplicationContext().createPackageContext(packageName, 0);
+            List<File> directories = new ArrayList<>();
+            // collect all cache files
+            directories.add(packageContext.getCacheDir());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                Collections.addAll(directories, packageContext.getExternalCacheDirs());
+            } else {
+                directories.add(packageContext.getExternalCacheDir());
             }
+
+            // remove cache files
+            int num = 0;
+            for(File f :directories) {
+                boolean isDeleted = deleteDir(f);
+                if(isDeleted) {
+                    num++;
+                }
+            }
+            promise.resolve(num == directories.size());
+        }catch (PackageManager.NameNotFoundException e) {
+            promise.reject("remove app cache error", "app cache cannot be deleted", e);
         }
-        promise.resolve(num == directories.size());
-    }catch (PackageManager.NameNotFoundException e) {
-        promise.reject("remove app cache error", "app cache cannot be deleted", e);
     }
-}
+
+
 
     public static boolean deleteDir(File dir) {
         if (dir != null && dir.isDirectory()) {
