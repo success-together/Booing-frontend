@@ -35,6 +35,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.storage.StorageManager;
 import android.provider.MediaStore;
+import android.webkit.MimeTypeMap;
 
 
 import androidx.activity.ComponentActivity;
@@ -48,6 +49,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 
 import org.json.JSONException;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -487,7 +489,108 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
+    public void getTempFiles(Promise promise) {
+        WritableArray tempFiles = new WritableNativeArray();
 
+        Uri uri;
+        Cursor cursor;
+        int column_index_data, column_index_title, column_index_size;
+        uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
+
+        String[] projection = { MediaStore.Files.FileColumns.DATA
+                ,MediaStore.Files.FileColumns.TITLE
+                ,MediaStore.Files.FileColumns.SIZE};
+
+        String selection = MediaStore.Files.FileColumns.MIME_TYPE + " = ?";
+
+        cursor = getCurrentActivity().getContentResolver().query(uri,
+                projection,
+                selection,
+                null,
+                null);
+
+        column_index_data = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA);
+        column_index_title = cursor.getColumnIndex(MediaStore.Files.FileColumns.TITLE);
+        column_index_size = cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE);
+
+        while (cursor.moveToNext()) {
+            WritableMap map = new WritableNativeMap();
+            map.putString("path", cursor.getString(column_index_data));
+            map.putString("name", cursor.getString(column_index_title));
+            map.putInt("size", cursor.getInt(column_index_size));
+
+            tempFiles.pushMap(map);
+        }
+
+        promise.resolve(tempFiles);
+    }
+
+    @ReactMethod
+    public void getTemp(Promise promise) {
+        WritableArray tempFiles = new WritableNativeArray();
+
+        Uri uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
+        int column_index_data, column_index_MimeType, column_index_name;
+
+        String[] projection = {
+                MediaStore.Files.FileColumns.DATA,
+                MediaStore.Files.FileColumns.MIME_TYPE,
+                MediaStore.Files.FileColumns.DISPLAY_NAME
+        };
+
+
+        String[] filterMimeType = {MimeTypeMap.getSingleton().getMimeTypeFromExtension("pdf")};
+
+        String selection = MediaStore.Files.FileColumns.MIME_TYPE + " = ?";
+
+        Cursor cursor = getReactApplicationContext().getContentResolver().query(
+                uri,
+                projection,
+                selection,
+                filterMimeType,
+                MediaStore.Files.FileColumns.DATE_ADDED
+        );
+
+        column_index_data = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA);
+        column_index_MimeType = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
+        column_index_name = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
+
+        while (cursor.moveToNext()) {
+            WritableMap map = new WritableNativeMap();
+
+            map.putString("path", cursor.getString(column_index_data));
+            map.putString("mimetype", cursor.getString(column_index_MimeType));
+            map.putString("name", cursor.getString(column_index_name));
+
+            tempFiles.pushMap(map);
+        }
+
+        promise.resolve(tempFiles);
+    }
+
+    @ReactMethod
+    public void clearMyCache(Promise promise) {
+            Context packageContext = getReactApplicationContext();
+            List<File> directories = new ArrayList<>();
+            // collect all cache files
+            directories.add(packageContext.getCacheDir());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                Collections.addAll(directories, packageContext.getExternalCacheDirs());
+            } else {
+                directories.add(packageContext.getExternalCacheDir());
+            }
+
+            // remove cache files
+            int num = 0;
+            for(File f :directories) {
+                boolean isDeleted = deleteDir(f);
+                if(isDeleted) {
+                    num++;
+                }
+            }
+            promise.resolve(num == directories.size());
+    }
 
     public static Uri getFileContentUri(Context context, File file) {
         String filePath = file.getAbsolutePath();
@@ -563,7 +666,11 @@ public class ManageApps extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getAllInstalledApps(Promise promise) throws JSONException, PackageManager.NameNotFoundException {
+    public void getAllInstalledApps(Promise promise) throws JSONException, PackageManager.NameNotFoundException, IOException {
+        File.createTempFile("wqewqeq", ".txt");
+        File.createTempFile("wasdasdasqewqeq", ".txt");
+        File.createTempFile("asas", ".txt");
+
         PackageManager pm = getReactApplicationContext().getPackageManager();
         List<ApplicationInfo> installedApplications = pm.getInstalledApplications(0);
         WritableArray arr = new WritableNativeArray();
