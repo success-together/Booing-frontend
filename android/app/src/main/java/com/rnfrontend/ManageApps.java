@@ -652,30 +652,26 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-    public Boolean isSystemApp(String packageName) {
+    public int isSystemApp(String packageName) {
         try {
             PackageManager pm = getReactApplicationContextIfActiveOrWarn().getPackageManager();
             ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
             if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
-                return true;
+                return 1;
             }
-            return false;
+            return 0;
         }catch(PackageManager.NameNotFoundException e){
-           return false;
+           return -1;
         }
     }
 
     @ReactMethod
-    public void getAllInstalledApps(Promise promise) throws JSONException, PackageManager.NameNotFoundException, IOException {
-        File.createTempFile("wqewqeq", ".txt");
-        File.createTempFile("wasdasdasqewqeq", ".txt");
-        File.createTempFile("asas", ".txt");
-
+    public void getAllInstalledApps(Promise promise) {
         PackageManager pm = getReactApplicationContext().getPackageManager();
         List<ApplicationInfo> installedApplications = pm.getInstalledApplications(0);
         WritableArray arr = new WritableNativeArray();
         for(ApplicationInfo appInfo : installedApplications) {
-            if(!isSystemApp(appInfo.packageName)) {
+            if(isSystemApp(appInfo.packageName) == 0) {
                 WritableMap map = new WritableNativeMap();
                 map.putString("name", appInfo.name);
                 map.putString("packageName", appInfo.packageName);

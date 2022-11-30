@@ -1,6 +1,14 @@
 import {StorageAccessFramework} from 'expo-file-system';
 import React, {useEffect, useState} from 'react';
-import {View, Text, PermissionsAndroid, StyleSheet, Button, ActivityIndicator, TurboModuleRegistry} from 'react-native';
+import {
+  View,
+  Text,
+  PermissionsAndroid,
+  StyleSheet,
+  Button,
+  ActivityIndicator,
+  TurboModuleRegistry,
+} from 'react-native';
 import {
   CachesDirectoryPath,
   ExternalDirectoryPath,
@@ -22,40 +30,15 @@ import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {store} from '../../../../shared';
 
-
 export interface IImage extends ReadDirItem {
   id: string;
   logo: string;
 }
 
-const paths = [
-  {
-    label: 'Music',
-    path: ExternalDirectoryPath + '/Music',
-  },
-  {
-    label: 'Pictures',
-    path: ExternalDirectoryPath + '/Pictures',
-  },
-  {
-    label: 'Downloads',
-    path: DownloadDirectoryPath,
-  },
-  {
-    label: 'Videos',
-    path: ExternalDirectoryPath + '/Movies',
-  },
-  {
-    label: 'Cache',
-    path: CachesDirectoryPath,
-  },
-];
-
 function ClearData({route, navigation}: {navigation: any; route: any}) {
   const {freeDiskStorage} = route.params;
   const [showData, setShowData] = useState(false);
-  const [showModal, setShowModal] = useState({show:false, loading: false});
-
+  const [showModal, setShowModal] = useState({show: true, loading: false});
 
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
@@ -70,33 +53,37 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   useEffect(() => {
     (async () => {
       try {
-      const granted = await requestMultiple([
-        PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
-        PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
-      ]);
-      if (Object.values(granted).every(v => v === RESULTS.GRANTED || v === RESULTS.BLOCKED)) {
-        store.dispatch(setRootLoading(true));
-        console.log({granted});
-        setShowData(true);
-        let images = await ManageApps.getImages();
-        images = await Promise.all(
-          images.map(async (img: any) =>
-            Object.assign(img, {
-              logo: await readFile(img.path, 'base64'),
-              id: nanoid(10),
-            }),
-          ),
-        );
-        store.dispatch(setRootLoading(false));
+        const granted = await requestMultiple([
+          PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
+          PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
+        ]);
+        if (
+          Object.values(granted).every(
+            v => v === RESULTS.GRANTED || v === RESULTS.BLOCKED,
+          )
+        ) {
+          store.dispatch(setRootLoading(true));
+          console.log({granted});
+          setShowData(true);
+          let images = await ManageApps.getImages();
+          images = await Promise.all(
+            images.map(async (img: any) =>
+              Object.assign(img, {
+                logo: await readFile(img.path, 'base64'),
+                id: nanoid(10),
+              }),
+            ),
+          );
+          store.dispatch(setRootLoading(false));
 
-        setImages(images);
-        setVideos(addId(await ManageApps.getVideos()));
-        setMusic(addId(await ManageApps.getAudios()));
-        setApps(addId(await ManageApps.getAllInstalledApps()));
-        store.dispatch(setRootLoading(false));
-      } 
-         }catch(e: any) {
-        console.log(e.stack)
+          setImages(images);
+          setVideos(addId(await ManageApps.getVideos()));
+          setMusic(addId(await ManageApps.getAudios()));
+          setApps(addId(await ManageApps.getAllInstalledApps()));
+          store.dispatch(setRootLoading(false));
+        }
+      } catch (e: any) {
+        console.log(e.stack);
       }
       store.dispatch(setRootLoading(false));
     })();
@@ -122,31 +109,68 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
     }
   };
 
-
-
-  const clearMyCache =  () => {
+  const clearMyCache = () => {
     setShowModal({show: true, loading: true});
     ManageApps.clearMyCache().then(() => {
       setTimeout(() => {
-        setShowModal({show: true,loading: false});
+        setShowModal({show: true, loading: false});
       }, 3000);
     });
-
-  }
+  };
 
   return (
     <View>
-      {showModal.show && (<View style={{position: 'absolute', width: 200, height: 120, padding: 10, zIndex: 9999, backgroundColor: 'white', top: '50%', left: 80}}>
-        <Text>clear my app cache</Text>
-        {showModal.loading === true ?( <ActivityIndicator size="large" />):(<View>
-          <Text style={{marginBottom: 10}}>sell free space to the application ?</Text>
-          <View style={{display: 'flex', flexDirection: 'row'}}>
-            <Button title='Yes' onPress={() => setShowModal({show: false, loading: false})}/>
-            <Button title='No' onPress={() => setShowModal({show: false, loading: false})} />
+      {showModal.show && (
+        <View
+          style={{
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            top: 0,
+            left: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            zIndex: 999,
+          }}>
+          <View
+            style={{
+              borderRadius: 10,
+              width: 200,
+              height: 120,
+              padding: 10,
+              zIndex: 9999,
+              backgroundColor: 'white',
+            }}>
+            {showModal.loading === true ? (
+              <>
+                <Text style={{color: 'black', fontSize: 20, marginBottom: 20}}>
+                  clear my app cache
+                </Text>
+                <ActivityIndicator size="large" />
+              </>
+            ) : (
+              <View>
+                <Text style={{marginBottom: 20, color: 'black', fontSize: 16}}>
+                  sell free space to the application ?
+                </Text>
+                <View style={{display: 'flex', flexDirection: 'row'}}>
+                  <Button
+                    title="Yes"
+                    onPress={() => setShowModal({show: false, loading: false})}
+                  />
+                  <View style={{marginLeft: 10}}></View>
+                  <Button
+                    title="No"
+                    onPress={() => setShowModal({show: false, loading: false})}
+                  />
+                </View>
+              </View>
+            )}
           </View>
-        </View>)
-        }
-      </View>)}
+        </View>
+      )}
       <View style={styles.header}>
         <View style={styles.subContainer}>
           <View style={styles.navContainer}>
@@ -160,7 +184,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
             <Feather name="search" size={20} color="white" />
           </View>
           <View style={styles.percentageContainer}>
-            <Text style={styles.percentage}>+{bytes(freeDiskStorage)}</Text>
+            <Text style={styles.percentage}>+{freeDiskStorage} GB</Text>
           </View>
         </View>
       </View>
@@ -190,7 +214,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
             />
           </>
         )}
-        <Button title='clear application cache' onPress={clearMyCache} />
+        <Button title="clear application cache" onPress={clearMyCache} />
       </View>
     </View>
   );
