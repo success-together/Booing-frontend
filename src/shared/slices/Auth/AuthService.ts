@@ -83,7 +83,7 @@ export const socialMediaSignIn = (data: {
     url: BaseUrl + '/socialMediaSignup',
     data,
     isSilent : false,
-    withoutToast :false
+    withoutToast :true
   });
 };
 
