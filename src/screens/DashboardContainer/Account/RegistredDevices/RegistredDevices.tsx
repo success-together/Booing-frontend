@@ -22,7 +22,7 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
     try {
       let user: any = store.getState().authentication.loggedInUser;
       if (user?._id)
-        await GetDevicesService({user_id : user?._id}).then(res => {
+        await GetDevicesService({user_id: user?._id}).then(res => {
           console.log(res);
           setDevices(res.data);
         });
@@ -54,9 +54,9 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
         <Text style={styles.title}>Registred Devices</Text>
         <View style={styles.sectionView}>
           <View>
-            {/* {devices[0].name !== '' &&
-              devices[0].type !== '' &&
-              devices.map(device => {
+            {devices[0]?.name !== '' &&
+              devices[0]?.type !== '' &&
+              devices?.map(device => {
                 return (
                   <Pressable style={styles.button}>
                     <View style={{flexDirection: 'row'}}>
@@ -66,11 +66,11 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
                         size={20}
                         color="#CED5D8"
                       />
-                      <Text style={styles.text}>{device.name}</Text>
+                      <Text style={styles.text}>{device?.name}</Text>
                     </View>
                   </Pressable>
                 );
-              })} */}
+              })}
           </View>
         </View>
       </View>

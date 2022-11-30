@@ -230,7 +230,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               width={10}
               fill={freeSpacePerCent}
               tintColor="#33a1f9"
-              backgroundColor="green">
+              backgroundColor="gray">
               {fill => (
                 <Text style={{color: '#33a1f9'}}>{freeSpacePerCent}%</Text>
               )}
@@ -239,7 +239,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
           <View style={styles.storageInfoContainer}>
             <Text style={styles.txtStorage}>Storage Details</Text>
             <Text style={styles.createAccount}>
-              {freeDiskStorage} of {totalDiskStorage}
+              {freeDiskStorage} GB of {totalDiskStorage} GB
             </Text>
           </View>
           <Pressable

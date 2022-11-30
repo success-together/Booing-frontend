@@ -15,14 +15,12 @@ import Toast from 'react-native-toast-message';
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState<any>(true);
+export default function App({navigation}: any) {
+  const [isLoggedIn, setIsLoggedIn] = useState<any>(false);
   const [isLoading, setIsLoading] = useState<any>(false);
-
   useEffect(() => {
     setTimeout(() => {
       store.subscribe(() => {
-        // console.log(store.getState().root.isLoading);
         setIsLoading(store.getState().root.isLoading);
         setIsLoggedIn(store.getState().authentication.isLoggedIn);
       });
@@ -40,15 +38,22 @@ export default function App() {
           screenOptions={{
             headerShown: false,
           }}
-          initialRouteName="DashboardContainer">
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="Register" component={Register} />
-          <Stack.Screen name="Verification" component={VerificationCode} />
-          <Stack.Screen
-            name="DashboardContainer"
-            component={DashboardContainer}
-          />
+          initialRouteName="Home">
+          {!isLoggedIn ? (
+            <Stack.Group>
+              <Stack.Screen name="Home" component={Home} />
+              <Stack.Screen name="Login" component={Login} />
+              <Stack.Screen name="Register" component={Register} />
+              <Stack.Screen name="Verification" component={VerificationCode} />
+            </Stack.Group>
+          ) : (
+            <Stack.Group>
+              <Stack.Screen
+                name="DashboardContainer"
+                component={DashboardContainer}
+              />
+            </Stack.Group>
+          )}
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />

@@ -3,12 +3,13 @@ import {View, Text, StyleSheet} from 'react-native';
 import FontAwesoem from 'react-native-vector-icons/FontAwesome';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import LinearGradient from 'react-native-linear-gradient';
 
 // import * as Google from "expo-auth-session/providers/google";
 // import * as WebBrowser from 'expo-web-browser'
 import axios from 'axios';
-
+import {store} from '../../shared';
+import {setLoggedInUser} from '../../shared/slices/Auth/AuthSlice';
+import {socialMediaSignIn} from '../../shared/slices/Auth/AuthService';
 
 GoogleSignin.configure({
   webClientId:
@@ -79,16 +80,23 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       // Check if your device supports Google Play
       await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
       // Get the users ID token
-      const {idToken} = await GoogleSignin.signIn();
-
+      const {idToken, user} = await GoogleSignin.signIn();
+      console.log(user);
+      await socialMediaSignIn({
+        name: user.givenName || '',
+        email: user.email,
+        socialMedia_ID: user.id,
+      });
       // Create a Google credential with the token
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
       // Sign-in the user with the credential
       await auth().signInWithCredential(googleCredential);
+      console.log(googleCredential);
+      store.dispatch(setLoggedInUser(true));
       navigation.navigate('DashboardContainer');
-    }catch(error: any) {
-      console.log({error})
+    } catch (error: any) {
+      console.log({error});
     }
   }, [navigation]);
 
@@ -100,13 +108,30 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
     console.log('loginWithFacebook');
   }, []);
 
-
   return (
     <View style={styles.container}>
       <View style={styles.containerSocialMedia}>
-          <FontAwesoem style={{marginLeft: 37, ...styles.Icon}} name='google' size={38} color="#33A1F9" onPress={() => loginWithGoogle()}/>
-          <FontAwesoem style={styles.Icon} name='twitter' size={38} color="#33A1F9" onPress={() => loginWithTwitter()} />
-          <FontAwesoem style={styles.Icon} name='facebook' size={38} color="#33A1F9" onPress={() => loginWithFacebook()} />
+        <FontAwesoem
+          style={{marginLeft: 37, ...styles.Icon}}
+          name="google"
+          size={38}
+          color="#33A1F9"
+          onPress={() => loginWithGoogle()}
+        />
+        <FontAwesoem
+          style={styles.Icon}
+          name="twitter"
+          size={38}
+          color="#33A1F9"
+          onPress={() => loginWithTwitter()}
+        />
+        <FontAwesoem
+          style={styles.Icon}
+          name="facebook"
+          size={38}
+          color="#33A1F9"
+          onPress={() => loginWithFacebook()}
+        />
       </View>
       <Text style={styles.createAccount}>Use Social Login</Text>
     </View>
@@ -159,7 +184,7 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     letterSpacing: 0.25,
     marginBottom: 50,
-    color: "#8F9395",
+    color: '#8F9395',
   },
   containerSocialMedia: {
     flexDirection: 'row',
@@ -170,7 +195,7 @@ const styles = StyleSheet.create({
   },
   Icon: {
     marginRight: 37,
-  }
+  },
 });
 
 export default SocialMediaAuth;
