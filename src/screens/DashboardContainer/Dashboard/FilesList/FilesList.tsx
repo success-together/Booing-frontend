@@ -93,11 +93,6 @@ export default function FilesList({data, label, removeDeletedItems}: FilesListPr
                 text1: "items deleted successfully",
             });
        }
-
-       Toast.show({
-        type: "fail",
-        text1: "something went wrong, items cannot be deleted"
-       });
     }, [selectedFilesIds])
 
     const renderFile = useCallback(({item: {name, id, path, logo}}: RenderFileData) => {

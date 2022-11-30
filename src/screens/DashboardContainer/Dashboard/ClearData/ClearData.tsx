@@ -1,6 +1,6 @@
 import { StorageAccessFramework } from "expo-file-system";
 import React, { useEffect, useState } from "react";
-import { View, Text, PermissionsAndroid, StyleSheet } from "react-native";
+import { View, Text, PermissionsAndroid, StyleSheet, Button, ActivityIndicator, TurboModuleRegistry } from "react-native";
 import {CachesDirectoryPath, ExternalDirectoryPath ,ExternalCachesDirectoryPath  , ExternalStorageDirectoryPath,DownloadDirectoryPath , readDir, readdir, ReadDirItem, stat, readFile, PicturesDirectoryPath } from 'react-native-fs';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
@@ -11,6 +11,14 @@ import { randomId } from "../../../../utils/util-functions";
 import { nanoid } from "@reduxjs/toolkit";
 import {checkMultiple, Permission, PERMISSIONS, request, requestMultiple, RESULTS} from 'react-native-permissions';
 
+
+function sleep(randomSecs: number) {
+  return  new Promise((res, rej) => {
+    setTimeout(() => {
+      res('');
+    }, randomSecs);
+  })
+}
 
 export interface IImage extends ReadDirItem {
   id: string;
@@ -43,10 +51,11 @@ const paths =  [
 function ClearData({route, navigation}: {navigation: any, route: any}) {
   const {freeDiskStorage} = route.params;
   const [showData, setShowData] = useState(false);
+  const [showModal, setShowModal] = useState({show:false, loading: false});
+
 
   const [images, setImages]= useState([]);
   const [videos, setVideos] = useState([]);
-  const [downloads, setDownloads] = useState([]);
   const [apps, setApps] = useState([]);
   const [music, setMusic] = useState([]);
 
@@ -60,7 +69,6 @@ function ClearData({route, navigation}: {navigation: any, route: any}) {
       try {
       const granted = await requestMultiple([PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE, PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE]);
       if(Object.values(granted).every(v => v === RESULTS.GRANTED || v === RESULTS.BLOCKED)) {
-        console.log({granted})
         setShowData(true);
         let images = await ManageApps.getImages();
         images = await Promise.all(images.map(async(img: any) => Object.assign(img, {logo:await readFile(img.path, 'base64'), id: nanoid(10)})));
@@ -68,8 +76,8 @@ function ClearData({route, navigation}: {navigation: any, route: any}) {
         setVideos(addId(await ManageApps.getVideos()));
         setMusic(addId(await ManageApps.getAudios()));
         setApps(addId(await ManageApps.getAllInstalledApps()));
-      } 
-         }catch(e: any) {
+      }
+    }catch(e: any) {
         console.log(e.stack)
       }
     })();
@@ -94,8 +102,29 @@ function ClearData({route, navigation}: {navigation: any, route: any}) {
     }
   }
 
+  const clearMyCache =  () => {
+    setShowModal({show: true, loading: true});
+    ManageApps.clearMyCache().then(() => {
+      setTimeout(() => {
+        setShowModal({show: true,loading: false});
+      }, 3000);
+    });
+
+  }
+
   return (
     <View>
+      {showModal.show && (<View style={{position: 'absolute', width: 200, height: 120, padding: 10, zIndex: 9999, backgroundColor: 'white', top: '50%', left: 80}}>
+        <Text>clear my app cache</Text>
+        {showModal.loading === true ?( <ActivityIndicator size="large" />):(<View>
+          <Text style={{marginBottom: 10}}>sell free space to the application ?</Text>
+          <View style={{display: 'flex', flexDirection: 'row'}}>
+            <Button title='Yes' onPress={() => setShowModal({show: false, loading: false})}/>
+            <Button title='No' onPress={() => setShowModal({show: false, loading: false})} />
+          </View>
+        </View>)
+        }
+      </View>)}
       <View style={styles.header}>
         <View style={styles.subContainer}>
             <View style={styles.navContainer}>
@@ -124,10 +153,11 @@ function ClearData({route, navigation}: {navigation: any, route: any}) {
                    removeDeletedItems={removeDeletedItems}
         />
         <FilesList data={apps as []}
-                   label='Applications'     
+                   label='Cache'     
                    removeDeletedItems={removeDeletedItems}
               />
         </>}
+        <Button title='clear app cache' onPress={clearMyCache} />
       </View>
     </View>
   );
