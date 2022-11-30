@@ -771,38 +771,38 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-    @ReactMethod
-    public void getAllApps(Promise promise) {
-        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        List<ResolveInfo> pkgAppsList = getReactApplicationContext().getPackageManager()
-                .queryIntentActivities( mainIntent, 0);
-
-        WritableArray listOfAllApps = new WritableNativeArray();
-        if(pkgAppsList != null && pkgAppsList.size() != 0) {
-            for(ResolveInfo ri: pkgAppsList){
-                WritableMap map  = new WritableNativeMap();
-                String name = ri.activityInfo.name;
-                map.putString("name", name);
-                String packageName = ri.activityInfo.packageName;
-                map.putString("packageName", packageName);
-                if(isSystemApp(packageName)) {
-                    continue;
-                }
-                try {
-                    PackageInfo pi = getReactApplicationContext().getPackageManager().getPackageInfo(
-                            packageName, 0
-                    );
-                    long size = new File(pi.applicationInfo.publicSourceDir).length();
-                    map.putDouble("size", size);
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
-                listOfAllApps.pushMap(map);
-            }
-        }
-        promise.resolve(listOfAllApps);
-    }
+//    @ReactMethod
+//    public void getAllApps(Promise promise) {
+//        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+//        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+//        List<ResolveInfo> pkgAppsList = getReactApplicationContext().getPackageManager()
+//                .queryIntentActivities( mainIntent, 0);
+//
+//        WritableArray listOfAllApps = new WritableNativeArray();
+//        if(pkgAppsList != null && pkgAppsList.size() != 0) {
+//            for(ResolveInfo ri: pkgAppsList){
+//                WritableMap map  = new WritableNativeMap();
+//                String name = ri.activityInfo.name;
+//                map.putString("name", name);
+//                String packageName = ri.activityInfo.packageName;
+//                map.putString("packageName", packageName);
+//                if(isSystemApp(packageName)) {
+//                    continue;
+//                }
+//                try {
+//                    PackageInfo pi = getReactApplicationContext().getPackageManager().getPackageInfo(
+//                            packageName, 0
+//                    );
+//                    long size = new File(pi.applicationInfo.publicSourceDir).length();
+//                    map.putDouble("size", size);
+//                } catch (PackageManager.NameNotFoundException e) {
+//                    e.printStackTrace();
+//                }
+//                listOfAllApps.pushMap(map);
+//            }
+//        }
+//        promise.resolve(listOfAllApps);
+//    }
 //
 //    @ReactMethod
 //    public void manageUnusedApps(Promise promise) {
