@@ -38,7 +38,7 @@ export interface IImage extends ReadDirItem {
 function ClearData({route, navigation}: {navigation: any; route: any}) {
   const {freeDiskStorage} = route.params;
   const [showData, setShowData] = useState(false);
-  const [showModal, setShowModal] = useState({show: true, loading: false});
+  const [showModal, setShowModal] = useState({show: false, loading: false});
 
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
