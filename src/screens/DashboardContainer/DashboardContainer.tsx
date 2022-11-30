@@ -46,7 +46,7 @@ const DashboardContainer = () => {
               }
               // You can return any component that you like here!
               if (iconName == 'Booingcoin') {
-                return <Image style={styles.image} source={small_logo} />;
+                return <Image style={{width : 50,height:50}} source={{uri :small_logo}} />;
               }
               return (
                 <Ionicons name={iconName as any} size={size} color={color} />
@@ -119,7 +119,7 @@ export default DashboardContainer;
 
 const styles = StyleSheet.create({
   image: {
-    width: 10,
-    height: 20,
+    width: 50,
+    height: 50,
   },
 });
