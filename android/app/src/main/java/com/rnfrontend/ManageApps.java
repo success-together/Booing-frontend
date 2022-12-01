@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ManageApps extends ReactContextBaseJavaModule {
+
     ManageApps(ReactApplicationContext context) {
         super(context);
     }
@@ -811,11 +812,61 @@ public class ManageApps extends ReactContextBaseJavaModule {
 //        promise.resolve(null);
 //    }
 
+//    @ReactMethod
+//    public void uninstallApp(String packageName) {
+//        Intent intent = new Intent(getCurrentActivity(), getCurrentActivity().getClass());
+//        PendingIntent sender = PendingIntent.getActivity(getCurrentActivity(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
+//        PackageInstaller mPackageInstaller = getCurrentActivity().getPackageManager().getPackageInstaller();
+//        mPackageInstaller.uninstall(packageName, sender.getIntentSender());
+//    }
+
     @ReactMethod
-    public void uninstallApp(String packageName) {
-        Intent intent = new Intent(getCurrentActivity(), getCurrentActivity().getClass());
-        PendingIntent sender = PendingIntent.getActivity(getCurrentActivity(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
-        PackageInstaller mPackageInstaller = getCurrentActivity().getPackageManager().getPackageInstaller();
-        mPackageInstaller.uninstall(packageName, sender.getIntentSender());
+    public void pickVideos(Promise promise) {
+        MainActivity.setPromise(promise);
+        int PICK_VIDEO_FILE = 2;
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setType("video/*");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, PICK_VIDEO_FILE);
     }
+
+    @ReactMethod
+    public void pickAudios(Promise promise) {
+        MainActivity.setPromise(promise);
+        MainActivity.setPickerRequestCode(4);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setType("audio/*");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, 4);
+    }
+
+    @ReactMethod
+    public void pickApks(Promise promise) {
+        MainActivity.setPromise(promise);
+        MainActivity.setPickerRequestCode(4);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setType("application/vnd.android.package-archive");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, 4);
+    }
+
+
+
+
+
 }

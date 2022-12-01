@@ -3,22 +3,12 @@ import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
-  PermissionsAndroid,
   StyleSheet,
   Button,
   ActivityIndicator,
-  TurboModuleRegistry,
+  Linking,
 } from 'react-native';
-import {
-  CachesDirectoryPath,
-  ExternalDirectoryPath,
-  DownloadDirectoryPath,
-  readdir,
-  ReadDirItem,
-  stat,
-  readFile,
-  PicturesDirectoryPath,
-} from 'react-native-fs';
+import {ReadDirItem, readFile} from 'react-native-fs';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import ManageApps from '../../../../utils/manageApps';
