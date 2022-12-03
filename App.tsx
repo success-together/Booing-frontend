@@ -38,15 +38,15 @@ export default function App({navigation}: any) {
           screenOptions={{
             headerShown: false,
           }}
-          initialRouteName="dashboardContainer">
-          {/* {!isLoggedIn ? (
-            <Stack.Group>
-              <Stack.Screen name="Home" component={Home} />
-              <Stack.Screen name="Login" component={Login} />
-              <Stack.Screen name="Register" component={Register} />
-              <Stack.Screen name="Verification" component={VerificationCode} />
-            </Stack.Group>
-          ) : ( */}
+          initialRouteName="DashboardContainer">
+          {/* {!isLoggedIn ? ( */}
+          <Stack.Group>
+            <Stack.Screen name="Home" component={Home} />
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Register" component={Register} />
+            <Stack.Screen name="Verification" component={VerificationCode} />
+          </Stack.Group>
+          {/* ) : ( */}
           <Stack.Group>
             <Stack.Screen
               name="DashboardContainer"

@@ -1,7 +1,7 @@
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer } from "@react-navigation/native";
-import React from "react";
-import { StyleSheet, Image } from "react-native";
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {NavigationContainer} from '@react-navigation/native';
+import React from 'react';
+import {StyleSheet, Image} from 'react-native';
 import {
   Account,
   ClearData,
@@ -12,18 +12,18 @@ import {
   UpdatePassword,
   UpdateProfile,
   Uploads,
-} from "../exports";
-import { small_logo } from "../../images/export";
-import Ionicons  from "react-native-vector-icons/Ionicons";
-import { Toast } from "react-native-toast-message/lib/src/Toast";
-import RegistredDevices from "./Account/RegistredDevices/RegistredDevices";
-import { store } from "../../shared";
-import { disconnect } from "../../shared/slices/Auth/AuthSlice";
+  Videos,
+} from '../exports';
+import {small_logo} from '../../images/export';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
+import {store} from '../../shared';
+import {disconnect} from '../../shared/slices/Auth/AuthSlice';
 
 const Stack = createBottomTabNavigator();
 
 const DashboardContainer = () => {
-
   return (
     <>
       <NavigationContainer independent={true}>
@@ -46,7 +46,12 @@ const DashboardContainer = () => {
               }
               // You can return any component that you like here!
               if (iconName == 'Booingcoin') {
-                return <Image style={{width : 50,height:50}} source={{uri :small_logo}} />;
+                return (
+                  <Image
+                    style={{width: 50, height: 50}}
+                    source={{uri: small_logo}}
+                  />
+                );
               }
               return (
                 <Ionicons name={iconName as any} size={size} color={color} />
@@ -105,6 +110,12 @@ const DashboardContainer = () => {
           <Stack.Screen
             name="RegistredDevices"
             component={RegistredDevices}
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
+          <Stack.Screen
+            name="Videos"
+            component={Videos}
             options={{
               tabBarItemStyle: {display: 'none'},
             }}></Stack.Screen>

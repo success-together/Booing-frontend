@@ -4,13 +4,11 @@ import {
   View,
   StyleSheet,
   Pressable,
-  TextInput,
   ScrollView,
 } from 'react-native';
 import FilesHeader from '../FilesHeader/FilesHeader';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
@@ -79,15 +77,14 @@ const Uploads = ({navigation}: {navigation: any}) => {
               <Feather name="image" size={24} color="#FF2960" />
               <Text style={styles.font}>Images</Text>
             </Pressable>
-            <View style={styles.icon}>
+            <Pressable onPress={() => navigation.navigate('Videos')} style={styles.icon}>
               <Feather
                 name="video"
                 size={24}
                 color="#FF00E4"
-                onPress={async () => await ManageApps.pickVideos()}
               />
               <Text style={styles.font}>Videos</Text>
-            </View>
+            </Pressable>
             <View style={styles.icon}>
               <MaterialIcons
                 name="audiotrack"
