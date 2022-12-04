@@ -56,9 +56,9 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
           <View>
             {devices[0]?.name !== '' &&
               devices[0]?.type !== '' &&
-              devices?.map(device => {
+              devices?.map((device,index) => {
                 return (
-                  <Pressable style={styles.button}>
+                  <Pressable style={styles.button} key={index}>
                     <View style={{flexDirection: 'row'}}>
                       <Octicons
                         style={styles.icon}

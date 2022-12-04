@@ -17,7 +17,7 @@ function Home({navigation} :{navigation: any}) {
           style={styles.button}
           onPress={() => navigation.navigate("Register")}
         >
-          <Text style={styles.text}>Get started</Text>
+          <Text style={styles.text}>Signup</Text>
         </Pressable>
       </View>
     </View>
