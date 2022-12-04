@@ -90,7 +90,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
           },
           error => {
             // See error code charts below.
-            console.log(error.code, error.message);
+            // console.log(error.code, error.message);
           },
           {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
         );
@@ -105,15 +105,15 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   const addNewDevice = async (data: any) => {
     // console.log(data);
 
-    await addDevice(data);
-
-    console.log(position);
-    if (position?.lat && position?.lon)
-      await updateGeoLocation({
-        device_ref: data.device_ref,
-        lat: position?.lat,
-        lon: position?.lon,
-      });
+    // await addDevice(data).then(async () => {
+    //   // console.log('**************' + position);
+    //   if (position?.lat && position?.lon)
+    //     await updateGeoLocation({
+    //       device_ref: data.device_ref,
+    //       lat: position?.lat,
+    //       lon: position?.lon,
+    //     });
+    // });
   };
 
   useEffect(() => {
@@ -166,14 +166,14 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                   lon: position.coords.longitude,
                 });
 
-                console.log({
-                  user_id: userData?._id,
-                  device_ref: deviceId,
-                  lat: position.coords.latitude,
-                  lon: position.coords.longitude,
-                  name: deviceName,
-                  type: system,
-                });
+                // console.log({
+                //   user_id: userData?._id,
+                //   device_ref: deviceId,
+                //   lat: position.coords.latitude,
+                //   lon: position.coords.longitude,
+                //   name: deviceName,
+                //   type: system,
+                // });
 
                 addNewDevice({
                   user_id: userData?._id,
@@ -186,7 +186,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               },
               error => {
                 // See error code charts below.
-                console.log(error.code, error.message);
+                // console.log(error.code, error.message);
               },
               {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
             );
@@ -195,7 +195,6 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       });
     });
   }, []);
-
 
   // useEffect(() => {
   //   console.log(Device.brand);
@@ -244,8 +243,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
           </View>
           <Pressable
             style={styles.scanContainer}
-            onPress={() => navigation.navigate("ClearData", {freeDiskStorage})}
-          >
+            onPress={() => navigation.navigate('ClearData', {freeDiskStorage})}>
             <MaterialIcons name="cleaning-services" size={24} color="white" />
             <Text style={{color: 'white'}}>Scan</Text>
           </Pressable>
