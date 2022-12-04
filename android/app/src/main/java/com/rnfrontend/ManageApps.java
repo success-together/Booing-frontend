@@ -35,6 +35,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.storage.StorageManager;
 import android.provider.MediaStore;
+import android.webkit.MimeTypeMap;
 
 
 import androidx.activity.ComponentActivity;
@@ -48,11 +49,13 @@ import androidx.activity.result.contract.ActivityResultContracts;
 
 import org.json.JSONException;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class ManageApps extends ReactContextBaseJavaModule {
+
     ManageApps(ReactApplicationContext context) {
         super(context);
     }
@@ -487,7 +490,108 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
+    public void getTempFiles(Promise promise) {
+        WritableArray tempFiles = new WritableNativeArray();
 
+        Uri uri;
+        Cursor cursor;
+        int column_index_data, column_index_title, column_index_size;
+        uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
+
+        String[] projection = { MediaStore.Files.FileColumns.DATA
+                ,MediaStore.Files.FileColumns.TITLE
+                ,MediaStore.Files.FileColumns.SIZE};
+
+        String selection = MediaStore.Files.FileColumns.MIME_TYPE + " = ?";
+
+        cursor = getCurrentActivity().getContentResolver().query(uri,
+                projection,
+                selection,
+                null,
+                null);
+
+        column_index_data = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA);
+        column_index_title = cursor.getColumnIndex(MediaStore.Files.FileColumns.TITLE);
+        column_index_size = cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE);
+
+        while (cursor.moveToNext()) {
+            WritableMap map = new WritableNativeMap();
+            map.putString("path", cursor.getString(column_index_data));
+            map.putString("name", cursor.getString(column_index_title));
+            map.putInt("size", cursor.getInt(column_index_size));
+
+            tempFiles.pushMap(map);
+        }
+
+        promise.resolve(tempFiles);
+    }
+
+    @ReactMethod
+    public void getTemp(Promise promise) {
+        WritableArray tempFiles = new WritableNativeArray();
+
+        Uri uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
+        int column_index_data, column_index_MimeType, column_index_name;
+
+        String[] projection = {
+                MediaStore.Files.FileColumns.DATA,
+                MediaStore.Files.FileColumns.MIME_TYPE,
+                MediaStore.Files.FileColumns.DISPLAY_NAME
+        };
+
+
+        String[] filterMimeType = {MimeTypeMap.getSingleton().getMimeTypeFromExtension("pdf")};
+
+        String selection = MediaStore.Files.FileColumns.MIME_TYPE + " = ?";
+
+        Cursor cursor = getReactApplicationContext().getContentResolver().query(
+                uri,
+                projection,
+                selection,
+                filterMimeType,
+                MediaStore.Files.FileColumns.DATE_ADDED
+        );
+
+        column_index_data = cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA);
+        column_index_MimeType = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
+        column_index_name = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
+
+        while (cursor.moveToNext()) {
+            WritableMap map = new WritableNativeMap();
+
+            map.putString("path", cursor.getString(column_index_data));
+            map.putString("mimetype", cursor.getString(column_index_MimeType));
+            map.putString("name", cursor.getString(column_index_name));
+
+            tempFiles.pushMap(map);
+        }
+
+        promise.resolve(tempFiles);
+    }
+
+    @ReactMethod
+    public void clearMyCache(Promise promise) {
+            Context packageContext = getReactApplicationContext();
+            List<File> directories = new ArrayList<>();
+            // collect all cache files
+            directories.add(packageContext.getCacheDir());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                Collections.addAll(directories, packageContext.getExternalCacheDirs());
+            } else {
+                directories.add(packageContext.getExternalCacheDir());
+            }
+
+            // remove cache files
+            int num = 0;
+            for(File f :directories) {
+                boolean isDeleted = deleteDir(f);
+                if(isDeleted) {
+                    num++;
+                }
+            }
+            promise.resolve(num == directories.size());
+    }
 
     public static Uri getFileContentUri(Context context, File file) {
         String filePath = file.getAbsolutePath();
@@ -549,26 +653,26 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-    public Boolean isSystemApp(String packageName) {
+    public int isSystemApp(String packageName) {
         try {
             PackageManager pm = getReactApplicationContextIfActiveOrWarn().getPackageManager();
             ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
             if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
-                return true;
+                return 1;
             }
-            return false;
+            return 0;
         }catch(PackageManager.NameNotFoundException e){
-           return false;
+           return -1;
         }
     }
 
     @ReactMethod
-    public void getAllInstalledApps(Promise promise) throws JSONException, PackageManager.NameNotFoundException {
+    public void getAllInstalledApps(Promise promise) {
         PackageManager pm = getReactApplicationContext().getPackageManager();
         List<ApplicationInfo> installedApplications = pm.getInstalledApplications(0);
         WritableArray arr = new WritableNativeArray();
         for(ApplicationInfo appInfo : installedApplications) {
-            if(!isSystemApp(appInfo.packageName)) {
+            if(isSystemApp(appInfo.packageName) == 0) {
                 WritableMap map = new WritableNativeMap();
                 map.putString("name", appInfo.name);
                 map.putString("packageName", appInfo.packageName);
@@ -668,38 +772,38 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-    @ReactMethod
-    public void getAllApps(Promise promise) {
-        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        List<ResolveInfo> pkgAppsList = getReactApplicationContext().getPackageManager()
-                .queryIntentActivities( mainIntent, 0);
-
-        WritableArray listOfAllApps = new WritableNativeArray();
-        if(pkgAppsList != null && pkgAppsList.size() != 0) {
-            for(ResolveInfo ri: pkgAppsList){
-                WritableMap map  = new WritableNativeMap();
-                String name = ri.activityInfo.name;
-                map.putString("name", name);
-                String packageName = ri.activityInfo.packageName;
-                map.putString("packageName", packageName);
-                if(isSystemApp(packageName)) {
-                    continue;
-                }
-                try {
-                    PackageInfo pi = getReactApplicationContext().getPackageManager().getPackageInfo(
-                            packageName, 0
-                    );
-                    long size = new File(pi.applicationInfo.publicSourceDir).length();
-                    map.putDouble("size", size);
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
-                listOfAllApps.pushMap(map);
-            }
-        }
-        promise.resolve(listOfAllApps);
-    }
+//    @ReactMethod
+//    public void getAllApps(Promise promise) {
+//        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+//        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+//        List<ResolveInfo> pkgAppsList = getReactApplicationContext().getPackageManager()
+//                .queryIntentActivities( mainIntent, 0);
+//
+//        WritableArray listOfAllApps = new WritableNativeArray();
+//        if(pkgAppsList != null && pkgAppsList.size() != 0) {
+//            for(ResolveInfo ri: pkgAppsList){
+//                WritableMap map  = new WritableNativeMap();
+//                String name = ri.activityInfo.name;
+//                map.putString("name", name);
+//                String packageName = ri.activityInfo.packageName;
+//                map.putString("packageName", packageName);
+//                if(isSystemApp(packageName)) {
+//                    continue;
+//                }
+//                try {
+//                    PackageInfo pi = getReactApplicationContext().getPackageManager().getPackageInfo(
+//                            packageName, 0
+//                    );
+//                    long size = new File(pi.applicationInfo.publicSourceDir).length();
+//                    map.putDouble("size", size);
+//                } catch (PackageManager.NameNotFoundException e) {
+//                    e.printStackTrace();
+//                }
+//                listOfAllApps.pushMap(map);
+//            }
+//        }
+//        promise.resolve(listOfAllApps);
+//    }
 //
 //    @ReactMethod
 //    public void manageUnusedApps(Promise promise) {
@@ -708,11 +812,61 @@ public class ManageApps extends ReactContextBaseJavaModule {
 //        promise.resolve(null);
 //    }
 
+//    @ReactMethod
+//    public void uninstallApp(String packageName) {
+//        Intent intent = new Intent(getCurrentActivity(), getCurrentActivity().getClass());
+//        PendingIntent sender = PendingIntent.getActivity(getCurrentActivity(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
+//        PackageInstaller mPackageInstaller = getCurrentActivity().getPackageManager().getPackageInstaller();
+//        mPackageInstaller.uninstall(packageName, sender.getIntentSender());
+//    }
+
     @ReactMethod
-    public void uninstallApp(String packageName) {
-        Intent intent = new Intent(getCurrentActivity(), getCurrentActivity().getClass());
-        PendingIntent sender = PendingIntent.getActivity(getCurrentActivity(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
-        PackageInstaller mPackageInstaller = getCurrentActivity().getPackageManager().getPackageInstaller();
-        mPackageInstaller.uninstall(packageName, sender.getIntentSender());
+    public void pickVideos(Promise promise) {
+        MainActivity.setPromise(promise);
+        int PICK_VIDEO_FILE = 2;
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setType("video/*");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, PICK_VIDEO_FILE);
     }
+
+    @ReactMethod
+    public void pickAudios(Promise promise) {
+        MainActivity.setPromise(promise);
+        MainActivity.setPickerRequestCode(4);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setType("audio/*");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, 4);
+    }
+
+    @ReactMethod
+    public void pickApks(Promise promise) {
+        MainActivity.setPromise(promise);
+        MainActivity.setPickerRequestCode(4);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setType("application/vnd.android.package-archive");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, 4);
+    }
+
+
+
+
+
 }
