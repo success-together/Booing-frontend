@@ -83,7 +83,11 @@ export const socialMediaSignIn = (data: {
     url: BaseUrl + '/socialMediaSignup',
     data,
     isSilent : false,
-    withoutToast :true
+    withoutToast :true,
+    successFun (data) {
+      console.log("data : ", data);
+      saveToken(data)
+    }
   });
 };
 

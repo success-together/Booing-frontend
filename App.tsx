@@ -38,7 +38,7 @@ export default function App({navigation}: any) {
           screenOptions={{
             headerShown: false,
           }}
-          initialRouteName="DashboardContainer">
+          initialRouteName="Home">
           {/* {!isLoggedIn ? ( */}
           <Stack.Group>
             <Stack.Screen name="Home" component={Home} />
