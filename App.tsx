@@ -12,19 +12,53 @@ import {useEffect, useState} from 'react';
 import {Loader} from './src/Components/exports';
 import {store} from './src/shared';
 import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  checkForDownloads,
+  checkForUploads,
+} from './src/shared/slices/Fragmentation/FragmentationService';
 
 const Stack = createNativeStackNavigator();
 
-export default function App({navigation}: any) {
-  const [isLoggedIn, setIsLoggedIn] = useState<any>(false);
-  const [isLoading, setIsLoading] = useState<any>(false);
+export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   useEffect(() => {
+    const checkForToken = async () => {
+      setIsLoading(true);
+
+      let token = await AsyncStorage.getItem('token');
+      console.log(token);
+      if (token) {
+        setIsLoggedIn(true);
+      } else {
+        setIsLoggedIn(false);
+      }
+      setIsLoading(false);
+    };
+    checkForToken();
+  }, []);
+
+  useEffect(() => {
+    // if (!isLoggedIn) AsyncStorage.removeItem('token');
     setTimeout(() => {
       store.subscribe(() => {
         setIsLoading(store.getState().root.isLoading);
         setIsLoggedIn(store.getState().authentication.isLoggedIn);
+        let userData: any = store.getState().authentication.loggedInUser;
+        if (
+          store.getState().authentication.isLoggedIn &&
+          store.getState().authentication.loggedInUser !== undefined &&
+          userData
+        ) {
+          checkForDownloads({
+            user_id: userData._id,
+          });
+          checkForUploads({user_id: userData._id});
+        }
       });
-    }, 1000);
+    }, 500);
   }, [
     store.getState().root.isLoading,
     store.getState().authentication.isLoggedIn,
@@ -39,21 +73,21 @@ export default function App({navigation}: any) {
             headerShown: false,
           }}
           initialRouteName="Home">
-          {/* {!isLoggedIn ? ( */}
-          <Stack.Group>
-            <Stack.Screen name="Home" component={Home} />
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Register" component={Register} />
-            <Stack.Screen name="Verification" component={VerificationCode} />
-          </Stack.Group>
-          {/* ) : ( */}
-          <Stack.Group>
-            <Stack.Screen
-              name="DashboardContainer"
-              component={DashboardContainer}
-            />
-          </Stack.Group>
-          {/* )} */}
+          {!isLoggedIn ? (
+            <Stack.Group>
+              <Stack.Screen name="Home" component={Home} />
+              <Stack.Screen name="Login" component={Login} />
+              <Stack.Screen name="Register" component={Register} />
+              <Stack.Screen name="Verification" component={VerificationCode} />
+            </Stack.Group>
+          ) : (
+            <Stack.Group>
+              <Stack.Screen
+                name="DashboardContainer"
+                component={DashboardContainer}
+              />
+            </Stack.Group>
+          )}
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />

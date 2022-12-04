@@ -1,31 +1,31 @@
-import Interceptor from "./Intersptor";
-import axios, { AxiosResponse } from "axios";
-import { store } from "./index";
-import { ExecutorInterface } from "../models/Executor";
-import { setRootLoading } from "./slices/rootSlice";
-import { Toast } from "react-native-toast-message/lib/src/Toast";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import Interceptor from './Intersptor';
+import axios, {AxiosResponse} from 'axios';
+import {BaseUrl, store} from './index';
+import {ExecutorInterface} from '../models/Executor';
+import {setRootLoading} from './slices/rootSlice';
+import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+var RNFS = require('react-native-fs');
 
 export function Executor(config: ExecutorInterface): Promise<any> {
-
-  // get token from asycn storage 
+  // get token from asycn storage
   // let token : string | null = '';
   // AsyncStorage.getItem("token").then(res => token = res);
 
-  // console.log("token" + store.getState().authentication.token);   
+  // console.log("token" + store.getState().authentication.token);
   return new Promise((resolve, reject) => {
     !config.isSilent && store.dispatch(setRootLoading(true));
     // Interceptor[config.method](config.url, config.data)
-    axios[config.method](config.url, config.data,
-       {
+    console.log(config.url);
+    console.log(config.data);
+
+    axios[config.method](config.url, config.data, {
       headers: {
         token: store.getState().authentication.token,
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-    }
-    )
+    })
       .then((res: AxiosResponse<any>) => {
         console.log(config.url);
         console.log(config.method);
@@ -71,4 +71,62 @@ export function Executor(config: ExecutorInterface): Promise<any> {
         reject(err);
       });
   });
+}
+
+const delay = (delayInms: number) => {
+  return new Promise(resolve => setTimeout(() => resolve, delayInms));
+};
+
+export async function fetchWithTimeout(
+  url: string,
+  options: {user_id: string},
+  time: number,
+  isDownload: boolean,
+) {
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(async () => {
+      console.log(url);
+
+      const result = await axios.post(url, options);
+
+      if (result.data.length > 0 && isDownload) {
+        var path = RNFS.DocumentDirectoryPath + '/download.json';
+        // write the file
+        RNFS.writeFile(path, result?.data.fragements, 'utf8')
+          .then(() => {
+            console.log('FILE WRITTEN!');
+          })
+          .catch((err: any) => {
+            console.log(err.message);
+          });
+      }
+
+      
+    }, time);
+  });
+
+  // let timerId = setInterval(() => console.log('checking for updates'), 5000);
+  // return Promise.race([
+  //   axios.post(url, options.body).then((res) => {
+  //     console.log(res);
+  //   }),
+  //   new Promise((_, reject) =>
+  //     setTimeout(() => {
+  //       clearInterval(timerId);
+  //       reject(new Error('timeout'));
+  //     }, 999999999999999),
+  //   ),
+  // ]);
+
+  // while (true) {
+  //   console.log('in');
+  //   let res = await axios.post(
+  //     BaseUrl + '/logged-in-user/checkForDownloads',
+  //     options,
+  //   );
+  //   console.log(res.data);
+
+  //   await delay(5000);
+  //   console.log('out');
+  // }
 }

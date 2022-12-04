@@ -6,6 +6,7 @@ import storage from 'redux-persist/lib/storage'
 import { rootSlice } from './slices/rootSlice';
 import { authentificationSlice } from './slices/Auth/AuthSlice';
 import { DevicesSlice } from './slices/Devices/DevicesSlice';
+import { fragmentationSlice } from './slices/Fragmentation/FragmentationSlice';
 
 const persistConfig = {
   key: 'root',
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
   root: rootSlice.reducer,
   authentication: authentificationSlice.reducer,
   devices: DevicesSlice.reducer,
+  fragmentation : fragmentationSlice.reducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
