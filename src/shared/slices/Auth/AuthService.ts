@@ -12,6 +12,7 @@ export const login = (data: Login) => {
     data,
     isSilent: false,
     successFun: (data: Login) => {
+      console.log('success fn')
       saveUserData(data);
       saveToken(data);
     },
@@ -85,18 +86,21 @@ export const socialMediaSignIn = (data: {
     isSilent : false,
     withoutToast :true,
     successFun(data) {
-      console.log(data);
-      saveSocialMediaUser(data)
+      saveSocialMediaUser(data);
     },
   });
 };
 
 const saveSocialMediaUser = (data: any) => {  
-  store.dispatch(setToken(data.signinToken))
+  store.dispatch(setToken(data.signinToken));
+  store.dispatch(setLoggedInUser({
+    isLoggedIn: true,
+    LoggedInUser: data?.data?.user,
+    userId: data?.data?.user?._id
+    }));
 }
 
 const saveUserData = (data: any) => {
-  console.log(data);
   store.dispatch(setLoggedInUser(data.data));
   // setToken(data.data.token);
 };

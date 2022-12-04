@@ -14,6 +14,7 @@ const Login = ({navigation}: {navigation: any}) => {
   const submit = async () => {
     if (email && password)
       await login({email, password}).then(res => {
+        console.log('then');
         if (res.success) navigation.navigate('DashboardContainer');
       });
   };

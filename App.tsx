@@ -47,6 +47,7 @@ export default function App() {
         setIsLoading(store.getState().root.isLoading);
         setIsLoggedIn(store.getState().authentication.isLoggedIn);
         let userData: any = store.getState().authentication.loggedInUser;
+        console.log({userData});
         if (
           store.getState().authentication.isLoggedIn &&
           store.getState().authentication.loggedInUser !== undefined &&

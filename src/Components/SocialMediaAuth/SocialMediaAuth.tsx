@@ -81,7 +81,6 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
       // Get the users ID token
       const {idToken, user} = await GoogleSignin.signIn();
-      console.log(user);
       await socialMediaSignIn({
         name: user.givenName || '',
         email: user.email,
@@ -92,7 +91,6 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
 
       // Sign-in the user with the credential
       await auth().signInWithCredential(googleCredential);
-      console.log(googleCredential);
       store.dispatch(setLoggedInUser(true));
       navigation.navigate('DashboardContainer');
     } catch (error: any) {

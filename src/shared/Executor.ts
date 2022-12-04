@@ -77,14 +77,12 @@ const delay = (delayInms: number) => {
 };
 
 export async function fetchWithTimeout(url : string , options: {user_id: string},time : number) {
-  return new Promise((resolve, reject) => {
-    const interval = setInterval(async () => {
-      console.log(url);
-      
+    (async function fetchDownloads() {
       const result = await axios.post(url, options);
-      console.log(result.data);
-    }, time);
-  });
+
+      console.log({fetchedDownloads: result.data});
+      setTimeout(fetchDownloads, time);
+    })();
   
   
   // let timerId = setInterval(() => console.log('checking for updates'), 5000);
