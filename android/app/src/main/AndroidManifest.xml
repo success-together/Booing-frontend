@@ -31,6 +31,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
                      />
 
+    <permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
 <!-- If your app doesn't need to access media files that other apps created,
      set the "maxSdkVersion" attribute to "28" instead. -->

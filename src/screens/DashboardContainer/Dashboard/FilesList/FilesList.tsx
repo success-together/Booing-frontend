@@ -20,6 +20,7 @@ import {deleteFile, deleteFiles} from '../../../../utils/filesManagment';
 import Toast from 'react-native-toast-message';
 import ManageApps from '../../../../utils/manageApps';
 import {PERMISSIONS, request} from 'react-native-permissions';
+import bytes from 'bytes';
 
 const icons = {
   Pictures: (size: number, color = '#8F8F8F') => (
@@ -61,6 +62,7 @@ interface RenderFileData {
     path: string;
     logo?: string;
     name: string;
+    visibleCacheSize?: number;
   };
 }
 
@@ -68,6 +70,8 @@ interface FilesListProps {
   data: [];
   label: keyof typeof icons;
   removeDeletedItems: Function;
+  size: number;
+  setTriggerRerender?: Function;
 }
 
 interface DeleteBtnProps {
@@ -104,6 +108,8 @@ export default function FilesList({
   data,
   label,
   removeDeletedItems,
+  size,
+  setTriggerRerender,
 }: FilesListProps) {
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
   const [showDeleteBtn, setShowDeleteBtn] = useState(false);
@@ -119,7 +125,6 @@ export default function FilesList({
   );
 
   const onDeleteFilesPress = useCallback(async () => {
-    // add permission check here (WRITE_TO_EXTERNAL_STORAGE)
     const paths = selectedFilesIds.reduce<string[]>((acc, id) => {
       const item = data.find((e: RenderFileData['item']) => e.id === id);
       if (item) {
@@ -143,6 +148,7 @@ export default function FilesList({
 
     if (isDeleted) {
       removeDeletedItems(selectedFilesIds, label);
+      setShowDeleteBtn(false);
       return Toast.show({
         type: 'success',
         text1: 'items deleted successfully',
@@ -151,7 +157,7 @@ export default function FilesList({
   }, [selectedFilesIds]);
 
   const renderFile = useCallback(
-    ({item: {name, id, path, logo}}: RenderFileData) => {
+    ({item: {name, id, path, logo, visibleCacheSize}}: RenderFileData) => {
       return (
         <File
           name={name}
@@ -159,6 +165,7 @@ export default function FilesList({
           id={id}
           logo={logo}
           onPress={onPress}
+          visibleCacheSize={visibleCacheSize}
           selected={selectedFilesIds.includes(id)}
           Icon={icons[label]}
         />
@@ -183,6 +190,15 @@ export default function FilesList({
   }, [selectedFilesIds]);
 
   const onDeleteAppsPress = async () => {
+    const granted = await ManageApps.checkAllFilesAccessPermission();
+    if (!granted) {
+      setShowDeleteBtn(false);
+      return Toast.show({
+        type: 'error',
+        text1: 'you need to enable access to delete apps cache !',
+      });
+    }
+
     const apps = selectedFilesIds.reduce<any[]>((acc, id) => {
       const item = data.find((e: RenderFileData['item']) => e.id === id);
       if (item) {
@@ -191,16 +207,22 @@ export default function FilesList({
       }
       return acc;
     }, []);
+    console.log({apps});
 
-    const deleted = await ManageApps.deleteAppCache(apps[0].packageName);
+    for (const app of apps) {
+      const arr = await ManageApps.clearAppVisibleCache(
+        (app as any).packageName,
+      );
+      console.log({arr});
+    }
 
+    if (setTriggerRerender) {
+      setTriggerRerender((prev: any) => !prev);
+    }
+
+    setShowDeleteBtn(false);
     Toast.show({
-      text1:
-        typeof deleted === 'string'
-          ? deleted
-          : deleted
-          ? 'cache deleted !'
-          : 'cannot delete cache',
+      text1: `cache cleared for apps ${apps.map(e => e.name).join(',')}`,
     });
   };
 
@@ -221,7 +243,15 @@ export default function FilesList({
             {label}
           </Text>
         </View>
-        <View style={{height: 30}}>
+        <View
+          style={{
+            height: 30,
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Text style={{marginRight: 10}}>{bytes(size)}</Text>
           {showDeleteBtn && (
             <DeleteBtn
               onPress={
@@ -241,7 +271,7 @@ export default function FilesList({
             showsHorizontalScrollIndicator={false}
           />
         ) : (
-          <Text>No Items Found !</Text>
+          <Text style={{color: 'black'}}>No Items Found !</Text>
         )}
       </SafeAreaView>
     </View>

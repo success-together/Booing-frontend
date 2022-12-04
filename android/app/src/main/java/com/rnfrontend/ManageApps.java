@@ -1,16 +1,24 @@
 package com.rnfrontend;
-import android.Manifest;
 import android.annotation.SuppressLint;
+import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.AppOpsManager;
 import android.app.DownloadManager;
 import android.app.PendingIntent;
 import android.app.RecoverableSecurityException;
+import android.app.usage.StorageStats;
+import android.app.usage.StorageStatsManager;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.IPackageStatsObserver;
+import android.content.pm.IPackageDataObserver;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
@@ -28,13 +36,23 @@ import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 
 import android.content.Context;
+import android.content.pm.PackageStats;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.nfc.tech.IsoDep;
 import android.os.Build;
 import android.os.Environment;
+import android.os.RemoteException;
+import android.os.UserHandle;
 import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.webkit.MimeTypeMap;
 
 
@@ -46,16 +64,22 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.ActivityResultRegistry;
 import androidx.activity.result.ActivityResultRegistryOwner;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import org.json.JSONException;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class ManageApps extends ReactContextBaseJavaModule {
 
+    static Promise promise;
     ManageApps(ReactApplicationContext context) {
         super(context);
     }
@@ -258,7 +282,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 getReactApplicationContext().getCurrentActivity().startIntentSenderForResult(
                         intentSender, 100, null, 0, 0, 0
                 );
-                promise.resolve(true);
+                MainActivity.setPromise(promise);
             }else {
                 promise.resolve(false);
             }
@@ -300,7 +324,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
 
-
         try {
             for(Uri uri: filesUris){
                 getReactApplicationContext().getContentResolver().delete(
@@ -330,7 +353,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 getReactApplicationContext().getCurrentActivity().startIntentSenderForResult(
                         intentSender, 100, null, 0, 0, 0
                 );
-                promise.resolve(true);
+                MainActivity.setPromise(promise);
             }else {
                 promise.resolve(false);
             }
@@ -372,7 +395,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
 
-
         try {
             for(Uri uri: filesUris){
                 getReactApplicationContext().getContentResolver().delete(
@@ -402,7 +424,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 getReactApplicationContext().getCurrentActivity().startIntentSenderForResult(
                         intentSender, 100, null, 0, 0, 0
                 );
-                promise.resolve(true);
+                MainActivity.setPromise(promise);
             }else {
                 promise.resolve(false);
             }
@@ -446,7 +468,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         ArrayList<Uri> arr = new ArrayList<>();
         for(int i = 0; i < directories.size(); i++) {
-            arr.add(getFileContentUri(packageContext, directories.get(i)));
+//            arr.add(getFileContentUri(packageContext, directories.get(i)));
         }
 
 
@@ -571,88 +593,126 @@ public class ManageApps extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void clearMyCache(Promise promise) {
-            Context packageContext = getReactApplicationContext();
+    public void clearAppVisibleCache(String packageName, Promise promise) throws PackageManager.NameNotFoundException {
+        Context packageContext = getReactApplicationContext().createPackageContext(packageName, 0);
             List<File> directories = new ArrayList<>();
             // collect all cache files
-            directories.add(packageContext.getCacheDir());
+            if(packageName == getReactApplicationContext().getPackageName()) {
+                directories.add(packageContext.getCacheDir());
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 Collections.addAll(directories, packageContext.getExternalCacheDirs());
             } else {
                 directories.add(packageContext.getExternalCacheDir());
             }
 
+            WritableArray arr = new WritableNativeArray();
             // remove cache files
             int num = 0;
             for(File f :directories) {
-                boolean isDeleted = deleteDir(f);
-                if(isDeleted) {
-                    num++;
+                if(f != null && f.exists()) {
+                    boolean isDeleted = deleteDirectory(f);
+                    arr.pushBoolean(isDeleted);
+                    arr.pushString(f.getAbsolutePath());
+                    if(isDeleted) {
+                        num++;
+                    }
                 }
             }
-            promise.resolve(num == directories.size());
+            promise.resolve(arr);
     }
 
-    public static Uri getFileContentUri(Context context, File file) {
+    public WritableMap getFileContentUri(Context context, File file) {
+        WritableMap map = new WritableNativeMap();
         String filePath = file.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
                 MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL),
-                new String[] { MediaStore.Files.FileColumns._ID },
+                new String[] { MediaStore.Files.FileColumns._ID,
+                        MediaStore.Files.FileColumns.SIZE
+                },
                 MediaStore.Files.FileColumns.DATA + "=? ",
                 new String[] { filePath }, null);
         if (cursor != null && cursor.moveToFirst()) {
             @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Files.FileColumns._ID));
+            @SuppressLint("Range") long size = cursor.getLong(cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE));
             cursor.close();
-            return Uri.withAppendedPath(MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL), "" + id);
+            map.putString("contentUri",
+                    Uri.withAppendedPath(MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL), "" + id).toString());
+            map.putDouble("size", size);
+            return map;
         } else {
-            if (file.exists()) {
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Files.FileColumns.DATA, filePath);
-                return context.getContentResolver().insert(
-                        MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL), values);
-            } else {
                 Cursor cursor1 = context.getContentResolver().query(
                         MediaStore.Files.getContentUri(MediaStore.VOLUME_INTERNAL),
-                        new String[] { MediaStore.Files.FileColumns._ID },
+                        new String[] { MediaStore.Files.FileColumns._ID,
+                                MediaStore.Files.FileColumns.SIZE},
                         MediaStore.Files.FileColumns.DATA + "=? ",
                         new String[] { filePath }, null);
                 if (cursor1 != null && cursor1.moveToFirst()) {
-                    @SuppressLint("Range") int id = cursor1.getInt(cursor1.getColumnIndex(MediaStore.Files.FileColumns._ID));
-                    cursor1.close();
-                    return Uri.withAppendedPath(MediaStore.Files.getContentUri(MediaStore.VOLUME_INTERNAL), "" + id);
+                    @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Files.FileColumns._ID));
+                    @SuppressLint("Range") long size = cursor.getLong(cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE));
+                    cursor.close();
+                    map.putString("contentUri",
+                            Uri.withAppendedPath(MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL), "" + id).toString());
+                    map.putDouble("size", size);
+                    return map;
                 } else {
-                    if (file.exists()) {
-                        ContentValues values = new ContentValues();
-                        values.put(MediaStore.Files.FileColumns.DATA, filePath);
-                        return context.getContentResolver().insert(
-                                MediaStore.Files.getContentUri(MediaStore.VOLUME_INTERNAL), values);
+                    Cursor cursor2 = context.getContentResolver().query(
+                            MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+                            new String[] { MediaStore.Files.FileColumns._ID,
+                                    MediaStore.Files.FileColumns.SIZE},
+                            MediaStore.Files.FileColumns.DATA + "=? ",
+                            new String[] { filePath }, null);
+                    if (cursor2 != null && cursor2.moveToFirst()) {
+                        @SuppressLint("Range") int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Files.FileColumns._ID));
+                        @SuppressLint("Range") long size = cursor.getLong(cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE));
+                        cursor.close();
+                        map.putString("contentUri",
+                                Uri.withAppendedPath(MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL), "" + id).toString());
+                        map.putDouble("size", size);
+                        return map;
                     } else {
-                        Cursor cursor2 = context.getContentResolver().query(
-                                MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
-                                new String[] { MediaStore.Files.FileColumns._ID },
-                                MediaStore.Files.FileColumns.DATA + "=? ",
-                                new String[] { filePath }, null);
-                        if (cursor2 != null && cursor2.moveToFirst()) {
-                            @SuppressLint("Range") int id = cursor2.getInt(cursor2.getColumnIndex(MediaStore.Files.FileColumns._ID));
-                            cursor2.close();
-                            return Uri.withAppendedPath(MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), "" + id);
-                        } else {
-                            if (file.exists()) {
-                                ContentValues values = new ContentValues();
-                                values.put(MediaStore.Files.FileColumns.DATA, filePath);
-                                return context.getContentResolver().insert(
-                                        MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values);
-                            } else {
-                                return null;
-                            }
-                        }
+                        return null;
                     }
                 }
-
-            }
         }
     }
 
+    public long getFolderSize(File file) {
+        File directory = readlink(file); // resolve symlinks to internal storage
+        String path = directory.getAbsolutePath();
+        Cursor cursor = null;
+
+        long size = 0;
+        try {
+            cursor = getReactApplicationContext().getContentResolver().query(MediaStore.Files.getContentUri("external"),
+                    new String[]{MediaStore.MediaColumns.SIZE},
+                    MediaStore.MediaColumns.DATA + " LIKE ?",
+                    new String[]{path + "/%"},
+                    null);
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    size += cursor.getLong(0);
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return size;
+    }
+    public static File readlink(File file) {
+        File f;
+        try {
+            f = file.getCanonicalFile();
+        } catch (IOException e) {
+            return file;
+        }
+        if (f.getAbsolutePath().equals(file.getAbsolutePath())) {
+            return f;
+        }
+        return readlink(f);
+    }
     public int isSystemApp(String packageName) {
         try {
             PackageManager pm = getReactApplicationContextIfActiveOrWarn().getPackageManager();
@@ -666,21 +726,21 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-    @ReactMethod
-    public void getAllInstalledApps(Promise promise) {
-        PackageManager pm = getReactApplicationContext().getPackageManager();
-        List<ApplicationInfo> installedApplications = pm.getInstalledApplications(0);
-        WritableArray arr = new WritableNativeArray();
-        for(ApplicationInfo appInfo : installedApplications) {
-            if(isSystemApp(appInfo.packageName) == 0) {
-                WritableMap map = new WritableNativeMap();
-                map.putString("name", appInfo.name);
-                map.putString("packageName", appInfo.packageName);
-                arr.pushMap(map);
-            }
-        }
-        promise.resolve(arr);
-    }
+//    @ReactMethod
+//    public void getAllInstalledApps(Promise promise) {
+//        PackageManager pm = getReactApplicationContext().getPackageManager();
+//        List<ApplicationInfo> installedApplications = pm.getInstalledApplications(0);
+//        WritableArray arr = new WritableNativeArray();
+//        for(ApplicationInfo appInfo : installedApplications) {
+//            if(isSystemApp(appInfo.packageName) == 0) {
+//                WritableMap map = new WritableNativeMap();
+//                map.putString("name", appInfo.name);
+//                map.putString("packageName", appInfo.packageName);
+//                arr.pushMap(map);
+//            }
+//        }
+//        promise.resolve(arr);
+//    }
 
     @ReactMethod
     public void isAppInstalled(String packageName, Promise promise) {
@@ -705,105 +765,139 @@ public class ManageApps extends ReactContextBaseJavaModule {
             map.putBoolean("isFile", f.isFile());
             map.putBoolean("isDir", f.isDirectory());
             map.putString("URI", f.toURI().toString());
-//            map.putBoolean("Deleted", delete(f));
 
 
             promise.resolve(map);
-//            if(!f.canRead()) {
-//                promise.resolve("cannot read this file");
-//            }
-//            if(!f.canWrite()) {
-//                promise.resolve("cannot read this file");
-//            }
-//            if(f.exists()) {
-//                if(f.delete()) {
-//                    promise.resolve("deleted");
-//                }else {
-//                    promise.resolve("cannot delete");
-//                }
-//            }else {
-//                promise.resolve("not exist");
-//            }
     }
+
 
     @ReactMethod
-    public void removeAppCache(String packageName, Promise promise) {
-        try {
-            Context packageContext = getReactApplicationContext().createPackageContext(packageName, 0);
-            List<File> directories = new ArrayList<>();
-            // collect all cache files
-            directories.add(packageContext.getCacheDir());
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                Collections.addAll(directories, packageContext.getExternalCacheDirs());
-            } else {
-                directories.add(packageContext.getExternalCacheDir());
-            }
+    public void checkAllFilesAccessPermission(Promise promise) {
+        MainActivity.setPromise(promise);
 
-            // remove cache files
-            int num = 0;
-            for(File f :directories) {
-                boolean isDeleted = deleteDir(f);
-                if(isDeleted) {
-                    num++;
-                }
+        // If you have access to the external storage, do whatever you need
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Environment.isExternalStorageManager()){
+                promise.resolve(true);
+            }else{
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                Uri uri = Uri.fromParts("package", getCurrentActivity().getPackageName(), null);
+                intent.setData(uri);
+
+                getCurrentActivity().startActivityForResult(intent, 22);
             }
-            promise.resolve(num == directories.size());
-        }catch (PackageManager.NameNotFoundException e) {
-            promise.reject("remove app cache error", "app cache cannot be deleted", e);
         }
     }
 
+   @ReactMethod
+   public void getAllInstalledApps(Promise promise) {
+        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        List<ResolveInfo> pkgAppsList = getReactApplicationContext().getPackageManager()
+                .queryIntentActivities( mainIntent, 0);
+
+        WritableArray listOfAllApps = new WritableNativeArray();
+        if(pkgAppsList != null && pkgAppsList.size() != 0) {
+            for(ResolveInfo ri: pkgAppsList){
+                WritableMap map  = new WritableNativeMap();
+                CharSequence name = ri.activityInfo.loadLabel( getReactApplicationContext().getPackageManager());
+                map.putString("name", name.toString());
+                String packageName = ri.activityInfo.packageName;
+                map.putString("packageName", packageName);
+                try {
+                    PackageInfo pi = getReactApplicationContext().getPackageManager().getPackageInfo(
+                            packageName, 0
+                    );
+                    Context packageContext = getReactApplicationContext().createPackageContext(packageName, 0);
+
+                    StorageStatsManager storageStatsManager = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        storageStatsManager = (StorageStatsManager)
+                                getReactApplicationContext().getSystemService(Context.STORAGE_STATS_SERVICE);
+                    }
+                    StorageManager storageManager = (StorageManager)  getReactApplicationContext()
+                             .getSystemService(Context.STORAGE_SERVICE);
+                    try {
+                        ApplicationInfo ai = getReactApplicationContext().
+                                getPackageManager().getApplicationInfo(packageName, 0);
+                        StorageStats storageStats = null;
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            storageStats = storageStatsManager.queryStatsForPackage(ai.storageUuid, packageName,null );
+                        }
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            long cacheSize =storageStats.getCacheBytes();
+                            map.putString("ca", packageName);
+                        }
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                            long dataSize =storageStats.getDataBytes();
+                        }
+
+                    } catch (Exception e) {}
 
 
-    public static boolean deleteDir(File dir) {
-        if (dir != null && dir.isDirectory()) {
-            String[] children = dir.list();
-            for (int i = 0; i < children.length; i++) {
-                boolean success = deleteDir(new File(dir, children[i]));
-                if (!success) {
-                    return false;
+
+
+
+                    // hidden cache
+                    long hiddenCacheSize = packageContext.getCacheDir().length();
+
+                    map.putDouble("hiddenCacheSize", hiddenCacheSize);
+
+                    // visible cache
+                    List<File> directories = new ArrayList<>();
+                    // collect all cache files
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        Collections.addAll(directories, packageContext.getExternalCacheDirs());
+                    } else {
+                        directories.add(packageContext.getExternalCacheDir());
+                    }
+
+
+                    long visibleCacheSize = 0;
+
+                    if(directories != null && directories.size() > 0) {
+                        for(File dir : directories) {
+                            if(dir != null && dir.exists()) {
+                                visibleCacheSize += dir.length();
+                            }
+                        }
+                    }
+
+                    map.putDouble("visibleCacheSize", visibleCacheSize);
+
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
                 }
+                listOfAllApps.pushMap(map);
             }
-            return dir.delete();
-        } else if(dir!= null && dir.isFile()) {
-            return dir.delete();
-        } else {
-            return false;
         }
+        promise.resolve(listOfAllApps);
+   }
+
+
+   // acces to dwnlaods
+    //volume.createAccessIntent(Environment.DIRECTORY_DOWNLOADS);
+   //get docs
+//   Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+//        intent.addCategory(Intent.CATEGORY_OPENABLE);
+//        intent.setType("*/*");
+//        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] {
+//        "application/pdf", // .pdf
+//                "application/vnd.oasis.opendocument.text", // .odt
+//                "text/plain" // .txt
+//    });
+//    startActivityForResult(intent, REQUEST_CODE);
+
+
+    @ReactMethod
+    public void clearAllVisibleCache(Promise promise) {
+        MainActivity.setPromise(promise);
+        Intent intent = new Intent(StorageManager.ACTION_CLEAR_APP_CACHE);
+        getCurrentActivity().startActivityForResult(intent, 200);
     }
 
-//    @ReactMethod
-//    public void getAllApps(Promise promise) {
-//        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-//        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-//        List<ResolveInfo> pkgAppsList = getReactApplicationContext().getPackageManager()
-//                .queryIntentActivities( mainIntent, 0);
-//
-//        WritableArray listOfAllApps = new WritableNativeArray();
-//        if(pkgAppsList != null && pkgAppsList.size() != 0) {
-//            for(ResolveInfo ri: pkgAppsList){
-//                WritableMap map  = new WritableNativeMap();
-//                String name = ri.activityInfo.name;
-//                map.putString("name", name);
-//                String packageName = ri.activityInfo.packageName;
-//                map.putString("packageName", packageName);
-//                if(isSystemApp(packageName)) {
-//                    continue;
-//                }
-//                try {
-//                    PackageInfo pi = getReactApplicationContext().getPackageManager().getPackageInfo(
-//                            packageName, 0
-//                    );
-//                    long size = new File(pi.applicationInfo.publicSourceDir).length();
-//                    map.putDouble("size", size);
-//                } catch (PackageManager.NameNotFoundException e) {
-//                    e.printStackTrace();
-//                }
-//                listOfAllApps.pushMap(map);
-//            }
-//        }
-//        promise.resolve(listOfAllApps);
-//    }
+
 //
 //    @ReactMethod
 //    public void manageUnusedApps(Promise promise) {
@@ -819,6 +913,15 @@ public class ManageApps extends ReactContextBaseJavaModule {
 //        PackageInstaller mPackageInstaller = getCurrentActivity().getPackageManager().getPackageInstaller();
 //        mPackageInstaller.uninstall(packageName, sender.getIntentSender());
 //    }
+boolean deleteDirectory(File directoryToBeDeleted) {
+    File[] allContents = directoryToBeDeleted.listFiles();
+    if (allContents != null) {
+        for (File file : allContents) {
+            deleteDirectory(file);
+        }
+    }
+    return directoryToBeDeleted.delete();
+}
 
     @ReactMethod
     public void pickVideos(Promise promise) {
@@ -864,9 +967,28 @@ public class ManageApps extends ReactContextBaseJavaModule {
 //        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
         getCurrentActivity().startActivityForResult(intent, 4);
     }
+//    ublic void findReviewsToLoad() {
+//        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+//        intent.addCategory(Intent.CATEGORY_OPENABLE);
+//        String [] mimeTypes = {"text/csv", "text/comma-separated-values"};
+//        intent.setType("*/*");
+//        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+//        startActivityForResult(intent, FIND_FILE_REQUEST_CODE);
+//    }
 
+    @ReactMethod
+    public void freeSpace(Promise promise) {
+        MainActivity.setPromise(promise);
+        Intent intent = new Intent(StorageManager.ACTION_MANAGE_STORAGE);
+        getCurrentActivity().startActivityForResult(intent, 100);
+    }
 
-
+    @ReactMethod
+    public void openTree(Promise promise) {
+        MainActivity.setPromise(promise);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        getCurrentActivity().startActivityForResult(intent, 100);
+    }
 
 
 }
