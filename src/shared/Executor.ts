@@ -5,6 +5,7 @@ import {ExecutorInterface} from '../models/Executor';
 import {setRootLoading} from './slices/rootSlice';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+var RNFS = require('react-native-fs');
 
 export function Executor(config: ExecutorInterface): Promise<any> {
   // get token from asycn storage
@@ -76,15 +77,34 @@ const delay = (delayInms: number) => {
   return new Promise(resolve => setTimeout(() => resolve, delayInms));
 };
 
-export async function fetchWithTimeout(url : string , options: {user_id: string},time : number) {
-    (async function fetchDownloads() {
+export async function fetchWithTimeout(
+  url: string,
+  options: {user_id: string},
+  time: number,
+  isDownload: boolean,
+) {
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(async () => {
+      console.log(url);
+
       const result = await axios.post(url, options);
 
-      console.log({fetchedDownloads: result.data});
-      setTimeout(fetchDownloads, time);
-    })();
-  
-  
+      if (result.data.length > 0 && isDownload) {
+        var path = RNFS.DocumentDirectoryPath + '/download.json';
+        // write the file
+        RNFS.writeFile(path, result?.data.fragements, 'utf8')
+          .then(() => {
+            console.log('FILE WRITTEN!');
+          })
+          .catch((err: any) => {
+            console.log(err.message);
+          });
+      }
+
+      
+    }, time);
+  });
+
   // let timerId = setInterval(() => console.log('checking for updates'), 5000);
   // return Promise.race([
   //   axios.post(url, options.body).then((res) => {
@@ -110,4 +130,3 @@ export async function fetchWithTimeout(url : string , options: {user_id: string}
   //   console.log('out');
   // }
 }
-
