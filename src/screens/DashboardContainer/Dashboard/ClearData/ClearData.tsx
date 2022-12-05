@@ -7,6 +7,7 @@ import {
   Button,
   ActivityIndicator,
   Linking,
+  PermissionsAndroid,
 } from 'react-native';
 import {ReadDirItem, readFile} from 'react-native-fs';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -19,6 +20,11 @@ import {nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {store} from '../../../../shared';
+
+const calcSpace = (arr: {size: number}[], field = 'size', minVal = 0) =>
+  arr.reduce((acc, elem) => acc + (elem as any)[field], 0) > minVal
+    ? arr.reduce((acc, elem) => acc + (elem as any)[field], 0)
+    : 0;
 
 export interface IImage extends ReadDirItem {
   id: string;
@@ -34,6 +40,8 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [videos, setVideos] = useState([]);
   const [apps, setApps] = useState([]);
   const [music, setMusic] = useState([]);
+
+  const [triggerRerender, setTriggerRerender] = useState(false);
 
   const addId = (arr: []) => {
     arr.forEach(e => Object.assign(e, {id: nanoid(10)}));
@@ -77,7 +85,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       }
       store.dispatch(setRootLoading(false));
     })();
-  }, []);
+  }, [triggerRerender]);
 
   const removeDeletedItems = (ids: string[], label: string) => {
     console.log({ids, label});
@@ -101,13 +109,14 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
 
   const clearMyCache = () => {
     setShowModal({show: true, loading: true});
-    ManageApps.clearMyCache().then(() => {
+    ManageApps.clearAppVisibleCache('com.rnfrontend').then(() => {
       setTimeout(() => {
         setShowModal({show: true, loading: false});
       }, 3000);
     });
   };
 
+  console.log({apps});
   return (
     <View>
       {showModal.show && (
@@ -171,6 +180,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
               onPress={() => navigation.goBack()}
             />
             <Text style={styles.text}>Available Storage</Text>
+
             <Feather name="search" size={20} color="white" />
           </View>
           <View style={styles.percentageContainer}>
@@ -185,26 +195,42 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
             <FilesList
               data={images as []}
               label="Pictures"
+              size={calcSpace(images)}
               removeDeletedItems={removeDeletedItems}
             />
             <FilesList
               data={videos as []}
               label="Videos"
               removeDeletedItems={removeDeletedItems}
+              size={calcSpace(videos)}
             />
             <FilesList
               data={music as []}
               label="Music"
               removeDeletedItems={removeDeletedItems}
+              size={calcSpace(music)}
             />
             <FilesList
-              data={apps as []}
+              data={
+                apps.filter(
+                  (e: any) =>
+                    e.visibleCacheSize > 6144 || e.hiddenCacheSize > 6144,
+                ) as []
+              }
               label="Cache"
               removeDeletedItems={removeDeletedItems}
+              size={calcSpace(apps, 'visibleCacheSize', 0)}
+              setTriggerRerender={setTriggerRerender}
             />
           </>
         )}
-        <Button title="clear application cache" onPress={clearMyCache} />
+        <View style={{marginTop: 10}}></View>
+        <Button
+          title="free up space (manullay)"
+          onPress={async () => await ManageApps.freeSpace()}
+        />
+        <View style={{marginTop: 10}} />
+        <Button title="clear my cache" onPress={async () => clearMyCache()} />
       </View>
     </View>
   );

@@ -2,6 +2,7 @@ package com.rnfrontend;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import com.facebook.react.ReactActivity;
@@ -45,6 +46,49 @@ public class MainActivity extends ReactActivity {
       promise.resolve(arr);
       promise = null;
       pickerRequestCode = 0;
+    }else if(requestCode == 100 && resultCode == Activity.RESULT_OK) {
+      promise.resolve(true);
+      promise = null;
+    }else if(requestCode == 22) {
+      if(resultCode == Activity.RESULT_OK){
+        promise.resolve(true);
+        promise = null;
+      }else {
+        promise.resolve(false);
+        promise = null;
+      }
+    }else if(requestCode == 200) {
+      if(resultCode == Activity.RESULT_OK) {
+        promise.resolve("cache cleared");
+      }else {
+        promise.resolve("cache not cleared");
+      }
+
+    }
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode,
+                                         String permissions[], int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    switch (requestCode) {
+      case 10: {
+        // If request is cancelled, the result arrays are empty.
+        if (grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          promise.resolve("granted");
+        } else {
+          promise.resolve("not granted");
+        }
+        return;
+      }
+      case 101:
+        if (grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          promise.resolve(true);
+        }else {
+          promise.resolve(false);
+        }
     }
   }
   /**
