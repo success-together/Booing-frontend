@@ -99,6 +99,8 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   };
 
   const getUserData = () => {
+    console.log('store',store.getState().authentication.loggedInUser);
+    
     setLoggedUser(store.getState().authentication.loggedInUser);
   };
 
