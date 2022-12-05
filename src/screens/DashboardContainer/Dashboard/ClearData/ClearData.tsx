@@ -219,12 +219,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
               size={calcSpace(music)}
             />
             <FilesList
-              data={
-                apps.filter(
-                  (e: any) =>
-                    e.visibleCacheSize > 6144 || e.hiddenCacheSize > 6144,
-                ) as []
-              }
+              data={apps.filter((e: any) => e.visibleCacheSize > 0) as []}
               label="Cache"
               removeDeletedItems={removeDeletedItems}
               size={calcSpace(apps, 'visibleCacheSize', 0)}
