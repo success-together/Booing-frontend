@@ -892,7 +892,12 @@ public class ManageApps extends ReactContextBaseJavaModule {
         return 0;
     }
 
+    @ReactMethod
+    public void getDownloads(Promise p) {
 
+    }
+
+    // downloadCacheDirectory from Enviremet
    // acces to dwnlaods
     //volume.createAccessIntent(Environment.DIRECTORY_DOWNLOADS);
    //get docs
@@ -905,7 +910,11 @@ public class ManageApps extends ReactContextBaseJavaModule {
 //                "text/plain" // .txt
 //    });
 //    startActivityForResult(intent, REQUEST_CODE);
-
+// load thumbnail
+    // Load thumbnail of a specific media item.
+//    Bitmap thumbnail =
+//            getApplicationContext().getContentResolver().loadThumbnail(
+//                    content-uri, new Size(640, 480), null);
 
     @ReactMethod
     public void clearAllVisibleCache(Promise promise) {
@@ -916,12 +925,12 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
 
 //
-//    @ReactMethod
-//    public void manageUnusedApps(Promise promise) {
-//        Intent mainIntent =  new Intent(Intent.ACTION_MANAGE_UNUSED_APPS);
-//        getCurrentActivity().startActivity(mainIntent);
-//        promise.resolve(null);
-//    }
+    @ReactMethod
+    public void manageUnusedApps(Promise promise) {
+        Intent mainIntent =  new Intent(Intent.ACTION_MANAGE_UNUSED_APPS);
+        getCurrentActivity().startActivity(mainIntent);
+        promise.resolve(null);
+    }
 
 //    @ReactMethod
 //    public void uninstallApp(String packageName) {

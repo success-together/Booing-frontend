@@ -20,6 +20,7 @@ import {nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {store} from '../../../../shared';
+import Toast from 'react-native-toast-message';
 
 const calcSpace = (arr: {size: number}[], field = 'size', minVal = 0) =>
   arr.reduce((acc, elem) => acc + (elem as any)[field], 0) > minVal
@@ -115,6 +116,13 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       }, 3000);
     });
   };
+
+  async function clearAllAppsCache() {
+    const granted = await ManageApps.checkAllFilesAccessPermission();
+    if (granted) {
+      await ManageApps.clearAllVisibleCache();
+    }
+  }
 
   console.log({apps});
   return (
@@ -225,6 +233,11 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
           </>
         )}
         <View style={{marginTop: 10}}></View>
+        <Button
+          title="clear all apps visible cache"
+          onPress={clearAllAppsCache}
+        />
+        <View style={{marginTop: 10}} />
         <Button
           title="free up space (manullay)"
           onPress={async () => await ManageApps.freeSpace()}
