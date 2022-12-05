@@ -836,9 +836,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
                     } catch (Exception e) {}
 
 
-
-
-
                     // hidden cache
                     long hiddenCacheSize = packageContext.getCacheDir().length();
 
@@ -859,7 +856,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
                     if(directories != null && directories.size() > 0) {
                         for(File dir : directories) {
                             if(dir != null && dir.exists()) {
-                                visibleCacheSize += dir.length();
+                                visibleCacheSize += dirSize(dir);
                             }
                         }
                     }
@@ -874,6 +871,26 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
         promise.resolve(listOfAllApps);
    }
+
+    public  long dirSize(File dir) {
+        if (dir.exists()) {
+            long result = 0;
+            File[] fileList = dir.listFiles();
+            if (fileList != null) {
+                for(int i = 0; i < fileList.length; i++) {
+                    // Recursive call if it's a directory
+                    if(fileList[i].isDirectory()) {
+                        result += dirSize(fileList[i]);
+                    } else {
+                        // Sum the file size in bytes
+                        result += fileList[i].length();
+                    }
+                }
+            }
+            return result; // return the file size
+        }
+        return 0;
+    }
 
 
    // acces to dwnlaods

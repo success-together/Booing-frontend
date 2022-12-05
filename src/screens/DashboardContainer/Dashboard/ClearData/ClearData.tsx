@@ -219,7 +219,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
               }
               label="Cache"
               removeDeletedItems={removeDeletedItems}
-              size={calcSpace(apps, 'visibleCacheSize', 6144)}
+              size={calcSpace(apps, 'visibleCacheSize', 0)}
               setTriggerRerender={setTriggerRerender}
             />
           </>
