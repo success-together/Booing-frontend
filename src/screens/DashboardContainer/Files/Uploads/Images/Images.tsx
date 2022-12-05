@@ -12,11 +12,29 @@ import FilesHeader from '../../FilesHeader/FilesHeader';
 import ImagePicker from 'react-native-image-picker';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {BaseUrl, store} from '../../../../../shared';
+
 import axios from 'axios';
 
 const Images = ({navigation}: {navigation: any}) => {
   const [image, setImage] = useState<Array<any>>([]);
   let userData: any = store.getState().authentication.loggedInUser;
+import { downloadFiles } from '../../../../../shared/slices/Fragmentation/FragmentationService';
+
+const Images = ({navigation}: {navigation: any}) => {
+  const [image, setImage] = useState<Array<any>>([]);
+  const [downloadedImages, setDownloadedImages] = useState<Array<any>>([])
+
+  useEffect(() => {
+    let user:any = store.getState().authentication.loggedInUser
+    let user_id = user?._id
+    downloadFiles({user_id:user_id}).then((res) =>{
+      console.log(res.data);
+      
+      setDownloadedImages(res.data)
+    })
+
+  }, [])
+  
 
   const createFormData = (photo: any, body = {}) => {
     let data = new FormData();

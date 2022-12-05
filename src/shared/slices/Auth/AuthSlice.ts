@@ -23,6 +23,8 @@ export const authentificationSlice = createSlice({
       },
       action: PayloadAction<any>,
     ) => {
+      console.log(action.payload);
+      
       state.isLoggedIn = true;
       state.loggedInUser = action.payload.user;
       state.userId = action.payload.user._id
