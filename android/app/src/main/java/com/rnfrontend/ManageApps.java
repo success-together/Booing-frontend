@@ -854,6 +854,8 @@ public class ManageApps extends ReactContextBaseJavaModule {
                     }
 
 
+                    // TODO : get length() of files inside dirs not dirs size
+
                     long visibleCacheSize = 0;
 
                     if(directories != null && directories.size() > 0) {
