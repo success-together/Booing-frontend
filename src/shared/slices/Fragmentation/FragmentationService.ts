@@ -23,8 +23,7 @@ export const checkForUploads = async (data: {user_id: string}) => {
 export const downloadFiles = async (data: {user_id: string}) =>{
   return Executor({
     method : 'get',
-    url: BaseUrl + '/logged-in-user/downloadFile',
-    data,
+    url: `${BaseUrl}/logged-in-user/downloadFile/${data.user_id}`,
     isSilent: true,
     withoutToast : true,
     successFun (data){
