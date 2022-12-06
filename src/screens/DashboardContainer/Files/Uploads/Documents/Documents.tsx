@@ -1,9 +1,8 @@
-import { View } from "react-native"
+import {View} from 'react-native';
+import {LayoutWrapper} from '../../../../exports';
 
 const Documents = () => {
-  return (
-    <View>Documents</View>
-  )
-}
+  return <LayoutWrapper></LayoutWrapper>;
+};
 
-export default Documents
+export default Documents;

@@ -85,8 +85,10 @@ export const socialMediaSignIn = (data: {
     data,
     isSilent : false,
     withoutToast :true,
-    successFun(data) {
-      saveSocialMediaUser(data);
+    successFun (data) {
+      console.log(data);
+      saveToken(data)
+      store.dispatch(setLoggedInUser(data.data));
     },
   });
 };

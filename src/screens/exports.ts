@@ -18,3 +18,8 @@ export {default as UpdatePassword} from './DashboardContainer/Account/UpdatePass
 export {default as Images} from './DashboardContainer/Files/Uploads/Images/Images';
 export {default as RegistredDevives} from './DashboardContainer/Account/RegistredDevices/RegistredDevices';
 export {default as Videos} from './DashboardContainer/Files/Uploads/Videos/Videos';
+export {default as Audio} from './DashboardContainer/Files/Uploads/Audio/Audio';
+export {default as Documents} from './DashboardContainer/Files/Uploads/Documents/Documents';
+export {default as Downloads} from './DashboardContainer/Files/Uploads/Downloads/Downloads';
+export {default as Apks} from './DashboardContainer/Files/Uploads/APK/ApkFiles';
+export {default as LayoutWrapper} from './DashboardContainer/Files/Uploads/LayoutWrapper/LayoutWrapper';

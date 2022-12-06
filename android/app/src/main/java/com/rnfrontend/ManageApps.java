@@ -836,9 +836,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
                     } catch (Exception e) {}
 
 
-
-
-
                     // hidden cache
                     long hiddenCacheSize = packageContext.getCacheDir().length();
 
@@ -861,7 +858,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
                     if(directories != null && directories.size() > 0) {
                         for(File dir : directories) {
                             if(dir != null && dir.exists()) {
-                                visibleCacheSize += dir.length();
+                                visibleCacheSize += dirSize(dir);
                             }
                         }
                     }
@@ -877,7 +874,28 @@ public class ManageApps extends ReactContextBaseJavaModule {
         promise.resolve(listOfAllApps);
    }
 
+    public long dirSize(File dir) {
+        if (dir.exists()) {
+            long result = 0;
+            File[] fileList = dir.listFiles();
+            if (fileList != null) {
+                for(int i = 0; i < fileList.length; i++) {
+                    // Recursive call if it's a directory
+                    if(fileList[i].isDirectory()) {
+                        result += dirSize(fileList[i]);
+                    } else {
+                        // Sum the file size in bytes
+                        result += fileList[i].length();
+                    }
+                }
+            }
+            return result; // return the file size
+        }
+        return 0;
+    }
 
+
+    // downloadCacheDirectory from Enviremet
    // acces to dwnlaods
     //volume.createAccessIntent(Environment.DIRECTORY_DOWNLOADS);
    //get docs
@@ -890,7 +908,29 @@ public class ManageApps extends ReactContextBaseJavaModule {
 //                "text/plain" // .txt
 //    });
 //    startActivityForResult(intent, REQUEST_CODE);
+// load thumbnail
+    // Load thumbnail of a specific media item.
+//    Bitmap thumbnail =
+//            getApplicationContext().getContentResolver().loadThumbnail(
+//                    content-uri, new Size(640, 480), null);
 
+    @ReactMethod
+    public void traverseStorageTree(Promise p) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+//            File rootDir = new File();
+//            WritableArray arr = new WritableNativeArray();
+//
+//            File[] fileList = rootDir.listFiles();
+//            if(fileList == null) {
+//                p.resolve("cannot traverse");
+//                return;
+//            }
+//            for(File f : fileList) {
+//                arr.pushString(f.getAbsolutePath());
+//            }
+            p.resolve(Environment.DIRECTORY_ALARMS);
+        }
+    }
 
     @ReactMethod
     public void clearAllVisibleCache(Promise promise) {
@@ -901,20 +941,20 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
 
 //
-//    @ReactMethod
-//    public void manageUnusedApps(Promise promise) {
-//        Intent mainIntent =  new Intent(Intent.ACTION_MANAGE_UNUSED_APPS);
-//        getCurrentActivity().startActivity(mainIntent);
-//        promise.resolve(null);
-//    }
+    @ReactMethod
+    public void manageUnusedApps(Promise promise) {
+        Intent mainIntent =  new Intent(Intent.ACTION_MANAGE_UNUSED_APPS);
+        getCurrentActivity().startActivity(mainIntent);
+        promise.resolve(null);
+    }
 
-//    @ReactMethod
-//    public void uninstallApp(String packageName) {
-//        Intent intent = new Intent(getCurrentActivity(), getCurrentActivity().getClass());
-//        PendingIntent sender = PendingIntent.getActivity(getCurrentActivity(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
-//        PackageInstaller mPackageInstaller = getCurrentActivity().getPackageManager().getPackageInstaller();
-//        mPackageInstaller.uninstall(packageName, sender.getIntentSender());
-//    }
+    @ReactMethod
+    public void uninstallApp(String packageName) {
+        Intent intent = new Intent(getCurrentActivity(), getCurrentActivity().getClass());
+        PendingIntent sender = PendingIntent.getActivity(getCurrentActivity(), 0, intent, PendingIntent.FLAG_IMMUTABLE);
+        PackageInstaller mPackageInstaller = getCurrentActivity().getPackageManager().getPackageInstaller();
+        mPackageInstaller.uninstall(packageName, sender.getIntentSender());
+    }
 boolean deleteDirectory(File directoryToBeDeleted) {
     File[] allContents = directoryToBeDeleted.listFiles();
     if (allContents != null) {
@@ -969,14 +1009,6 @@ boolean deleteDirectory(File directoryToBeDeleted) {
 //        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
         getCurrentActivity().startActivityForResult(intent, 4);
     }
-//    ublic void findReviewsToLoad() {
-//        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-//        intent.addCategory(Intent.CATEGORY_OPENABLE);
-//        String [] mimeTypes = {"text/csv", "text/comma-separated-values"};
-//        intent.setType("*/*");
-//        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-//        startActivityForResult(intent, FIND_FILE_REQUEST_CODE);
-//    }
 
     @ReactMethod
     public void freeSpace(Promise promise) {

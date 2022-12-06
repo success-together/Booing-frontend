@@ -9,4 +9,5 @@ export interface User {
   password?: string;
   __v?: number;
   _id?: string;
+  socialMedia_ID? :string
 }

@@ -1,25 +1,15 @@
-import {StorageAccessFramework} from 'expo-file-system';
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Button,
-  ActivityIndicator,
-  Linking,
-  PermissionsAndroid,
-} from 'react-native';
+import {View, Text, StyleSheet, Button, ActivityIndicator} from 'react-native';
 import {ReadDirItem, readFile} from 'react-native-fs';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import ManageApps from '../../../../utils/manageApps';
-import bytes from 'bytes';
 import FilesList from '../FilesList/FilesList';
-import {randomId} from '../../../../utils/util-functions';
 import {nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {store} from '../../../../shared';
+import Toast from 'react-native-toast-message';
 
 const calcSpace = (arr: {size: number}[], field = 'size', minVal = 0) =>
   arr.reduce((acc, elem) => acc + (elem as any)[field], 0) > minVal
@@ -78,6 +68,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
           setVideos(addId(await ManageApps.getVideos()));
           setMusic(addId(await ManageApps.getAudios()));
           setApps(addId(await ManageApps.getAllInstalledApps()));
+          console.log({tree: await ManageApps.traverseStorageTree()});
           store.dispatch(setRootLoading(false));
         }
       } catch (e: any) {
@@ -115,6 +106,13 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       }, 3000);
     });
   };
+
+  async function clearAllAppsCache() {
+    const granted = await ManageApps.checkAllFilesAccessPermission();
+    if (granted) {
+      await ManageApps.clearAllVisibleCache();
+    }
+  }
 
   console.log({apps});
   return (
@@ -211,20 +209,20 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
               size={calcSpace(music)}
             />
             <FilesList
-              data={
-                apps.filter(
-                  (e: any) =>
-                    e.visibleCacheSize > 6144 || e.hiddenCacheSize > 6144,
-                ) as []
-              }
+              data={apps.filter((e: any) => e.visibleCacheSize > 0) as []}
               label="Cache"
               removeDeletedItems={removeDeletedItems}
-              size={calcSpace(apps, 'visibleCacheSize', 6144)}
+              size={calcSpace(apps, 'visibleCacheSize', 0)}
               setTriggerRerender={setTriggerRerender}
             />
           </>
         )}
         <View style={{marginTop: 10}}></View>
+        <Button
+          title="clear all apps visible cache"
+          onPress={clearAllAppsCache}
+        />
+        <View style={{marginTop: 10}} />
         <Button
           title="free up space (manullay)"
           onPress={async () => await ManageApps.freeSpace()}

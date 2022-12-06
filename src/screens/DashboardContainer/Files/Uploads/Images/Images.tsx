@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Dimensions,
   FlatList,
@@ -11,23 +11,38 @@ import {
 import FilesHeader from '../../FilesHeader/FilesHeader';
 import ImagePicker from 'react-native-image-picker';
 import {launchImageLibrary} from 'react-native-image-picker';
-import {BaseUrl} from '../../../../../shared';
+import {BaseUrl, store} from '../../../../../shared';
+import {downloadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
+import axios from 'axios';
 
 const Images = ({navigation}: {navigation: any}) => {
   const [image, setImage] = useState<Array<any>>([]);
+  const [downloadedImages, setDownloadedImages] = useState<Array<any>>([]);
+  let userData: any = store.getState().authentication.loggedInUser;
+
+  useEffect(() => {
+    let user: any = store.getState().authentication.loggedInUser;
+    let user_id = user?._id;
+    downloadFiles({user_id: user_id}).then(res => {
+      console.log(res.data);
+
+      setDownloadedImages(res.data);
+    });
+  }, []);
 
   const createFormData = (photo: any, body = {}) => {
-    const data = new FormData();
-
+    let data = new FormData();
+    console.log(photo);
     data.append('file', {
-      // name: photo.fileName,
-      // type: photo.type,
-      file: photo.uri,
+      uri: photo,
+      type: photo.type,
+      name: photo.fileName,
     });
 
-    Object.keys(body).forEach(key => {
-      data.append(key, body[key]);
-    });
+    // Object.keys(body).forEach(key => {
+    //   data.append(key, body[key]);
+    // });
+    // data.append('file',image,'images[]')
 
     return data;
   };
@@ -40,26 +55,35 @@ const Images = ({navigation}: {navigation: any}) => {
         // maxHeight: 200,
         // maxWidth: 200,
       },
-      response => {
+      async response => {
         response.assets && console.log(response.assets[0].uri);
         if (image.length === 0 && response.assets) {
           setImage([{uri: response.assets[0].uri}]);
-          fetch(`${BaseUrl}/logged-in-user/uploadFile`, {
+          console.log(`${BaseUrl}/logged-in-user/uploadFile${userData._id}`);
+          let data = new FormData();
+          console.log(response.assets[0]);
+
+          data.append('file', {
+            uri: response.assets[0].uri,
+            type: response.assets[0].type,
+            name: response.assets[0].fileName,
+          });
+          console.log(data);
+
+          await axios({
+            url: `${BaseUrl}/logged-in-user/uploadFile${userData._id}`,
             method: 'POST',
+            data: data,
             headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-              token:
-                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYzN2E4YTQ4ZjQyYzhmZjBkZDE1YWZiYSIsImlhdCI6MTY2OTYzNjk0MiwiZXhwIjoxNjY5NzIzMzQyfQ.Dmenec_EewLSW8sWsmg8yVW7umsMr1yvs1zKXQO-SXU',
+              accept: 'application/json',
+              'Content-Type': 'multipart/form-data',
             },
-            body: createFormData(response.assets[0]),
           })
-            .then(response => response.json())
-            .then(response => {
-              console.log('response', response);
+            .then(function (response) {
+              console.log('response :', response);
             })
-            .catch(error => {
-              console.log('error', error);
+            .catch(function (error) {
+              console.log(error);
             });
         } else
           setImage(oldImages => [
@@ -101,6 +125,7 @@ const Images = ({navigation}: {navigation: any}) => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   image: {
     width: 150,

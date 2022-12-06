@@ -1,13 +1,16 @@
-import React from 'react'
-import { View } from 'react-native';
-import { Text } from 'react-native-elements'
+import React from 'react';
+import {View} from 'react-native';
+import {Text} from 'react-native-elements';
+import {LayoutWrapper} from '../../../../exports';
+import ManageApps from '../../../../../utils/manageApps';
 
 const Audio = () => {
   return (
-    <View>
-      <Text>Audio</Text>
-    </View>
+    <LayoutWrapper
+      uploadButtonPress={async () =>
+        await ManageApps.pickAudios()
+      }></LayoutWrapper>
   );
-}
+};
 
-export default Audio
+export default Audio;

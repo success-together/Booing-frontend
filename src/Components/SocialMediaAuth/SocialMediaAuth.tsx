@@ -82,10 +82,13 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       // Get the users ID token
       const {idToken, user} = await GoogleSignin.signIn();
       await socialMediaSignIn({
-        name: user.givenName || '',
+        name: user.name || '',
         email: user.email,
         socialMedia_ID: user.id,
-      });
+      }).then((res) => {
+        console.log(res);
+        
+      })
       // Create a Google credential with the token
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
