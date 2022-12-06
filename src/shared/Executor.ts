@@ -21,7 +21,7 @@ export function Executor(config: ExecutorInterface): Promise<any> {
 
     axios[config.method](config.url, config.data, {
       headers: {
-        token: store.getState().authentication.token,
+        // token: store.getState().authentication.token,
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
