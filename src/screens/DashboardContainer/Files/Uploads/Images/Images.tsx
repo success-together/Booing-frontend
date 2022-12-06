@@ -11,43 +11,51 @@ import {
 import FilesHeader from '../../FilesHeader/FilesHeader';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {BaseUrl, store} from '../../../../../shared';
-import { downloadFiles } from '../../../../../shared/slices/Fragmentation/FragmentationService';
+import {downloadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 
 import axios from 'axios';
-
+import {setRootLoading} from '../../../../../shared/slices/rootSlice';
 
 const Images = ({navigation}: {navigation: any}) => {
   let userData: any = store.getState().authentication.loggedInUser;
   const [image, setImage] = useState<Array<any>>([]);
-  const [downloadedImages, setDownloadedImages] = useState<Array<any>>([])
+  const [downloadedImages, setDownloadedImages] = useState<Array<any>>([]);
 
   useEffect(() => {
-    let user:any = store.getState().authentication.loggedInUser;
-    let user_id = user?._id
-    downloadFiles({user_id:user_id}).then((res) =>{
-      console.log(res.data);
-      setDownloadedImages(res.data)
-    })
-
-  }, [])
-  
-
-  const createFormData = (photo: any, body = {}) => {
-    let data = new FormData();
-    console.log(photo);
-    data.append('file', {
-      uri: photo,
-      type: photo.type,
-      name: photo.fileName,
+    let user: any = store.getState().authentication.loggedInUser;
+    let user_id = user?._id;
+    downloadFiles({user_id: user_id}).then(res => {
+      console.log('response from server \n' + res.data[0]);
+      // res.data.json();
+      // setDownloadedImages(res.data);
+      // setImage([{uri: res.data[0]}]);
+      // store.dispatch(setRootLoading(true));
+      res?.data.forEach((item: string) => {
+        console.log(item);
+        setImage(oldImages => [...oldImages, {uri: item ? item : ''}]);
+        console.log(image);
+      });
     });
+    console.log(image);
+    // store.dispatch(setRootLoading(false));
+  }, []);
 
-    // Object.keys(body).forEach(key => {
-    //   data.append(key, body[key]);
-    // });
-    // data.append('file',image,'images[]')
+  // const createFormData = (photo: any, body = {}) => {
+  //   let data = new FormData();
+  //   console.log(photo);
+  //   data.append('file', {
+  //     uri: photo,
+  //     type: photo.type,
+  //     name: photo.fileName,
+  //   });
 
-    return data;
-  };
+  //   // Object.keys(body).forEach(key => {
+  //   //   data.append(key, body[key]);
+  //   // });
+  //   // data.append('file',image,'images[]')
+
+  //   return data;
+  // };
 
   const pickImage = async () => {
     await launchImageLibrary(
@@ -71,7 +79,8 @@ const Images = ({navigation}: {navigation: any}) => {
             name: response.assets[0].fileName,
           });
           console.log(data);
-          
+          store.dispatch(setRootLoading(true));
+
           await axios({
             url: `${BaseUrl}/logged-in-user/uploadFile${userData._id}`,
             method: 'POST',
@@ -82,7 +91,8 @@ const Images = ({navigation}: {navigation: any}) => {
             },
           })
             .then(function (response) {
-              console.log('response :', response);
+              console.log('response :', response?.data);
+              store.dispatch(setRootLoading(false));
             })
             .catch(function (error) {
               console.log(error);
@@ -92,9 +102,11 @@ const Images = ({navigation}: {navigation: any}) => {
             ...oldImages,
             {uri: response.assets ? response.assets[0].uri : ''},
           ]);
+        store.dispatch(setRootLoading(false));
       },
     );
     console.log(image);
+    store.dispatch(setRootLoading(false));
   };
 
   return (
@@ -176,4 +188,3 @@ const styles = StyleSheet.create({
 });
 
 export default Images;
-

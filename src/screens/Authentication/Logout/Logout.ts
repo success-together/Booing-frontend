@@ -1,10 +1,16 @@
-import React from 'react'
-import { store } from '../../../shared'
-import { disconnect } from '../../../shared/slices/Auth/AuthSlice'
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import React from 'react';
+import {store} from '../../../shared';
+import {disconnect} from '../../../shared/slices/Auth/AuthSlice';
 
+export const Logout = async ({navigation}: {navigation: any}) => {
+  try {
+    await GoogleSignin.revokeAccess();
+    await GoogleSignin.signOut();
+  } catch (error) {
+    console.error(error);
+  }
 
-export const Logout = ({navigation} : {navigation:any}) => {
-
-    store.dispatch(disconnect())
-    // navigation.navigate("Login")
-}
+  store.dispatch(disconnect());
+  // navigation.navigate("Login")
+};

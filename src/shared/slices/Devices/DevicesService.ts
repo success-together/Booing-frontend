@@ -7,7 +7,7 @@ import {Executor} from '../../Executor';
 
 export const GetDevicesService = (data: {user_id: string}) => {
   return Executor({
-    method: 'get',
+    method: 'post',
     url: BaseUrl + '/logged-in-user/getDevices',
     isSilent: false,
     data,

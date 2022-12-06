@@ -27,7 +27,8 @@ export const register = (data: any) => {
     isSilent: false,
     withoutToast: false,
     successFun: (data: any) => {
-      saveUserData(data);
+      console.log("resgistration : "+data);
+      // saveUserData(data);
     },
   });
 };
@@ -54,7 +55,9 @@ export const updateProfile = (data: {
     withoutToast: false,
     data,
     successFun(data) {
-      saveUserData(data);
+      console.log("here : "+data.data);
+      
+      // saveUserData(data.data.user);
     },
   });
 };

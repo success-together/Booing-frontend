@@ -20,6 +20,7 @@ import {nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {store} from '../../../../shared';
+import {ScrollView} from 'react-native';
 
 const calcSpace = (arr: {size: number}[], field = 'size', minVal = 0) =>
   arr.reduce((acc, elem) => acc + (elem as any)[field], 0) > minVal
@@ -118,7 +119,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
 
   console.log({apps});
   return (
-    <View>
+    <View style={styles.container}>
       {showModal.show && (
         <View
           style={{
@@ -152,9 +153,9 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
             ) : (
               <View>
                 <Text style={{marginBottom: 20, color: 'black', fontSize: 16}}>
-                  sell free space to the application ?
+                  sell {freeDiskStorage / 2} Gb free space for {(50000 * freeDiskStorage) / 2} Boo coin ?
                 </Text>
-                <View style={{display: 'flex', flexDirection: 'row'}}>
+                <View style={{display: 'flex', flexDirection: 'row',justifyContent : 'center'}}>
                   <Button
                     title="Yes"
                     onPress={() => setShowModal({show: false, loading: false})}
@@ -188,55 +189,70 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
           </View>
         </View>
       </View>
-
-      <View style={styles.main}>
-        {showData && (
-          <>
-            <FilesList
-              data={images as []}
-              label="Pictures"
-              size={calcSpace(images)}
-              removeDeletedItems={removeDeletedItems}
-            />
-            <FilesList
-              data={videos as []}
-              label="Videos"
-              removeDeletedItems={removeDeletedItems}
-              size={calcSpace(videos)}
-            />
-            <FilesList
-              data={music as []}
-              label="Music"
-              removeDeletedItems={removeDeletedItems}
-              size={calcSpace(music)}
-            />
-            <FilesList
-              data={
-                apps.filter(
-                  (e: any) =>
-                    e.visibleCacheSize > 6144 || e.hiddenCacheSize > 6144,
-                ) as []
-              }
-              label="Cache"
-              removeDeletedItems={removeDeletedItems}
-              size={calcSpace(apps, 'visibleCacheSize', 0)}
-              setTriggerRerender={setTriggerRerender}
-            />
-          </>
-        )}
-        <View style={{marginTop: 10}}></View>
-        <Button
-          title="free up space (manullay)"
-          onPress={async () => await ManageApps.freeSpace()}
-        />
-        <View style={{marginTop: 10}} />
-        <Button title="clear my cache" onPress={async () => clearMyCache()} />
-      </View>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.main}>
+          {showData && (
+            <>
+              <FilesList
+                data={images as []}
+                label="Pictures"
+                size={calcSpace(images)}
+                removeDeletedItems={removeDeletedItems}
+              />
+              <FilesList
+                data={videos as []}
+                label="Videos"
+                removeDeletedItems={removeDeletedItems}
+                size={calcSpace(videos)}
+              />
+              <FilesList
+                data={music as []}
+                label="Music"
+                removeDeletedItems={removeDeletedItems}
+                size={calcSpace(music)}
+              />
+              <FilesList
+                data={
+                  apps.filter(
+                    (e: any) =>
+                      e.visibleCacheSize > 6144 || e.hiddenCacheSize > 6144,
+                  ) as []
+                }
+                label="Cache"
+                removeDeletedItems={removeDeletedItems}
+                size={calcSpace(apps, 'visibleCacheSize', 0)}
+                setTriggerRerender={setTriggerRerender}
+              />
+            </>
+          )}
+          <View style={{marginTop: 10}}></View>
+          <Button
+            title="free up space (manullay)"
+            onPress={async () => await ManageApps.freeSpace()}
+          />
+          <View style={{marginTop: 10}} />
+          <Button title="clear my cache" onPress={async () => clearMyCache()} />
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+    marginHorizontal: 0,
+    width: '100%',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#F2F6F7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    // flexWrap: "wrap",
+    // flexDirecton: "row",
+  },
   header: {
     width: '100%',
     justifyContent: 'center',
