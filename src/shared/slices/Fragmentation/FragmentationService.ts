@@ -24,15 +24,7 @@ export const downloadFiles = async (data: {user_id: string}) =>{
   return Executor({
     method : 'get',
     url: `${BaseUrl}/logged-in-user/downloadFile/${data.user_id}`,
-    isSilent: true,
+    isSilent: false,
     withoutToast : true,
-    successFun (data){
-      console.log(data);
-      
-    },
-    errorFun (data) {
-      console.log(data);
-      
-    }
   })
 }
