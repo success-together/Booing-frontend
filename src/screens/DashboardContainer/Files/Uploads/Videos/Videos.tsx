@@ -13,6 +13,7 @@ import ImagePicker from 'react-native-image-picker';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {BaseUrl} from '../../../../../shared';
 import ManageApps from '../../../../../utils/manageApps';
+import {LayoutWrapper} from '../../../../exports';
 
 const Videos = ({navigation}: {navigation: any}) => {
   const [image, setImage] = useState<Array<any>>([]);
@@ -74,33 +75,37 @@ const Videos = ({navigation}: {navigation: any}) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.containerImage}>
-        <FilesHeader />
-      </View>
-      <FlatList
-        data={image}
-        numColumns={3}
-        style={{flex: 1}}
-        keyExtractor={item => item.uri}
-        renderItem={({item}) => {
-          return (
-            <View style={styles.inner}>
-              <Image
-                source={{uri: item.uri}}
-                style={{
-                  width: Dimensions.get('window').width / 4,
-                  height: Dimensions.get('window').height / 4,
-                }}
-                resizeMode={'contain'}
-              />
-            </View>
-          );
-        }}></FlatList>
-      <Pressable style={styles.button} onPress={pickVideo}>
-        <Text style={styles.text}>Upload</Text>
-      </Pressable>
-    </View>
+    // <View style={styles.container}>
+    //   <View style={styles.containerImage}>
+    //     <FilesHeader />
+    //   </View>
+    //   <FlatList
+    //     data={image}
+    //     numColumns={3}
+    //     style={{flex: 1}}
+    //     keyExtractor={item => item.uri}
+    //     renderItem={({item}) => {
+    //       return (
+    //         <View style={styles.inner}>
+    //           <Image
+    //             source={{uri: item.uri}}
+    //             style={{
+    //               width: Dimensions.get('window').width / 4,
+    //               height: Dimensions.get('window').height / 4,
+    //             }}
+    //             resizeMode={'contain'}
+    //           />
+    //         </View>
+    //       );
+    //     }}></FlatList>
+    //   <Pressable style={styles.button} onPress={pickVideo}>
+    //     <Text style={styles.text}>Upload</Text>
+    //   </Pressable>
+    // </View>
+    <LayoutWrapper
+      uploadButtonPress={async () =>
+        await ManageApps.pickVideos()
+      }></LayoutWrapper>
   );
 };
 const styles = StyleSheet.create({

@@ -1,11 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {
-  Text,
-  View,
-  StyleSheet,
-  Pressable,
-  ScrollView,
-} from 'react-native';
+import {Text, View, StyleSheet, Pressable, ScrollView} from 'react-native';
 import FilesHeader from '../FilesHeader/FilesHeader';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
@@ -77,46 +71,45 @@ const Uploads = ({navigation}: {navigation: any}) => {
               <Feather name="image" size={24} color="#FF2960" />
               <Text style={styles.font}>Images</Text>
             </Pressable>
-            <Pressable onPress={() => navigation.navigate('Videos')} style={styles.icon}>
-              <Feather
-                name="video"
-                size={24}
-                color="#FF00E4"
-              />
+            <Pressable
+              onPress={() => navigation.navigate('Videos')}
+              style={styles.icon}>
+              <Feather name="video" size={24} color="#FF00E4" />
               <Text style={styles.font}>Videos</Text>
             </Pressable>
-            <View style={styles.icon}>
-              <MaterialIcons
-                name="audiotrack"
-                size={24}
-                color="#FF00E4"
-                onPress={async () => await ManageApps.pickAudios()}
-              />
+            <Pressable
+              style={styles.icon}
+              onPress={() => navigation.navigate('Audio')}>
+              <MaterialIcons name="audiotrack" size={24} color="#FF00E4" />
               <Text style={styles.font}>Audio Files</Text>
-            </View>
+            </Pressable>
           </View>
           <View style={styles.rowIcon}>
-            <View style={styles.icon}>
+            <Pressable
+              style={styles.icon}
+              onPress={() => navigation.navigate('Documents')}>
               <Ionicons name="document-outline" size={24} color="#FF8700" />
               <Text style={styles.font}>Documents</Text>
-            </View>
-            <View style={styles.icon}>
+            </Pressable>
+            <Pressable
+              style={styles.icon}
+              onPress={() => navigation.navigate('Downloads')}>
               <Feather name="download" size={24} color="#0DD6C0" />
               <Text style={styles.font}>Downloads</Text>
-            </View>
-            <View style={styles.icon}>
-              {/* <Feather name="image" size={24} color="#06FE19" /> */}
+            </Pressable>
+            <Pressable
+              style={styles.icon}
+              onPress={() => navigation.navigate('Apks')}>
               <Text
                 style={{
                   color: '#06FE19',
                   fontSize: 15,
                   fontWeight: 'bold',
-                }}
-                onPress={async () => await ManageApps.pickApks()}>
+                }}>
                 APK
               </Text>
               <Text style={styles.font}>Installation Files</Text>
-            </View>
+            </Pressable>
           </View>
         </View>
         <View style={{marginLeft: 20}}>

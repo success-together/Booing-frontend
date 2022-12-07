@@ -4,6 +4,7 @@ import React from 'react';
 import {StyleSheet, Image} from 'react-native';
 import {
   Account,
+  Apks,
   ClearData,
   Dashboard,
   Files,
@@ -13,6 +14,9 @@ import {
   UpdateProfile,
   Uploads,
   Videos,
+  Audio,
+  Documents,
+  Downloads,
 } from '../exports';
 import {small_logo} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -116,6 +120,30 @@ const DashboardContainer = () => {
           <Stack.Screen
             name="Videos"
             component={Videos}
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
+          <Stack.Screen
+            name="Audio"
+            component={Audio}
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
+          <Stack.Screen
+            name="Documents"
+            component={Documents}
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
+          <Stack.Screen
+            name="Downloads"
+            component={Downloads}
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
+          <Stack.Screen
+            name="Apks"
+            component={Apks}
             options={{
               tabBarItemStyle: {display: 'none'},
             }}></Stack.Screen>
