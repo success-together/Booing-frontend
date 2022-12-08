@@ -48,12 +48,12 @@ const DashboardContainer = () => {
                   iconName = focused ? 'lock-closed' : 'lock-closed-outline';
                   break;
               }
-              // You can return any component that you like here!
-              if (iconName == 'Booingcoin') {
+              // You can return any component that you like here!              
+              if (rn == 'Booingcoin') {
                 return (
                   <Image
-                    style={{width: 50, height: 50}}
-                    source={{uri: small_logo}}
+                    style={{width: 35, height: 20}}
+                    source={ small_logo}
                   />
                 );
               }
