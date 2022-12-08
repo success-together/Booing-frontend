@@ -51,6 +51,7 @@ import android.os.RemoteException;
 import android.os.UserHandle;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.webkit.MimeTypeMap;
@@ -68,6 +69,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import org.json.JSONException;
+import org.w3c.dom.Document;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -968,16 +971,19 @@ boolean deleteDirectory(File directoryToBeDeleted) {
     @ReactMethod
     public void pickVideos(Promise promise) {
         MainActivity.setPromise(promise);
-        int PICK_VIDEO_FILE = 2;
+        MainActivity.setPickerRequestCode(4);
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_MOVIES);
         intent.setType("video/*");
 
         // Optionally, specify a URI for the file that should appear in the
         // system file picker when it loads.
 //        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
-        getCurrentActivity().startActivityForResult(intent, PICK_VIDEO_FILE);
+        getCurrentActivity().startActivityForResult(intent, 4);
     }
 
     @ReactMethod
@@ -986,7 +992,10 @@ boolean deleteDirectory(File directoryToBeDeleted) {
         MainActivity.setPickerRequestCode(4);
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI,  Environment.DIRECTORY_MUSIC);
         intent.setType("audio/*");
 
         // Optionally, specify a URI for the file that should appear in the
@@ -999,9 +1008,15 @@ boolean deleteDirectory(File directoryToBeDeleted) {
     public void pickApks(Promise promise) {
         MainActivity.setPromise(promise);
         MainActivity.setPickerRequestCode(4);
+
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS);
+
+
         intent.setType("application/vnd.android.package-archive");
 
         // Optionally, specify a URI for the file that should appear in the
@@ -1009,6 +1024,89 @@ boolean deleteDirectory(File directoryToBeDeleted) {
 //        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
         getCurrentActivity().startActivityForResult(intent, 4);
     }
+
+    @ReactMethod
+    public void pickDocument(Promise promise) {
+        MainActivity.setPromise(promise);
+        MainActivity.setPickerRequestCode(4);
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.setType("*/*");
+        String [] mimeTypes = {"text/*",
+                "application/pdf",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                "application/vnd.openxmlformats-officedocument.presentationml.slide",
+                "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+                "application/vnd.openxmlformats-officedocument.presentationml.template",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+        };
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOCUMENTS);
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, 4);
+    }
+
+
+    @ReactMethod
+    public void pickDownloads(Promise promise) {
+        MainActivity.setPromise(promise);
+        MainActivity.setPickerRequestCode(4);
+
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS);
+
+        intent.setType("*/*");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, 4);
+    }
+
+    @ReactMethod
+    public void getFileDescription(String uriString, Promise p) {
+        Uri uri = Uri.parse(uriString);
+        String[] projection = { MediaStore.Files.FileColumns.DISPLAY_NAME,
+                MediaStore.Files.FileColumns.DOCUMENT_ID
+        };
+        Cursor cursor = getReactApplicationContext()
+                .getContentResolver()
+                .query(uri, projection, null, null, null);
+
+        if (cursor == null) {
+            p.resolve(null);
+        }
+
+        WritableMap map = new WritableNativeMap();
+        int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
+        int idIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DOCUMENT_ID);
+
+        cursor.moveToFirst();
+
+        String name = cursor.getString(nameIndex);
+        String id = cursor.getString(idIndex);
+
+        map.putString("id", id);
+        map.putString("name", name);
+
+        p.resolve(map);
+        cursor.close();
+    }
+
+
+
 
     @ReactMethod
     public void freeSpace(Promise promise) {

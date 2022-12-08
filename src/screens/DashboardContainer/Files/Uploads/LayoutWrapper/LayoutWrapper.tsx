@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {ReactNode} from 'react';
 import {
   GestureResponderEvent,
   Image,
@@ -15,9 +15,13 @@ import Feather from 'react-native-vector-icons/Feather';
 
 interface LayoutWrapperProps {
   uploadButtonPress?: (event: GestureResponderEvent) => void;
+  children?: ReactNode;
 }
 
-export default function LayoutWrapper({uploadButtonPress}: LayoutWrapperProps) {
+export default function LayoutWrapper({
+  uploadButtonPress,
+  children,
+}: LayoutWrapperProps) {
   return (
     <View style={styles.main}>
       <LinearGradient
@@ -80,6 +84,9 @@ export default function LayoutWrapper({uploadButtonPress}: LayoutWrapperProps) {
           />
         </View>
       </LinearGradient>
+      <View style={{flex: 1, padding: 10, backgroundColor: '#F6F7FB'}}>
+        {children}
+      </View>
       <View style={styles.uploadContainer}>
         <TouchableOpacity
           style={{
