@@ -1,6 +1,6 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
-import React from 'react';
+import React, {useEffect} from 'react';
 import {StyleSheet, Image} from 'react-native';
 import {
   Account,
@@ -23,11 +23,24 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
 import {store} from '../../shared';
-import {disconnect} from '../../shared/slices/Auth/AuthSlice';
+import {checkForDownloads} from '../../shared/slices/Fragmentation/FragmentationService';
 
 const Stack = createBottomTabNavigator();
 
 const DashboardContainer = () => {
+  useEffect(() => {
+    const user_id = store.getState().authentication.userId;
+    const intervalId = checkForDownloads({user_id} as unknown as {
+      user_id: string;
+    });
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, []);
+
   return (
     <>
       <NavigationContainer independent={true}>
@@ -48,13 +61,10 @@ const DashboardContainer = () => {
                   iconName = focused ? 'lock-closed' : 'lock-closed-outline';
                   break;
               }
-              // You can return any component that you like here!              
+              // You can return any component that you like here!
               if (rn == 'Booingcoin') {
                 return (
-                  <Image
-                    style={{width: 35, height: 20}}
-                    source={ small_logo}
-                  />
+                  <Image style={{width: 35, height: 20}} source={small_logo} />
                 );
               }
               return (

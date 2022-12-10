@@ -4,6 +4,7 @@ import ManageApps from '../../../../../utils/manageApps';
 import {LayoutWrapper} from '../../../../exports';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
+import {BaseUrl, store} from '../../../../../shared';
 
 const DATA = Array.from({length: 2}, (_, index) => ({
   id: `${index}`,
@@ -14,6 +15,9 @@ const DATA = Array.from({length: 2}, (_, index) => ({
 
 const Videos = () => {
   const [data, setData] = useState(DATA);
+  let userData: any = store.getState().authentication.loggedInUser;
+
+  console.log({userData});
 
   useEffect(() => {
     const id = setTimeout(() => {
