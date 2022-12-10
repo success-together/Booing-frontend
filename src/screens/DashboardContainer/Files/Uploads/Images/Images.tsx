@@ -15,6 +15,7 @@ import {downloadFiles} from '../../../../../shared/slices/Fragmentation/Fragment
 
 import axios from 'axios';
 import {setRootLoading} from '../../../../../shared/slices/rootSlice';
+import LayoutWrapper from '../LayoutWrapper/LayoutWrapper';
 
 const Images = ({navigation}: {navigation: any}) => {
   let userData: any = store.getState().authentication.loggedInUser;
@@ -110,33 +111,33 @@ const Images = ({navigation}: {navigation: any}) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.containerImage}>
-        <FilesHeader />
+    <>
+      <View style={styles.container}>
+        <View style={styles.containerImage}>
+          <FilesHeader />
+        </View>
+        <FlatList
+          data={image}
+          numColumns={3}
+          style={{flex: 1}}
+          keyExtractor={item => item.uri}
+          renderItem={({item}) => {
+            return (
+              <View style={styles.inner}>
+                <Image
+                  source={{uri: item.uri}}
+                  style={{
+                    width: Dimensions.get('window').width / 4,
+                    height: Dimensions.get('window').height / 4,
+                  }}
+                  resizeMode={'contain'}
+                />
+              </View>
+            );
+          }}></FlatList>
       </View>
-      <FlatList
-        data={image}
-        numColumns={3}
-        style={{flex: 1}}
-        keyExtractor={item => item.uri}
-        renderItem={({item}) => {
-          return (
-            <View style={styles.inner}>
-              <Image
-                source={{uri: item.uri}}
-                style={{
-                  width: Dimensions.get('window').width / 4,
-                  height: Dimensions.get('window').height / 4,
-                }}
-                resizeMode={'contain'}
-              />
-            </View>
-          );
-        }}></FlatList>
-      <Pressable style={styles.button} onPress={pickImage}>
-        <Text style={styles.text}>Upload</Text>
-      </Pressable>
-    </View>
+      <LayoutWrapper uploadButtonPress={pickImage}></LayoutWrapper>
+    </>
   );
 };
 const styles = StyleSheet.create({
