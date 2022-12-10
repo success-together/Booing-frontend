@@ -43,6 +43,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.VolumeProvider;
 import android.net.Uri;
 import android.nfc.tech.IsoDep;
 import android.os.Build;
@@ -71,14 +72,22 @@ import androidx.core.content.ContextCompat;
 import org.json.JSONException;
 import org.w3c.dom.Document;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public class ManageApps extends ReactContextBaseJavaModule {
 
@@ -729,22 +738,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-//    @ReactMethod
-//    public void getAllInstalledApps(Promise promise) {
-//        PackageManager pm = getReactApplicationContext().getPackageManager();
-//        List<ApplicationInfo> installedApplications = pm.getInstalledApplications(0);
-//        WritableArray arr = new WritableNativeArray();
-//        for(ApplicationInfo appInfo : installedApplications) {
-//            if(isSystemApp(appInfo.packageName) == 0) {
-//                WritableMap map = new WritableNativeMap();
-//                map.putString("name", appInfo.name);
-//                map.putString("packageName", appInfo.packageName);
-//                arr.pushMap(map);
-//            }
-//        }
-//        promise.resolve(arr);
-//    }
-
     @ReactMethod
     public void isAppInstalled(String packageName, Promise promise) {
         PackageManager pm = getReactApplicationContext().getPackageManager();
@@ -1105,6 +1098,106 @@ boolean deleteDirectory(File directoryToBeDeleted) {
         cursor.close();
     }
 
+
+    @ReactMethod
+    public void saveFile(String name, String data, Promise p) {
+        try {
+            FileOutputStream fos = getReactApplicationContext().openFileOutput(
+                    name,
+                    Context.MODE_PRIVATE
+            );
+            fos.write(data.getBytes());
+            fos.close();
+            p.resolve(true);
+        } catch (IOException e) {
+            p.resolve(false);
+        }
+    }
+
+    @ReactMethod
+    public void getFileContent(String name, Promise p) throws FileNotFoundException {
+        FileInputStream fis = getReactApplicationContext().openFileInput(name);
+        InputStreamReader inputStreamReader =
+                new InputStreamReader(fis, StandardCharsets.UTF_8);
+        StringBuilder stringBuilder = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(inputStreamReader)) {
+            String line = reader.readLine();
+            while (line != null) {
+                stringBuilder.append(line).append('\n');
+                line = reader.readLine();
+            }
+        } catch (IOException e) {
+            p.resolve(null);
+        } finally {
+            String contents = stringBuilder.toString();
+            p.resolve(contents);
+        }
+    }
+
+    @ReactMethod
+    public void isFileExist(String name, Promise p) {
+        File file = new File(getReactApplicationContext().getFilesDir(),name);
+        p.resolve(file.exists());
+    }
+
+    @ReactMethod
+    public void getJsonFiles(Promise p) {
+        Uri uri;
+        Cursor cursor;
+        int column_index_data, column_index_title, column_index_size;
+        WritableArray listOfAllVideos = new WritableNativeArray();
+        uri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
+
+        String[] projection = { MediaStore.MediaColumns.DATA
+                ,MediaStore.Files.FileColumns.TITLE
+                ,MediaStore.Files.FileColumns.SIZE};
+
+        cursor = getCurrentActivity().getContentResolver().query(uri,
+                projection,
+                MediaStore.Files.FileColumns.MIME_TYPE + " = ?",
+                new String[]{"application/json"},
+                null);
+
+        column_index_data = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
+        column_index_title = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
+        column_index_size = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE);
+        while (cursor.moveToNext()) {
+            WritableMap map = new WritableNativeMap();
+            map.putString("path", cursor.getString(column_index_data));
+            map.putString("name", cursor.getString(column_index_title));
+            map.putInt("size", cursor.getInt(column_index_size));
+
+            listOfAllVideos.pushMap(map);
+        }
+        p.resolve(listOfAllVideos);
+    }
+
+    @ReactMethod
+    public void getFreeSpace(Promise p){
+        Context ctx = getReactApplicationContext();
+        StorageManager storageManager = null;
+        long availableBytes = 0;
+
+        try {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            storageManager = ctx.getSystemService(StorageManager.class);
+        }
+            UUID appSpecificInternalDirUuid = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                appSpecificInternalDirUuid = storageManager.getUuidForPath(ctx.getFilesDir());
+                availableBytes =
+                        storageManager.getAllocatableBytes(appSpecificInternalDirUuid);
+
+                storageManager.allocateBytes(
+                        appSpecificInternalDirUuid, availableBytes);
+                p.resolve("allocated");
+            }
+
+        }catch(IOException e) {
+            p.resolve("error");
+        }
+        p.resolve(String.valueOf(availableBytes));
+    }
 
 
 

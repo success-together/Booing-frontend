@@ -2,10 +2,10 @@ import axios from 'axios';
 import {BaseUrl} from '../..';
 import {Executor, fetchWithTimeout} from '../../Executor';
 
-export const checkForDownloads = async (data: {user_id: string}) => {
+export const checkForDownloads = (data: {user_id: string}) => {
   try {
     const url = BaseUrl + '/logged-in-user/checkForDownloads';
-    // await fetchWithTimeout(url, data, 60000,true);
+    return fetchWithTimeout(url, data, 1000, true);
   } catch (error) {
     console.log(error);
   }
@@ -20,11 +20,11 @@ export const checkForUploads = async (data: {user_id: string}) => {
   }
 };
 
-export const downloadFiles = async (data: {user_id: string}) =>{
+export const downloadFiles = async (data: {user_id: string}) => {
   return Executor({
-    method : 'get',
+    method: 'get',
     url: `${BaseUrl}/logged-in-user/downloadFile/${data.user_id}`,
     isSilent: false,
-    withoutToast : true,
-  })
-}
+    withoutToast: true,
+  });
+};

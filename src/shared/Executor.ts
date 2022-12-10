@@ -5,6 +5,7 @@ import {ExecutorInterface} from '../models/Executor';
 import {setRootLoading} from './slices/rootSlice';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ManageApps from '../utils/manageApps';
 var RNFS = require('react-native-fs');
 
 export function Executor(config: ExecutorInterface): Promise<any> {
@@ -77,33 +78,31 @@ const delay = (delayInms: number) => {
   return new Promise(resolve => setTimeout(() => resolve, delayInms));
 };
 
-export async function fetchWithTimeout(
+export function fetchWithTimeout(
   url: string,
   options: {user_id: string},
   time: number,
   isDownload: boolean,
 ) {
-  return new Promise((resolve, reject) => {
-    const interval = setInterval(async () => {
-      console.log(url);
-
+  return setInterval(async () => {
+    try {
       const result = await axios.post(url, options);
 
-      if (result.data.length > 0 && isDownload) {
-        var path = RNFS.DocumentDirectoryPath + '/download.json';
-        // write the file
-        RNFS.writeFile(path, result?.data.fragements, 'utf8')
-          .then(() => {
-            console.log('FILE WRITTEN!');
-          })
-          .catch((err: any) => {
-            console.log(err.message);
-          });
+      if (result.data?.data?.length > 0 && isDownload) {
+        for (const {fragmentID, fileName, user_id, fragment} of result.data
+          .data) {
+          const name = `${fragmentID}-${fileName}-${user_id}.json`;
+          const isExist = await ManageApps.isFileExist(name);
+          if (!isExist) {
+            console.log({name, isExist});
+            await ManageApps.saveFile(name, fragment);
+          }
+        }
       }
-
-      
-    }, time);
-  });
+    } catch (e: any) {
+      console.log({error: e.message});
+    }
+  }, time);
 
   // let timerId = setInterval(() => console.log('checking for updates'), 5000);
   // return Promise.race([
