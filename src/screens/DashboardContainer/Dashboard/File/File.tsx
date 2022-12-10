@@ -15,9 +15,22 @@ interface FileProps {
   Icon: (size: number, color: string) => Element;
 }
 
-const Selected = () => {
+export const Selected = () => {
   return (
-    <View style={styles.selected}>
+    <View
+      style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: 25,
+        height: 25,
+        backgroundColor: '#FFF',
+        borderRadius: 25 / 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 999,
+      }}>
       <Feather name="check-circle" size={19} color={'#BDECB6'} />
     </View>
   );
@@ -78,19 +91,6 @@ const styles = StyleSheet.create({
   image: {
     width: 80,
     height: 80,
-  },
-  selected: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 25,
-    height: 25,
-    backgroundColor: '#FFF',
-    borderRadius: 25 / 2,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 999,
   },
 });
 

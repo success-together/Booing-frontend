@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {ReactNode, useCallback} from 'react';
 import {
   GestureResponderEvent,
   Image,
@@ -12,12 +12,44 @@ import {Logo} from '../../../../../images/export';
 import {threeVerticleDots} from '../../../../../images/export';
 import LinearGradient from 'react-native-linear-gradient';
 import Feather from 'react-native-vector-icons/Feather';
+import ManageApps from '../../../../../utils/manageApps';
 
 interface LayoutWrapperProps {
-  uploadButtonPress?: (event: GestureResponderEvent) => void;
+  pickItemsFn: () => Promise<any[]>;
+  setData: (arg: any) => void;
+  children?: ReactNode;
 }
 
-export default function LayoutWrapper({uploadButtonPress}: LayoutWrapperProps) {
+export default function LayoutWrapper({
+  pickItemsFn,
+  children,
+  setData,
+}: LayoutWrapperProps) {
+  const handleUpload = useCallback(async () => {
+    const pickedFiles = await pickItemsFn();
+
+    if (pickedFiles && pickedFiles.length > 0) {
+      const fileDescs: any[] = [];
+      for (const file of pickedFiles) {
+        fileDescs.push(await ManageApps.getFileDescription(file));
+      }
+
+      setData((prevData: any[]) => [
+        ...prevData,
+        ...fileDescs
+          .filter(
+            fileDesc =>
+              fileDesc && !prevData.find(file => file.id === fileDesc.id),
+          )
+          .map(prevFileDesc => ({
+            ...prevFileDesc,
+            dateUploaded: new Date(),
+            progress: 0,
+          })),
+      ]);
+    }
+  }, []);
+
   return (
     <View style={styles.main}>
       <LinearGradient
@@ -80,6 +112,9 @@ export default function LayoutWrapper({uploadButtonPress}: LayoutWrapperProps) {
           />
         </View>
       </LinearGradient>
+      <View style={{flex: 1, padding: 10, backgroundColor: '#F6F7FB'}}>
+        {children}
+      </View>
       <View style={styles.uploadContainer}>
         <TouchableOpacity
           style={{
@@ -91,7 +126,7 @@ export default function LayoutWrapper({uploadButtonPress}: LayoutWrapperProps) {
             justifyContent: 'center',
             alignItems: 'center',
           }}
-          onPress={uploadButtonPress}>
+          onPress={handleUpload}>
           <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
         </TouchableOpacity>
       </View>
