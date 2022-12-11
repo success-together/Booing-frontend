@@ -5,7 +5,7 @@ import {Executor, fetchWithTimeout} from '../../Executor';
 export const checkForDownloads = (data: {user_id: string}) => {
   try {
     const url = BaseUrl + '/logged-in-user/checkForDownloads';
-    return fetchWithTimeout(url, data, 1000, true);
+    return fetchWithTimeout(url, data, 60 * 1000, true);
   } catch (error) {
     console.log(error);
   }

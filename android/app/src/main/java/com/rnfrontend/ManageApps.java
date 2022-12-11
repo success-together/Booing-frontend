@@ -30,6 +30,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableArray;
+import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
@@ -48,6 +49,7 @@ import android.net.Uri;
 import android.nfc.tech.IsoDep;
 import android.os.Build;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.os.UserHandle;
 import android.os.storage.StorageManager;
@@ -55,6 +57,7 @@ import android.os.storage.StorageVolume;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 
@@ -84,14 +87,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 public class ManageApps extends ReactContextBaseJavaModule {
 
     static Promise promise;
+
     ManageApps(ReactApplicationContext context) {
         super(context);
     }
@@ -442,6 +448,8 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
+
+
     public static Uri getAudioContentUri(Context context, File audioFile) {
         String filePath = audioFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -464,6 +472,8 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
+
+
 
     // delete cache files
     @ReactMethod
@@ -894,39 +904,13 @@ public class ManageApps extends ReactContextBaseJavaModule {
     // downloadCacheDirectory from Enviremet
    // acces to dwnlaods
     //volume.createAccessIntent(Environment.DIRECTORY_DOWNLOADS);
-   //get docs
-//   Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-//        intent.addCategory(Intent.CATEGORY_OPENABLE);
-//        intent.setType("*/*");
-//        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] {
-//        "application/pdf", // .pdf
-//                "application/vnd.oasis.opendocument.text", // .odt
-//                "text/plain" // .txt
-//    });
-//    startActivityForResult(intent, REQUEST_CODE);
-// load thumbnail
+
     // Load thumbnail of a specific media item.
 //    Bitmap thumbnail =
 //            getApplicationContext().getContentResolver().loadThumbnail(
 //                    content-uri, new Size(640, 480), null);
 
-    @ReactMethod
-    public void traverseStorageTree(Promise p) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-//            File rootDir = new File();
-//            WritableArray arr = new WritableNativeArray();
-//
-//            File[] fileList = rootDir.listFiles();
-//            if(fileList == null) {
-//                p.resolve("cannot traverse");
-//                return;
-//            }
-//            for(File f : fileList) {
-//                arr.pushString(f.getAbsolutePath());
-//            }
-            p.resolve(Environment.DIRECTORY_ALARMS);
-        }
-    }
+
 
     @ReactMethod
     public void clearAllVisibleCache(Promise promise) {
@@ -951,15 +935,16 @@ public class ManageApps extends ReactContextBaseJavaModule {
         PackageInstaller mPackageInstaller = getCurrentActivity().getPackageManager().getPackageInstaller();
         mPackageInstaller.uninstall(packageName, sender.getIntentSender());
     }
-boolean deleteDirectory(File directoryToBeDeleted) {
-    File[] allContents = directoryToBeDeleted.listFiles();
-    if (allContents != null) {
-        for (File file : allContents) {
-            deleteDirectory(file);
+
+    boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
         }
+        return directoryToBeDeleted.delete();
     }
-    return directoryToBeDeleted.delete();
-}
 
     @ReactMethod
     public void pickVideos(Promise promise) {
@@ -1199,7 +1184,183 @@ boolean deleteDirectory(File directoryToBeDeleted) {
         p.resolve(String.valueOf(availableBytes));
     }
 
+    @SuppressLint("Range")
+    @ReactMethod
+    public void getThumbnails(Promise p) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if(Environment.isExternalStorageManager()) {
+                WritableArray arr = new WritableNativeArray();
+                String[] DIRECTORIES = new String[] {
+                        Environment.DIRECTORY_MOVIES,
+                        Environment.DIRECTORY_MUSIC,
+                        Environment.DIRECTORY_PODCASTS,
+                        Environment.DIRECTORY_AUDIOBOOKS,
+                        Environment.DIRECTORY_DCIM,
+                        Environment.DIRECTORY_PICTURES,
+                        Environment.DIRECTORY_RINGTONES
+                };
 
+                for(String dirName : DIRECTORIES) {
+                    File dir = Environment.getExternalStoragePublicDirectory(dirName);
+                    File[] fileList = dir.listFiles();
+                    if(fileList != null) {
+                        for(File file: fileList) {
+                            if(file != null) {
+                                WritableMap map = new WritableNativeMap();
+                                map.putString("name", file.getName());
+                                map.putString("directory", dirName);
+                                map.putString("path", file.getAbsolutePath());
+                                arr.pushMap(map);
+                            }
+                        }
+                    }
+                }
+                p.resolve(arr);
+            }
+        }
+    }
+
+    @ReactMethod
+    public void getJunkData(Promise p) {
+        File rootDir = new File(
+                Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                        .getAbsolutePath()
+                        .replace(Environment.DIRECTORY_PICTURES, "")
+        );
+
+        WritableArray allFilesAndDirs = new WritableNativeArray();
+        walk(rootDir, allFilesAndDirs);
+
+
+        WritableArray thumbnails = new WritableNativeArray();
+        WritableArray emptyFolders = new WritableNativeArray();
+
+       for(int i = 0; i < allFilesAndDirs.size(); i++) {
+           ReadableMap item = allFilesAndDirs.getMap(i);
+           String name = item.getString("name");
+
+           // thumbnails
+           if(name.equals(".thumbnails")) {
+               thumbnails.pushMap(item);
+               continue;
+           }
+
+           // empty folders
+           if(item.getBoolean("dir") &&
+                   item.getBoolean("canDelete") &&
+                   item.getBoolean("empty")) {
+               emptyFolders.pushMap(item);
+               continue;
+           }
+       }
+
+       WritableMap output = new WritableNativeMap();
+
+       output.putArray("thumbnails", thumbnails);
+       output.putArray("emptyFolders", emptyFolders);
+
+       p.resolve(output);
+    }
+
+
+    public void walk(File dir, WritableArray arr) {
+        if(!dir.exists() || !dir.canRead()) {
+         return;
+        }
+
+        if(isDirectory(dir)) {
+            if(isEmpty(dir)) {
+                WritableMap item = new WritableNativeMap();
+
+                item.putString("name", dir.getName());
+                item.putString("path", dir.getAbsolutePath());
+                item.putBoolean("dir", true);
+                item.putBoolean("empty", true);
+                item.putDouble("size", dir.length());
+
+                boolean canDelete = dir.canWrite();
+
+                String[] publicDirs = new String[] {
+                           "media",
+                           "Android",
+                           "0",
+                   };
+
+                for(String s : publicDirs) {
+                    if(dir.getName().equals(s)) {
+                        canDelete = false;
+                    }
+                }
+
+                item.putBoolean("canDelete", canDelete);
+
+
+                arr.pushMap(item);
+            }else {
+                WritableMap item = new WritableNativeMap();
+
+                item.putString("name", dir.getName());
+                item.putString("path", dir.getAbsolutePath());
+                item.putBoolean("dir", true);
+                item.putBoolean("empty", false);
+                item.putDouble("size", dirSize(dir));
+
+                boolean canDelete = dir.canWrite();
+
+                String[] publicDirs = new String[] {
+                        "media",
+                        "Android",
+                        "0",
+                };
+
+                for(String s : publicDirs) {
+                    if(dir.getName().equals(s)) {
+                        canDelete = false;
+                    }
+                }
+
+                item.putBoolean("canDelete", canDelete);
+
+
+                arr.pushMap(item);
+
+                for(File f : dir.listFiles()) {
+                    walk(f, arr);
+                }
+
+            }
+        }else {
+            WritableMap item = new WritableNativeMap();
+
+            item.putString("name", dir.getName());
+            item.putString("path", dir.getAbsolutePath());
+            item.putBoolean("dir", false);
+            item.putBoolean("canDelete", dir.canWrite());
+            item.putDouble("size", dir.length());
+
+            arr.pushMap(item);
+        }
+    }
+
+    public boolean isDirectory(File dir) {
+        return dir.exists() && dir.isDirectory() && dir.listFiles() != null;
+    }
+
+    public boolean isEmpty(File dir) {
+        return isDirectory(dir) && dir.listFiles().length == 0;
+    }
+
+    @ReactMethod
+    public void deleteDirs(ReadableArray paths,Promise p) {
+        for(int i = 0; i < paths.size(); i++) {
+            File dir = new File(paths.getString(i));
+            if(dir.exists()) {
+                deleteDirectory(dir);
+            }
+        }
+        p.resolve(true);
+    }
 
     @ReactMethod
     public void freeSpace(Promise promise) {
@@ -1214,6 +1375,4 @@ boolean deleteDirectory(File directoryToBeDeleted) {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         getCurrentActivity().startActivityForResult(intent, 100);
     }
-
-
 }
