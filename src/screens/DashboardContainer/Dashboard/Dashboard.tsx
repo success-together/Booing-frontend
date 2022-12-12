@@ -14,6 +14,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Geolocation from 'react-native-geolocation-service';
 import DeviceInfo from 'react-native-device-info';
 import {store} from '../../../shared';
+import { addDevice, updateGeoLocation } from '../../../shared/slices/Devices/DevicesService';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
@@ -100,17 +101,17 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   };
 
   const addNewDevice = async (data: any) => {
-    // console.log(data);
+    console.log(data);
 
-    // await addDevice(data).then(async () => {
-    //   // console.log('**************' + position);
-    //   if (position?.lat && position?.lon)
-    //     await updateGeoLocation({
-    //       device_ref: data.device_ref,
-    //       lat: position?.lat,
-    //       lon: position?.lon,
-    //     });
-    // });
+    await addDevice(data).then(async () => {
+      // console.log('**************' + position);
+      if (position?.lat && position?.lon)
+        await updateGeoLocation({
+          device_ref: data.device_ref,
+          lat: position?.lat,
+          lon: position?.lon,
+        });
+    });
   };
 
   useEffect(() => {
