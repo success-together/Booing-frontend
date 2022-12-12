@@ -1,9 +1,6 @@
-import React from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import {BaseUrl, store} from '../..';
-import {Login} from '../../../models/Login';
 import {Executor} from '../../Executor';
+import {setDevice} from './DevicesSlice';
 
 export const GetDevicesService = (data: {user_id: string}) => {
   return Executor({
@@ -31,6 +28,9 @@ export const addDevice = async (data: {
     isSilent: true,
     data,
     withoutToast: true,
+    successFun(data) {
+      setDevice(data.data);
+    },
   });
 };
 

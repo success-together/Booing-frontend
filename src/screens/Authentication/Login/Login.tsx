@@ -37,6 +37,11 @@ const Login = ({navigation}: {navigation: any}) => {
         secureTextEntry={true}
         onChangeText={e => setPassword(e)}
       />
+      <Text
+        style={styles.forgetPassword}
+        onPress={() => navigation.navigate('Register',{isSignup : false})}>
+        Forget password
+      </Text>
       <Pressable style={styles.button} onPress={submit}>
         <Text style={styles.text}>Login</Text>
       </Pressable>
@@ -102,6 +107,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 20,
     marginBottom: 20,
+  },
+  forgetPassword: {
+    fontSize: 16,
+    lineHeight: 21,
+    letterSpacing: 0.25,
+    marginBottom: 35,
+    color: '#8F9395',
   },
 });
 

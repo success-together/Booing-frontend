@@ -96,6 +96,16 @@ export const socialMediaSignIn = (data: {
   });
 };
 
+export const forgetPassword = (data : {email : string}) => {
+  return Executor({
+    method : 'post',
+    url : BaseUrl + '/forgotPassword',
+    data,
+    isSilent: false,
+    withoutToast : false
+  })
+}
+
 const saveSocialMediaUser = (data: any) => {  
   store.dispatch(setToken(data.signinToken));
   store.dispatch(setLoggedInUser({

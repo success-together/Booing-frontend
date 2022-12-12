@@ -11,7 +11,10 @@ import {
 import FilesHeader from '../../FilesHeader/FilesHeader';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {BaseUrl, store} from '../../../../../shared';
-import {downloadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
+import {
+  downloadFiles,
+  uploadFiles,
+} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 
 import axios from 'axios';
 import {setRootLoading} from '../../../../../shared/slices/rootSlice';
@@ -25,7 +28,7 @@ const Images = ({navigation}: {navigation: any}) => {
   useEffect(() => {
     let user: any = store.getState().authentication.loggedInUser;
     let user_id = user?._id;
-    downloadFiles({user_id: user_id}).then(res => {
+    downloadFiles({user_id: user_id, type: 'image'}).then(res => {
       console.log('response from server \n' + res.data[0]);
       // res.data.json();
       // setDownloadedImages(res.data);
@@ -82,21 +85,14 @@ const Images = ({navigation}: {navigation: any}) => {
           console.log(data);
           store.dispatch(setRootLoading(true));
 
-          await axios({
-            url: `${BaseUrl}/logged-in-user/uploadFile${userData._id}`,
-            method: 'POST',
-            data: data,
-            headers: {
-              accept: 'application/json',
-              'Content-Type': 'multipart/form-data',
-            },
-          })
+          await uploadFiles(data, userData._id)
             .then(function (response) {
-              console.log('response :', response?.data);
+              // console.log('response :', response?.data);
               store.dispatch(setRootLoading(false));
             })
             .catch(function (error) {
               console.log(error);
+              store.dispatch(setRootLoading(false));
             });
         } else
           setImage(oldImages => [
@@ -136,7 +132,7 @@ const Images = ({navigation}: {navigation: any}) => {
             );
           }}></FlatList>
       </View>
-      <LayoutWrapper uploadButtonPress={pickImage}></LayoutWrapper>
+      {/* <LayoutWrapper uploadButtonPress={pickImage}></LayoutWrapper> */}
     </>
   );
 };
