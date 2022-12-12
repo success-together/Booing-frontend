@@ -1,26 +1,22 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {
-  Button,
   FlatList,
-  PermissionsAndroid,
   SafeAreaView,
   StyleSheet,
   Text,
-  ToastAndroid,
   TouchableOpacity,
   View,
 } from 'react-native';
+
+import File from '../File/File';
+import Toast from 'react-native-toast-message';
+import ManageApps from '../../../../utils/manageApps';
+import bytes from 'bytes';
+
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import File from '../File/File';
-import {ReadDirItem} from 'react-native-fs';
-import {deleteFile, deleteFiles} from '../../../../utils/filesManagment';
-import Toast from 'react-native-toast-message';
-import ManageApps from '../../../../utils/manageApps';
-import {PERMISSIONS, request} from 'react-native-permissions';
-import bytes from 'bytes';
+import Foundation from 'react-native-vector-icons/Foundation';
 
 const icons = {
   Pictures: (size: number, color = '#8F8F8F') => (
@@ -47,12 +43,14 @@ const icons = {
       color={color}
     />
   ),
-  // 'ScreenShots' :(size: number, color = '#8F8F8F') => <MaterialCommunityIcons name='cellphone-screenshot' size={size} color={color} />,
   Cache: (size: number, color = '#8F8F8F') => (
     <MaterialCommunityIcons name="cached" size={size} color={color} />
   ),
-  Applications: (size: number, color = '#8F8F8F') => (
-    <MaterialIcons name="phone-android" size={size} color={color} />
+  Thumbnails: (size: number, color = '#8F8F8F') => (
+    <Foundation name="thumbnails" size={size} color={color} />
+  ),
+  'Empty folders': (size: number, color = '#8F8F8F') => (
+    <MaterialCommunityIcons name="folder-outline" size={size} color={color} />
   ),
 };
 
@@ -72,6 +70,7 @@ interface FilesListProps {
   removeDeletedItems: Function;
   size: number;
   setTriggerRerender?: Function;
+  refetchByLabel: Function;
 }
 
 interface DeleteBtnProps {
@@ -110,6 +109,7 @@ export default function FilesList({
   removeDeletedItems,
   size,
   setTriggerRerender,
+  refetchByLabel,
 }: FilesListProps) {
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
   const [showDeleteBtn, setShowDeleteBtn] = useState(false);
@@ -145,16 +145,47 @@ export default function FilesList({
     if (label === 'Music') {
       isDeleted = await ManageApps.deleteAudios(paths);
     }
+    if (label === 'Empty folders' || label === 'Thumbnails') {
+      isDeleted = await ManageApps.deleteDirs(paths);
+    }
+
+    setShowDeleteBtn(false);
+    refetchByLabel(label);
 
     if (isDeleted) {
-      removeDeletedItems(selectedFilesIds, label);
-      setShowDeleteBtn(false);
       return Toast.show({
         type: 'success',
         text1: 'items deleted successfully',
       });
     }
   }, [selectedFilesIds]);
+
+  const onDeleteAppsPress = async () => {
+    const apps = selectedFilesIds.reduce<any[]>((acc, id) => {
+      const item = data.find((e: RenderFileData['item']) => e.id === id);
+      if (item) {
+        acc.push(item);
+        return acc;
+      }
+      return acc;
+    }, []);
+
+    for (const app of apps) {
+      const arr = await ManageApps.clearAppVisibleCache(
+        (app as any).packageName,
+      );
+    }
+
+    if (setTriggerRerender) {
+      setTriggerRerender((prev: any) => !prev);
+    }
+
+    setShowDeleteBtn(false);
+    refetchByLabel(label);
+    Toast.show({
+      text1: `cache cleared for apps ${apps.map(e => e.name).join(',')}`,
+    });
+  };
 
   const renderFile = useCallback(
     ({item: {name, id, path, logo, visibleCacheSize}}: RenderFileData) => {
@@ -188,43 +219,6 @@ export default function FilesList({
       }
     };
   }, [selectedFilesIds]);
-
-  const onDeleteAppsPress = async () => {
-    const granted = await ManageApps.checkAllFilesAccessPermission();
-    if (!granted) {
-      setShowDeleteBtn(false);
-      return Toast.show({
-        type: 'error',
-        text1: 'you need to enable access to delete apps cache !',
-      });
-    }
-
-    const apps = selectedFilesIds.reduce<any[]>((acc, id) => {
-      const item = data.find((e: RenderFileData['item']) => e.id === id);
-      if (item) {
-        acc.push(item);
-        return acc;
-      }
-      return acc;
-    }, []);
-    console.log({apps});
-
-    for (const app of apps) {
-      const arr = await ManageApps.clearAppVisibleCache(
-        (app as any).packageName,
-      );
-      console.log({arr});
-    }
-
-    if (setTriggerRerender) {
-      setTriggerRerender((prev: any) => !prev);
-    }
-
-    setShowDeleteBtn(false);
-    Toast.show({
-      text1: `cache cleared for apps ${apps.map(e => e.name).join(',')}`,
-    });
-  };
 
   return (
     <View style={styles.container}>
