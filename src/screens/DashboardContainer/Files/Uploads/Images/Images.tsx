@@ -66,10 +66,10 @@ const Images = ({navigation}: {navigation: any}) => {
         // maxHeight: 200,
         // maxWidth: 200,
       },
-      async response => {
+      async (response : any )=> {
         response.assets && console.log(response.assets[0].uri);
         if (response.assets) {
-          setImage([{uri: response.assets[0].uri}]);
+          setImage(oldImages => [...oldImages, {uri: response?.assets[0].uri ? response?.assets[0].uri : ''}]);
           console.log(`${BaseUrl}/logged-in-user/uploadFile/${userData._id}`);
           let data = new FormData();
           // console.log(response.assets[0]);
