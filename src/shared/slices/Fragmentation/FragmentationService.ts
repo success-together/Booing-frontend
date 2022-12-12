@@ -5,7 +5,7 @@ import {Executor, fetchWithTimeout} from '../../Executor';
 export const checkForDownloads = (data: {user_id: string}) => {
   try {
     const url = BaseUrl + '/logged-in-user/checkForDownloads';
-    return fetchWithTimeout(url, data, 60 * 1000, true);
+    // return fetchWithTimeout(url, data, 60 * 1000, true);
   } catch (error) {
     console.log(error);
   }
@@ -33,10 +33,16 @@ export const uploadFiles = async (data: FormData, user_id: string) => {
   return axios({
     url: `${BaseUrl}/logged-in-user/uploadFile/${user_id}`,
     method: 'POST',
-    data: data,
+    data,
     headers: {
       accept: 'application/json',
       'Content-Type': 'multipart/form-data',
     },
-  }).then;
+  })
+    .then(res => {
+      console.log('res upload : ', res);
+    })
+    .catch(err => {
+      console.log(err);
+    });
 };

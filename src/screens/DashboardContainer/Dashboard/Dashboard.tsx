@@ -13,12 +13,7 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Geolocation from 'react-native-geolocation-service';
 import DeviceInfo from 'react-native-device-info';
-import {
-  addDevice,
-  updateGeoLocation,
-} from '../../../shared/slices/Devices/DevicesService';
 import {store} from '../../../shared';
-import bytes from 'bytes';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);

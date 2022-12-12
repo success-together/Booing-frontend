@@ -18,7 +18,7 @@ export function Executor(config: ExecutorInterface): Promise<any> {
     !config.isSilent && store.dispatch(setRootLoading(true));
     // Interceptor[config.method](config.url, config.data)
     console.log(config.url);
-    console.log(config.data);
+    // console.log(config.data);
 
     axios[config.method](config.url, config.data, {
       headers: {
@@ -28,9 +28,9 @@ export function Executor(config: ExecutorInterface): Promise<any> {
       },
     })
       .then((res: AxiosResponse<any>) => {
-        console.log(config.url);
-        console.log(config.method);
-        console.log(config.data);
+        // console.log(config.url);
+        // console.log(config.method);
+        // console.log(config.data);
         if (res?.status === 200) {
           config?.successFun && config.successFun(res?.data);
           !config.withoutToast &&
