@@ -15,10 +15,6 @@ const DATA = Array.from({length: 2}, (_, index) => ({
 
 const Videos = () => {
   const [data, setData] = useState(DATA);
-  let userData: any = store.getState().authentication.loggedInUser;
-
-  console.log({userData});
-
   useEffect(() => {
     const id = setTimeout(() => {
       setData((prev: any) => {

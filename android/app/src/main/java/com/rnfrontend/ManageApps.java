@@ -200,7 +200,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getAllDownloads(Promise promise) {
-
         WritableArray listOfDownloads;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             listOfDownloads = getDownloadsMod(MediaStore.Downloads.EXTERNAL_CONTENT_URI);

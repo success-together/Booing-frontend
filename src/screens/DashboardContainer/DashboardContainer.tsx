@@ -23,20 +23,37 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
 import {store} from '../../shared';
-import {checkForDownloads} from '../../shared/slices/Fragmentation/FragmentationService';
+import {
+  checkForDownloads,
+  checkForUploads,
+} from '../../shared/slices/Fragmentation/FragmentationService';
 
 const Stack = createBottomTabNavigator();
 
 const DashboardContainer = () => {
   useEffect(() => {
     const user_id = store.getState().authentication.userId;
-    const intervalId = checkForDownloads({user_id} as unknown as {
+    const device_id = store.getState().devices.deviceId;
+
+    const intervalDownloads = checkForDownloads({user_id} as unknown as {
       user_id: string;
     });
 
+    let intervalUploads: number | undefined;
+    if (device_id) {
+      intervalUploads = checkForUploads({user_id} as unknown as {
+        user_id: string;
+      });
+
+      console.log({device_id});
+    }
+
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
+      if (intervalDownloads) {
+        clearInterval(intervalDownloads);
+      }
+      if (typeof intervalUploads !== 'undefined') {
+        clearInterval(intervalUploads);
       }
     };
   }, []);

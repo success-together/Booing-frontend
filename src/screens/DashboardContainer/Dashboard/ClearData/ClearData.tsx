@@ -80,14 +80,12 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
     try {
       setShowModal({show: true, loading: true});
       let images = await ManageApps.getImages();
-      images = await Promise.all(
-        images.map(async (img: any) =>
-          Object.assign(img, {
-            logo: await readFile(img.path, 'base64'),
-            id: nanoid(10),
-          }),
-        ),
-      );
+      for (const img of images) {
+        Object.assign(img, {
+          id: nanoid(10),
+          logo: await readFile(img.path, 'base64'),
+        });
+      }
       setImages(images);
       setVideos(addId(await ManageApps.getVideos()));
       setMusic(addId(await ManageApps.getAudios()));
@@ -135,15 +133,12 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
     switch (label) {
       case 'Pictures':
         let images = await ManageApps.getImages();
-        images = await Promise.all(
-          images.map(async (img: any) =>
-            Object.assign(img, {
-              logo: await readFile(img.path, 'base64'),
-              id: nanoid(10),
-            }),
-          ),
-        );
-
+        for (const img of images) {
+          Object.assign(img, {
+            id: nanoid(10),
+            logo: await readFile(img.path, 'base64'),
+          });
+        }
         setImages(images);
         break;
       case 'Videos':

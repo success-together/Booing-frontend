@@ -12,7 +12,7 @@ export const login = (data: Login) => {
     data,
     isSilent: false,
     successFun: (data: Login) => {
-      console.log('success fn')
+      console.log('success fn');
       saveUserData(data);
       saveToken(data);
     },
@@ -28,7 +28,7 @@ export const register = (data: any) => {
     isSilent: false,
     withoutToast: false,
     successFun: (data: any) => {
-      console.log("resgistration : "+data);
+      console.log('resgistration : ' + data);
       // saveUserData(data);
     },
   });
@@ -56,8 +56,8 @@ export const updateProfile = (data: {
     withoutToast: false,
     data,
     successFun(data) {
-      console.log("here : "+data.data);
-      
+      console.log('here : ' + data.data);
+
       // saveUserData(data.data.user);
     },
   });
@@ -86,24 +86,25 @@ export const socialMediaSignIn = (data: {
     method: 'post',
     url: BaseUrl + '/socialMediaSignup',
     data,
-    isSilent : false,
-    withoutToast :true,
-    successFun (data) {
-      console.log(data);
-      saveToken(data)
+    isSilent: false,
+    withoutToast: true,
+    successFun(data) {
+      saveToken(data);
       store.dispatch(setLoggedInUser(data.data));
     },
   });
 };
 
-const saveSocialMediaUser = (data: any) => {  
+const saveSocialMediaUser = (data: any) => {
   store.dispatch(setToken(data.signinToken));
-  store.dispatch(setLoggedInUser({
-    isLoggedIn: true,
-    LoggedInUser: data?.data?.user,
-    userId: data?.data?.user?._id
-    }));
-}
+  store.dispatch(
+    setLoggedInUser({
+      isLoggedIn: true,
+      LoggedInUser: data?.data?.user,
+      userId: data?.data?.user?._id,
+    }),
+  );
+};
 
 const saveUserData = (data: any) => {
   store.dispatch(setLoggedInUser(data.data));

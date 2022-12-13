@@ -39,7 +39,6 @@ export const updateGeoLocation = async (data: {
   lat: number;
   lon: number;
 }) => {
-  console.log(data);
   return Executor({
     method: 'post',
     url: BaseUrl + '/booing/logged-in-user/updateGeoLocation',
