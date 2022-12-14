@@ -79,14 +79,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const scanUserStorage = useCallback(async () => {
     try {
       setShowModal({show: true, loading: true});
-      let images = await ManageApps.getImages();
-      for (const img of images) {
-        Object.assign(img, {
-          id: nanoid(10),
-          logo: await readFile(img.path, 'base64'),
-        });
-      }
-      setImages(images);
+      setImages(addId(await ManageApps.getImages()));
       setVideos(addId(await ManageApps.getVideos()));
       setMusic(addId(await ManageApps.getAudios()));
       setApps(addId(await ManageApps.getAllInstalledApps()));
@@ -132,14 +125,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const refechByLabel = async (label: string) => {
     switch (label) {
       case 'Pictures':
-        let images = await ManageApps.getImages();
-        for (const img of images) {
-          Object.assign(img, {
-            id: nanoid(10),
-            logo: await readFile(img.path, 'base64'),
-          });
-        }
-        setImages(images);
+        setImages(addId(await ManageApps.getImages()));
         break;
       case 'Videos':
         setVideos(addId(await ManageApps.getVideos()));
