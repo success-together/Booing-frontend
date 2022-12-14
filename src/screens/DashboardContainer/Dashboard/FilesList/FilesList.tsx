@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -6,6 +6,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ViewabilityConfigCallbackPair,
+  ViewToken,
 } from 'react-native';
 
 import File from '../File/File';
@@ -114,7 +116,29 @@ export default function FilesList({
   const [showDeleteBtn, setShowDeleteBtn] = useState(false);
   const [items, setItems] = useState([]);
   const [iterator, setIterator] = useState<Iterator<[]>>();
-  const [loading, setLoading] = useState(false);
+  const [viewedItems, setViewedItems] = useState<
+    {id: string; isLoaded: boolean}[]
+  >([]);
+  const [loadedItemsIds, setLoadedItemsIds] = useState<string[]>([]);
+
+  const onViewableItemsChanged = ({
+    viewableItems,
+  }: {
+    viewableItems: ViewToken[];
+  }) => {
+    setViewedItems(prev => {
+      const newViewedItems = [];
+      for (const viewToken of viewableItems) {
+        const isExist = prev.findIndex(e => e.id === viewToken.item.id) !== -1;
+        if (!isExist) {
+          newViewedItems.push({id: viewToken.item.id, isLoaded: false});
+        }
+      }
+
+      return newViewedItems.length > 0 ? [...prev, ...newViewedItems] : prev;
+    });
+  };
+  const viewabilityConfigCallbackPairs = useRef([{onViewableItemsChanged}]);
 
   const onPress = useCallback(
     (id: string) => {
@@ -200,11 +224,30 @@ export default function FilesList({
           visibleCacheSize={visibleCacheSize}
           selected={selectedFilesIds.includes(id)}
           Icon={icons[label]}
+          loaded={() => {
+            setLoadedItemsIds(prev =>
+              prev.includes(id) ? prev : [...prev, id],
+            );
+          }}
         />
       );
     },
     [selectedFilesIds, onPress, data],
   );
+
+  useEffect(() => {
+    setViewedItems(prev => {
+      let changed = false;
+      for (const item of prev) {
+        if (loadedItemsIds.includes(item.id) && !item.isLoaded) {
+          item.isLoaded = true;
+          changed = true;
+        }
+      }
+
+      return changed ? [...prev] : prev;
+    });
+  }, [viewedItems, loadedItemsIds]);
 
   useEffect(() => {
     if (selectedFilesIds.length !== 0 && !showDeleteBtn) {
@@ -227,23 +270,30 @@ export default function FilesList({
         return;
       }
 
+      if (viewedItems.filter(item => !item.isLoaded).length !== 0) {
+        return Toast.show({
+          type: 'info',
+          text1: label,
+          text2: 'please wait until full content is loaded',
+        });
+      }
+
       if (initial) {
         const next = initial.next();
         if (next && !next.done) {
-          setItems(next.value);
-          setLoading(false);
+          setTimeout(() => {
+            setItems(next.value);
+          }, 500);
         }
         return;
       }
 
-      setLoading(true);
-      setTimeout(() => {
-        const next = iterator!.next();
-        if (next && !next.done) {
+      const next = iterator!.next();
+      if (next && !next.done) {
+        setTimeout(() => {
           setItems(next.value);
-          setLoading(false);
-        }
-      }, 500);
+        }, 500);
+      }
     },
     [items, data, iterator],
   );
@@ -281,7 +331,9 @@ export default function FilesList({
             }}>
             {label}
           </Text>
-          {loading && <Circle size={16} indeterminate={true} />}
+          {viewedItems.filter(item => !item.isLoaded).length !== 0 && (
+            <Circle size={16} indeterminate={true} />
+          )}
         </View>
         <View
           style={{
@@ -308,10 +360,16 @@ export default function FilesList({
           keyExtractor={item => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
-          initialNumToRender={2}
+          initialNumToRender={5}
           removeClippedSubviews={true}
-          maxToRenderPerBatch={4}
+          maxToRenderPerBatch={5}
           onEndReached={() => nextSet()}
+          viewabilityConfigCallbackPairs={
+            viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
+          }
+          viewabilityConfig={{
+            minimumViewTime: 200,
+          }}
         />
       </SafeAreaView>
     </View>

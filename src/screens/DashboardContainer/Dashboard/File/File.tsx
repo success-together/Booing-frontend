@@ -1,8 +1,8 @@
 import bytes from 'bytes';
-import React, {ReactNode} from 'react';
+import React, {ReactNode, useEffect} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import {extractExtension} from '../../../../utils/util-functions';
+import FastImage from 'react-native-fast-image';
 
 interface FileProps {
   selected: boolean;
@@ -12,6 +12,7 @@ interface FileProps {
   thumbnail?: string;
   visibleCacheSize?: number;
   Icon: (size: number, color: string) => Element;
+  loaded: () => void;
 }
 
 export const Selected = () => {
@@ -43,12 +44,23 @@ const File = ({
   thumbnail,
   onPress,
   Icon,
+  loaded,
 }: FileProps) => {
+  // for items that does not have a thumbnail
+  useEffect(() => {
+    if (!thumbnail) {
+      loaded();
+    }
+  }, []);
   return (
     <TouchableOpacity onPress={() => onPress(id)} style={styles.container}>
       {selected && <Selected />}
       {thumbnail ? (
-        <Image source={{uri: thumbnail}} style={styles.image} />
+        <FastImage
+          source={{uri: thumbnail}}
+          style={styles.image}
+          onLoadEnd={loaded}
+        />
       ) : (
         <View style={{width: 80, position: 'relative'}}>
           <Text style={{padding: 10}}>{name}</Text>
@@ -63,7 +75,7 @@ const File = ({
               top: 0,
               left: 0,
               width: 80,
-              height: '100%',
+              height: 80,
               zIndex: -1,
             }}>
             {Icon(70, '#ffffff63') as ReactNode}
