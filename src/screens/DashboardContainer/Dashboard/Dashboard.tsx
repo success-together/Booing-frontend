@@ -13,13 +13,11 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Geolocation from 'react-native-geolocation-service';
 import DeviceInfo from 'react-native-device-info';
+import {store} from '../../../shared';
 import {
   addDevice,
   updateGeoLocation,
 } from '../../../shared/slices/Devices/DevicesService';
-import {store} from '../../../shared';
-import bytes from 'bytes';
-import {setDeviceInfo} from '../../../shared/slices/Devices/DevicesSlice';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
@@ -97,16 +95,16 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   };
 
   const addNewDevice = async (data: any) => {
-    // console.log(data);
-    // await addDevice(data).then(async () => {
-    //   // console.log('**************' + position);
-    //   if (position?.lat && position?.lon)
-    //     await updateGeoLocation({
-    //       device_ref: data.device_ref,
-    //       lat: position?.lat,
-    //       lon: position?.lon,
-    //     });
-    // });
+    await addDevice(data).then(async x => {
+      console.log({addedDevice: x});
+      // console.log('**************' + position);
+      if (position?.lat && position?.lon)
+        await updateGeoLocation({
+          device_ref: data.device_ref,
+          lat: position?.lat,
+          lon: position?.lon,
+        });
+    });
   };
 
   useEffect(() => {
@@ -140,17 +138,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
 
     DeviceInfo.getUniqueId().then(uniqueId => {
       deviceId = uniqueId;
-      store.dispatch(setDeviceInfo({deviceId}));
 
       DeviceInfo.getDeviceName().then(deviceName => {
         system = DeviceInfo.getSystemName();
-
-        store.dispatch(
-          setDeviceInfo({
-            deviceName,
-            system,
-          }),
-        );
 
         const result = requestLocationPermission();
         result.then(res => {

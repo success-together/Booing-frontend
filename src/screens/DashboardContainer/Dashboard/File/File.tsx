@@ -8,9 +8,8 @@ interface FileProps {
   selected: boolean;
   onPress: (id: string) => void;
   id: string;
-  path: string;
   name: string;
-  logo?: string;
+  thumbnail?: string;
   visibleCacheSize?: number;
   Icon: (size: number, color: string) => Element;
 }
@@ -37,23 +36,19 @@ export const Selected = () => {
 };
 
 const File = ({
-  path,
   selected,
-  logo,
   id,
   name,
   visibleCacheSize,
+  thumbnail,
   onPress,
   Icon,
 }: FileProps) => {
-  const extension = path ? extractExtension(path) : null;
-  const source = {uri: `data:image/${extension};base64,${logo}`};
-
   return (
     <TouchableOpacity onPress={() => onPress(id)} style={styles.container}>
       {selected && <Selected />}
-      {extension && logo ? (
-        <Image source={source} style={styles.image} />
+      {thumbnail ? (
+        <Image source={{uri: thumbnail}} style={styles.image} />
       ) : (
         <View style={{width: 80, position: 'relative'}}>
           <Text style={{padding: 10}}>{name}</Text>

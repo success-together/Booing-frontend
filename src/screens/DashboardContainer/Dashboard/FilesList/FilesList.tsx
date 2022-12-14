@@ -57,10 +57,9 @@ const icons = {
 interface RenderFileData {
   item: {
     id: string;
-    path: string;
-    logo?: string;
     name: string;
     visibleCacheSize?: number;
+    thumbnail?: string;
   };
 }
 
@@ -106,7 +105,6 @@ const DeleteBtn = ({onPress}: DeleteBtnProps) => {
 export default function FilesList({
   data,
   label,
-  removeDeletedItems,
   size,
   setTriggerRerender,
   refetchByLabel,
@@ -188,13 +186,12 @@ export default function FilesList({
   };
 
   const renderFile = useCallback(
-    ({item: {name, id, path, logo, visibleCacheSize}}: RenderFileData) => {
+    ({item: {name, id, thumbnail, visibleCacheSize}}: RenderFileData) => {
       return (
         <File
           name={name}
-          path={path}
           id={id}
-          logo={logo}
+          thumbnail={thumbnail}
           onPress={onPress}
           visibleCacheSize={visibleCacheSize}
           selected={selectedFilesIds.includes(id)}

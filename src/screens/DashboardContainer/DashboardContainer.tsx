@@ -33,20 +33,19 @@ const Stack = createBottomTabNavigator();
 const DashboardContainer = () => {
   useEffect(() => {
     const user_id = store.getState().authentication.userId;
-    const device_id = store.getState().devices.deviceId;
 
     const intervalDownloads = checkForDownloads({user_id} as unknown as {
       user_id: string;
     });
 
     let intervalUploads: number | undefined;
-    if (device_id) {
-      intervalUploads = checkForUploads({user_id} as unknown as {
-        user_id: string;
-      });
+    // if (device_id) {
+    //   intervalUploads = checkForUploads({user_id} as unknown as {
+    //     user_id: string;
+    //   });
 
-      console.log({device_id});
-    }
+    //   console.log({device_id});
+    // }
 
     return () => {
       if (intervalDownloads) {
