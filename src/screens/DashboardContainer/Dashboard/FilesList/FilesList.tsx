@@ -17,6 +17,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import Foundation from 'react-native-vector-icons/Foundation';
+import {Circle} from 'react-native-progress';
 
 const icons = {
   Pictures: (size: number, color = '#8F8F8F') => (
@@ -111,6 +112,9 @@ export default function FilesList({
 }: FilesListProps) {
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
   const [showDeleteBtn, setShowDeleteBtn] = useState(false);
+  const [items, setItems] = useState([]);
+  const [iterator, setIterator] = useState<Iterator<[]>>();
+  const [loading, setLoading] = useState(false);
 
   const onPress = useCallback(
     (id: string) => {
@@ -217,6 +221,49 @@ export default function FilesList({
     };
   }, [selectedFilesIds]);
 
+  const nextSet = useCallback(
+    (initial?: Iterator<[]>) => {
+      if (items.length === data.length) {
+        return;
+      }
+
+      if (initial) {
+        const next = initial.next();
+        if (next && !next.done) {
+          setItems(next.value);
+          setLoading(false);
+        }
+        return;
+      }
+
+      setLoading(true);
+      setTimeout(() => {
+        const next = iterator!.next();
+        if (next && !next.done) {
+          setItems(next.value);
+          setLoading(false);
+        }
+      }, 500);
+    },
+    [items, data, iterator],
+  );
+
+  useEffect(() => {
+    const iterator = (function* () {
+      const dataCopy: typeof data = [];
+      let prevPos = 0;
+
+      while (dataCopy.length !== data.length) {
+        dataCopy.push(...data.slice(prevPos, prevPos + 5));
+        prevPos += 5;
+        yield dataCopy;
+      }
+    })();
+
+    setIterator(iterator);
+    nextSet(iterator);
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -230,9 +277,11 @@ export default function FilesList({
               borderBottomWidth: 1,
               borderBottomColor: '#8F8F8F',
               borderStyle: 'solid',
+              marginRight: 10,
             }}>
             {label}
           </Text>
+          {loading && <Circle size={16} indeterminate={true} />}
         </View>
         <View
           style={{
@@ -253,17 +302,17 @@ export default function FilesList({
         </View>
       </View>
       <SafeAreaView style={{paddingTop: 10, paddingBottom: 10}}>
-        {data.length !== 0 ? (
-          <FlatList
-            data={data}
-            renderItem={renderFile}
-            keyExtractor={item => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
-        ) : (
-          <Text style={{color: 'black'}}>No Items Found !</Text>
-        )}
+        <FlatList
+          data={items}
+          renderItem={renderFile}
+          keyExtractor={item => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          initialNumToRender={2}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={4}
+          onEndReached={() => nextSet()}
+        />
       </SafeAreaView>
     </View>
   );
@@ -282,6 +331,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     display: 'flex',
     flexDirection: 'row',
+    alignItems: 'center',
   },
   filesContainer: {
     display: 'flex',
