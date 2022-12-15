@@ -54,8 +54,6 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [thumbnails, setThumbnails] = useState([]);
   const [emptyFolders, setEmptyFolders] = useState([]);
 
-  const [triggerRerender, setTriggerRerender] = useState(false);
-
   const addId = (arr: []) => {
     arr.forEach(e => Object.assign(e, {id: nanoid(10)}));
     return arr;
@@ -90,6 +88,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       console.log(e.stack);
     } finally {
       setShowData(true);
+
       setTimeout(() => setShowModal({show: false, loading: false}), 200);
     }
   }, []);
@@ -201,6 +200,8 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                           fontSize: 11,
                           textAlign: 'center',
                           marginBottom: 20,
+                          color: 'black',
+                          fontWeight: 'bold',
                         }}>
                         you need to enable permission to perform this action
                       </Text>
@@ -296,7 +297,6 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                 label="Cache"
                 removeDeletedItems={removeDeletedItems}
                 size={calcSpace(apps, 'visibleCacheSize', 0)}
-                setTriggerRerender={setTriggerRerender}
                 refetchByLabel={refechByLabel}
               />
               <FilesList

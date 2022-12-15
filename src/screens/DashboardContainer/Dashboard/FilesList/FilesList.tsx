@@ -77,9 +77,10 @@ interface FilesListProps {
 
 interface DeleteBtnProps {
   onPress: () => void;
+  disabled: boolean;
 }
 
-const DeleteBtn = ({onPress}: DeleteBtnProps) => {
+const DeleteBtn = ({onPress, disabled}: DeleteBtnProps) => {
   return (
     <TouchableOpacity
       style={{
@@ -88,7 +89,7 @@ const DeleteBtn = ({onPress}: DeleteBtnProps) => {
         justifyContent: 'center',
         flexDirection: 'row',
         padding: 5,
-        backgroundColor: '#CB2821',
+        backgroundColor: disabled ? 'gray' : '#CB2821',
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.25,
@@ -96,7 +97,7 @@ const DeleteBtn = ({onPress}: DeleteBtnProps) => {
         elevation: 5,
         borderRadius: 5,
       }}
-      onPress={onPress}>
+      onPress={!disabled ? onPress : undefined}>
       <Feather name="trash-2" size={20} color="#FFF" />
       <Text style={{marginLeft: 3, fontWeight: '500', color: '#FFF'}}>
         Delete
@@ -113,7 +114,10 @@ export default function FilesList({
   refetchByLabel,
 }: FilesListProps) {
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
-  const [showDeleteBtn, setShowDeleteBtn] = useState(false);
+  const [deleteBtnProps, setDeleteBtnProps] = useState({
+    disabled: false,
+    show: false,
+  });
   const [items, setItems] = useState([]);
   const [iterator, setIterator] = useState<Iterator<[]>>();
   const [viewedItems, setViewedItems] = useState<
@@ -175,9 +179,10 @@ export default function FilesList({
       isDeleted = await ManageApps.deleteDirs(paths);
     }
 
-    setShowDeleteBtn(false);
-    refetchByLabel(label);
+    setDeleteBtnProps({disabled: true, show: true});
+    await refetchByLabel(label);
 
+    setDeleteBtnProps({disabled: false, show: false});
     if (isDeleted) {
       return Toast.show({
         type: 'success',
@@ -202,12 +207,10 @@ export default function FilesList({
       );
     }
 
-    if (setTriggerRerender) {
-      setTriggerRerender((prev: any) => !prev);
-    }
+    setDeleteBtnProps({disabled: true, show: true});
+    await refetchByLabel(label);
 
-    setShowDeleteBtn(false);
-    refetchByLabel(label);
+    setDeleteBtnProps({disabled: false, show: false});
     Toast.show({
       text1: `cache cleared for apps ${apps.map(e => e.name).join(',')}`,
     });
@@ -250,16 +253,16 @@ export default function FilesList({
   }, [viewedItems, loadedItemsIds]);
 
   useEffect(() => {
-    if (selectedFilesIds.length !== 0 && !showDeleteBtn) {
-      setShowDeleteBtn(true);
+    if (selectedFilesIds.length !== 0 && !deleteBtnProps.show) {
+      setDeleteBtnProps({show: true, disabled: false});
     }
-    if (selectedFilesIds.length === 0 && showDeleteBtn) {
-      setShowDeleteBtn(false);
+    if (selectedFilesIds.length === 0 && deleteBtnProps.show) {
+      setDeleteBtnProps({show: false, disabled: false});
     }
 
     return () => {
-      if (selectedFilesIds.length === 0 && showDeleteBtn) {
-        setShowDeleteBtn(false);
+      if (selectedFilesIds.length === 0 && deleteBtnProps.show) {
+        setDeleteBtnProps({show: false, disabled: false});
       }
     };
   }, [selectedFilesIds]);
@@ -312,7 +315,7 @@ export default function FilesList({
 
     setIterator(iterator);
     nextSet(iterator);
-  }, []);
+  }, [data]);
 
   return (
     <View style={styles.container}>
@@ -344,11 +347,12 @@ export default function FilesList({
             justifyContent: 'center',
           }}>
           <Text style={{marginRight: 10}}>{bytes(size)}</Text>
-          {showDeleteBtn && (
+          {deleteBtnProps.show && (
             <DeleteBtn
               onPress={
                 label !== 'Cache' ? onDeleteFilesPress : onDeleteAppsPress
               }
+              disabled={deleteBtnProps.disabled}
             />
           )}
         </View>
