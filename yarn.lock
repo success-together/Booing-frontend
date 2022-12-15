@@ -802,7 +802,7 @@
     node-forge "^1.2.1"
     nullthrows "^1.1.1"
 
-"@expo/config-plugins@^5.0.4", "@expo/config-plugins@~5.0.3":
+"@expo/config-plugins@^5.0.1", "@expo/config-plugins@^5.0.4", "@expo/config-plugins@~5.0.3":
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/@expo/config-plugins/-/config-plugins-5.0.4.tgz#216fea6558fe66615af1370de55193f4181cb23e"
   integrity sha512-vzUcVpqOMs3h+hyRdhGwk+eGIOhXa5xYdd92yO17RMNHav3v/+ekMbs7XA2c3lepMO8Yd4/5hqmRw9ZTL6jGzg==
@@ -6588,6 +6588,14 @@ react-native-fast-image@^8.6.3:
   resolved "https://registry.yarnpkg.com/react-native-fast-image/-/react-native-fast-image-8.6.3.tgz#6edc3f9190092a909d636d93eecbcc54a8822255"
   integrity sha512-Sdw4ESidXCXOmQ9EcYguNY2swyoWmx53kym2zRsvi+VeFCHEdkO+WG1DK+6W81juot40bbfLNhkc63QnWtesNg==
 
+react-native-fbsdk-next@^11.1.0:
+  version "11.1.0"
+  resolved "https://registry.yarnpkg.com/react-native-fbsdk-next/-/react-native-fbsdk-next-11.1.0.tgz#d0a321c5daea068bce933ee3b9bec5469f176975"
+  integrity sha512-fLKaR1OWPufX81Ks7uuWX0+7jUw4mXKKQ4J3gWYXmAjXYk/Fp10UqZBOqkQ4TE78EP7baB2Qw8ZIcl2dvyQS2Q==
+  dependencies:
+    "@expo/config-plugins" "^5.0.1"
+    xml2js "^0.4.23"
+
 react-native-fs@^2.20.0:
   version "2.20.0"
   resolved "https://registry.yarnpkg.com/react-native-fs/-/react-native-fs-2.20.0.tgz#05a9362b473bfc0910772c0acbb73a78dbc810f6"
@@ -8253,7 +8261,7 @@ xml-name-validator@^3.0.0:
   resolved "https://registry.yarnpkg.com/xml-name-validator/-/xml-name-validator-3.0.0.tgz#6ae73e06de4d8c6e47f9fb181f78d648ad457c6a"
   integrity sha512-A5CUptxDsvxKJEU3yO6DuWBSJz/qizqzJKOMIfUJHETbBw/sFaDxgd6fxm1ewUaM0jZ444Fc5vC5ROYurg/4Pw==
 
-xml2js@0.4.23:
+xml2js@0.4.23, xml2js@^0.4.23:
   version "0.4.23"
   resolved "https://registry.yarnpkg.com/xml2js/-/xml2js-0.4.23.tgz#a0c69516752421eb2ac758ee4d4ccf58843eac66"
   integrity sha512-ySPiMjM0+pLDftHgXY4By0uswI3SPKLDw/i3UXbnO8M/p28zqexCUoPmQFrYD+/1BzhGJSs2i1ERWKJAtiLrug==

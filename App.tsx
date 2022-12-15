@@ -17,6 +17,12 @@ import {
   checkForDownloads,
   checkForUploads,
 } from './src/shared/slices/Fragmentation/FragmentationService';
+import {Settings} from 'react-native-fbsdk-next';
+
+// Setting the facebook app id using setAppID
+// Remember to set CFBundleURLSchemes in Info.plist on iOS if needed
+Settings.setAppID('681969233386824');
+Settings.initializeSDK();
 
 const Stack = createNativeStackNavigator();
 

@@ -37,6 +37,7 @@
     "react-native-device-info": "^10.3.0",
     "react-native-elements": "^3.4.2",
     "react-native-fast-image": "^8.6.3",
+    "react-native-fbsdk-next": "^11.1.0",
     "react-native-fs": "^2.20.0",
     "react-native-geolocation-service": "^5.3.1",
     "react-native-image-picker": "^4.10.1",

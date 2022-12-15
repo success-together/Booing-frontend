@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">RNFrontEnd</string>
+    <string name="facebook_app_id">681969233386824</string>
+    <string name="fb_login_protocol_scheme">fb1234</string>
+    <string name="facebook_client_token">c526babe79382aa5721c1d2b1d1846cd</string>
 </resources>
