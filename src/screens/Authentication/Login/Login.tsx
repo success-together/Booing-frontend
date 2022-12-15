@@ -39,7 +39,10 @@ const Login = ({navigation}: {navigation: any}) => {
       />
       <Text
         style={styles.forgetPassword}
-        onPress={() => navigation.navigate('Register',{isSignup : false})}>
+        onPress={() => navigation.navigate('Verification', {
+          // user_id: res.data._id,
+          isSignup: false,
+        })}>
         Forget password
       </Text>
       <Pressable style={styles.button} onPress={submit}>
