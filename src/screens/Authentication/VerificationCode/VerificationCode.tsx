@@ -14,6 +14,8 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
   const [userId, setUserId] = useState<any>(null);
   const [isSignup, setIsSignup] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  let [step, setStep] = useState<number>(0);
 
   const submit = async () => {
     if (code > 999 && userId) {
@@ -23,29 +25,54 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
         code: code,
         isSignup: isSignup,
       }).then(res => {
-        navigation.navigate('Login');
+        if (step === 1 && isSignup) navigation.navigate('Login');
+        else if (step === 1 && !isSignup) setStep(++step);
       });
     }
   };
 
   const sendMail = async () => {
-    console.log(email);
-    await forgetPassword({email: email}).then(res => {
-      if (res.data.success) {
-        setIsSignup(false);
-      }
-    });
+    if (email)
+      await forgetPassword({email: email}).then(res => {
+        console.log(res);
+
+        if (res.success) {
+          setStep(++step);
+          setUserId(res.data._id);
+          // setIsSignup(true);
+        }
+      });
   };
 
   useEffect(() => {
     const {user_id, isSignup} = route.params;
+    console.log(user_id);
     setUserId(user_id);
     setIsSignup(isSignup);
   }, []);
 
   return (
     <View style={styles.container}>
-      {isSignup ? (
+      {!isSignup && step === 2 ? (
+        <>
+          <>
+            <Toast />
+            <View style={styles.containerImage}>
+              <Image style={styles.image} source={Logo} />
+            </View>
+            <View style={{flex: 0.1}} />
+            <Input
+              placeholder="Enter your new password"
+              autoCompleteType={'password'}
+              onChangeText={e => setPassword(e)}
+              secureTextEntry={true}
+            />
+            <Pressable style={styles.button}>
+              <Text style={styles.text}>Update Password</Text>
+            </Pressable>
+          </>
+        </>
+      ) : step === 0 ? (
         <>
           <Toast />
           <View style={styles.containerImage}>
@@ -57,10 +84,8 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
             autoCompleteType={'email'}
             onChangeText={e => setEmail(e)}
           />
-          <Pressable style={styles.button} onPress={submit}>
-            <Text style={styles.text} onPress={sendMail}>
-              Send Mail
-            </Text>
+          <Pressable style={styles.button} onPress={() => sendMail()}>
+            <Text style={styles.text}>Send Mail</Text>
           </Pressable>
           {/* <Text
           style={styles.createAccount}
@@ -69,25 +94,27 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
         </Text> */}
         </>
       ) : (
-        <>
-          <View style={styles.containerImage}>
-            <Image style={styles.image} source={Logo} />
-          </View>
-          <View style={{flex: 0.4}} />
-          <Text style={styles.createAccount}>
-            A mail was send to your adress
-          </Text>
-          <Input
-            placeholder="Enter verification code"
-            autoCompleteType={'password'}
-            keyboardType="numeric"
-            maxLength={4}
-            onChangeText={e => setCode(Number(e))}
-          />
-          <Pressable style={styles.button} onPress={submit}>
-            <Text style={styles.text}>Verify</Text>
-          </Pressable>
-        </>
+        step === 1 && (
+          <>
+            <View style={styles.containerImage}>
+              <Image style={styles.image} source={Logo} />
+            </View>
+            <View style={{flex: 0.4}} />
+            <Text style={styles.createAccount}>
+              A mail was send to your adress
+            </Text>
+            <Input
+              placeholder="Enter verification code"
+              autoCompleteType={'password'}
+              keyboardType="numeric"
+              maxLength={4}
+              onChangeText={e => setCode(Number(e))}
+            />
+            <Pressable style={styles.button} onPress={() => submit()}>
+              <Text style={styles.text}>Verify</Text>
+            </Pressable>
+          </>
+        )
       )}
     </View>
   );
