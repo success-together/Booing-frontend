@@ -66,7 +66,7 @@ const SelectableUploadWrapper = ({
   }, []);
 
   return (
-    <>
+    <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
       <View
         style={{
           display: 'flex',
@@ -114,7 +114,7 @@ const SelectableUploadWrapper = ({
           <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
         </TouchableOpacity>
       </View>
-    </>
+    </View>
   );
 };
 
