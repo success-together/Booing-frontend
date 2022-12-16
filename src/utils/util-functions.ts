@@ -3,6 +3,11 @@
 // import { rule } from "../../core/model/Input";
 // import { store } from "../store";
 
+import {MutableRefObject, useEffect} from 'react';
+import {GestureResponderEvent, TouchableHighlight} from 'react-native';
+import Toast from 'react-native-toast-message';
+import {store} from '../shared';
+
 // export const isMobile = () => {
 //   const width = store.getState().root.DEVICE_WIDTH;
 //   return width <= 767;
@@ -72,7 +77,6 @@
 //   return moment.unix(unix).add(days, "days").format(frenshFormat);
 // }
 
-
 // export const tomorrowStringDate = () => {
 //   const today = new Date()
 //   const tomorrow = new Date(today)
@@ -102,15 +106,41 @@
 
 export const randomId = (len: number) => {
   let str = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVXZ';
-    let arr = [];
-    for (let i = 0; i < len; i++) {
-        arr.push(str[Math.floor(Math.random() * str.length)]);
-    }
-    return arr.join('');
-}
+  let arr = [];
+  for (let i = 0; i < len; i++) {
+    arr.push(str[Math.floor(Math.random() * str.length)]);
+  }
+  return arr.join('');
+};
 
 export const extractExtension = (str: string) => {
   const index = str.lastIndexOf('.');
   return index !== -1 ? str.slice(index + 1) : null;
-}
+};
 
+export function useOutsideAlerter(
+  ref: MutableRefObject<any>,
+  setPressHandler?: (arg?: (e: GestureResponderEvent) => void) => void,
+  setIsSelecting?: (arg: boolean) => void,
+) {
+  useEffect(() => {
+    function handleClickOutside(event: GestureResponderEvent) {
+      if (
+        ref.current &&
+        ref.current.props.children !== event.target &&
+        setIsSelecting
+      ) {
+        setIsSelecting(false);
+      }
+    }
+    if (setPressHandler) {
+      setPressHandler(() => handleClickOutside);
+    }
+
+    return () => {
+      if (setPressHandler) {
+        setPressHandler();
+      }
+    };
+  }, []);
+}

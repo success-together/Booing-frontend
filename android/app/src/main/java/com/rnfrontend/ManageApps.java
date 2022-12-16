@@ -237,10 +237,9 @@ public class ManageApps extends ReactContextBaseJavaModule {
             map.putInt("size", cursor.getInt(column_index_size));
             Uri videoUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                     cursor.getInt(column_index_id));
+            map.putString("uri", videoUri.toString());
             String base64Thumbnail = getThumbnailBase64(videoUri, MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO);
             map.putString("thumbnail", base64Thumbnail);
-
-
 
             listOfAllVideos.pushMap(map);
         }
@@ -1138,12 +1137,17 @@ public class ManageApps extends ReactContextBaseJavaModule {
     @ReactMethod
     public void getFileDescription(String uriString, Promise p) {
         Uri uri = Uri.parse(uriString);
-        String[] projection = { MediaStore.Files.FileColumns.DISPLAY_NAME,
-                MediaStore.Files.FileColumns.DOCUMENT_ID
+        String[] projection = {
+                MediaStore.Files.FileColumns.DISPLAY_NAME,
+                MediaStore.Files.FileColumns.DOCUMENT_ID,
         };
         Cursor cursor = getReactApplicationContext()
                 .getContentResolver()
-                .query(uri, projection, null, null, null);
+                .query(uri,
+                        projection,
+                        null,
+                        null,
+                        null);
 
         if (cursor == null) {
             p.resolve(null);
@@ -1151,14 +1155,11 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         WritableMap map = new WritableNativeMap();
         int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
-        int idIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DOCUMENT_ID);
 
         cursor.moveToFirst();
 
         String name = cursor.getString(nameIndex);
-        String id = cursor.getString(idIndex);
 
-        map.putString("id", id);
         map.putString("name", name);
 
         p.resolve(map);

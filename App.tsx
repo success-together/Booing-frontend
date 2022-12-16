@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {MutableRefObject, useRef} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {
@@ -18,6 +18,7 @@ import {
   checkForUploads,
 } from './src/shared/slices/Fragmentation/FragmentationService';
 import {Settings} from 'react-native-fbsdk-next';
+import {TouchableWithoutFeedback} from 'react-native';
 
 // Setting the facebook app id using setAppID
 // Remember to set CFBundleURLSchemes in Info.plist on iOS if needed

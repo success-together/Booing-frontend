@@ -1,14 +1,31 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {FlatList, Text, View} from 'react-native';
+import React, {
+  MutableRefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
+  FlatList,
+  Text,
+  TouchableHighlight,
+  TouchableWithoutFeedback,
+  TouchableWithoutFeedbackComponent,
+  View,
+} from 'react-native';
 import CheckBox from '../../../../../Components/CheckBox/CheckBox';
+import {store} from '../../../../../shared';
+import {useOutsideAlerter} from '../../../../../utils/util-functions';
 import Item from './Item';
 
 export interface SelectableItemsProps {
-  handleSelect: (id: string) => () => void;
+  handleSelect: (id: string) => void;
   selectedIds: string[];
   data: any[];
   setSelectedIds: (x: any) => void;
   text: string;
+  showFile: (id: string) => void;
+  setPressHandler?: () => void;
 }
 
 const SelectableItems = ({
@@ -17,8 +34,32 @@ const SelectableItems = ({
   data,
   setSelectedIds,
   text,
+  showFile,
+  setPressHandler,
 }: SelectableItemsProps) => {
   const [checked, setChecked] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const listWrapperRef = useRef() as MutableRefObject<TouchableWithoutFeedback>;
+  useOutsideAlerter(listWrapperRef, setPressHandler, setIsSelecting);
+
+  const handlePress = useCallback(
+    (id: string) => () => {
+      if (isSelecting) {
+        return handleSelect(id);
+      }
+      // show file
+      showFile(id);
+    },
+    [isSelecting, data],
+  );
+
+  const handleLongPress = useCallback(
+    (id: string) => () => {
+      setIsSelecting(true);
+      handleSelect(id);
+    },
+    [isSelecting],
+  );
 
   const handleCheck = useCallback(() => {
     setChecked(prev => !prev);
@@ -29,9 +70,10 @@ const SelectableItems = ({
       <Item
         name={name}
         index={index}
-        handleSelect={handleSelect(id)}
         selected={selectedIds.includes(id)}
         progress={progress}
+        handleLongPress={handleLongPress(id)}
+        handlePress={handlePress(id)}
       />
     );
   };
@@ -55,37 +97,41 @@ const SelectableItems = ({
   }, [data, selectedIds]);
 
   return (
-    <FlatList
-      data={data}
-      renderItem={renderItem}
-      numColumns={4}
-      extraData={selectedIds}
-      ListHeaderComponent={
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginBottom: 10,
-          }}>
-          <CheckBox
-            checked={checked}
-            handleCheck={handleCheck}
-            onCheck={checkAll}
-            onUncheck={uncheckAll}
-          />
-          <Text
-            style={{
-              marginLeft: 13,
-              fontWeight: 'bold',
-              fontSize: 16,
-              color: 'black',
-            }}>
-            {text}
-          </Text>
-        </View>
-      }
-    />
+    <TouchableWithoutFeedback ref={listWrapperRef}>
+      <View>
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          numColumns={4}
+          extraData={selectedIds}
+          ListHeaderComponent={
+            <View
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 10,
+              }}>
+              <CheckBox
+                checked={checked}
+                handleCheck={handleCheck}
+                onCheck={checkAll}
+                onUncheck={uncheckAll}
+              />
+              <Text
+                style={{
+                  marginLeft: 13,
+                  fontWeight: 'bold',
+                  fontSize: 16,
+                  color: 'black',
+                }}>
+                {text}
+              </Text>
+            </View>
+          }
+        />
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
