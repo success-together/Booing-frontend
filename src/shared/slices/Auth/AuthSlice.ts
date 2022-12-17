@@ -19,15 +19,13 @@ export const authentificationSlice = createSlice({
       state: {
         isLoggedIn: boolean;
         loggedInUser: User | undefined;
-        userId ?: string
+        userId?: string;
       },
       action: PayloadAction<any>,
     ) => {
-      console.log(action.payload);
-      
       state.isLoggedIn = true;
       state.loggedInUser = action.payload.user;
-      state.userId = action.payload.user._id
+      state.userId = action.payload.user._id;
     },
     setToken: (
       state: {

@@ -14,7 +14,10 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Geolocation from 'react-native-geolocation-service';
 import DeviceInfo from 'react-native-device-info';
 import {store} from '../../../shared';
-import { addDevice, updateGeoLocation } from '../../../shared/slices/Devices/DevicesService';
+import {
+  addDevice,
+  updateGeoLocation,
+} from '../../../shared/slices/Devices/DevicesService';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
@@ -36,15 +39,6 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       }
     | undefined
   >(undefined);
-  const [deviceInfo, setDeviceInfo] = useState<{
-    deviceName: string;
-    deviceId: string;
-    system: string;
-  }>({
-    deviceId: '',
-    deviceName: '',
-    system: '',
-  });
 
   const requestLocationPermission = async () => {
     try {
@@ -95,15 +89,14 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   };
 
   const getUserData = () => {
-    console.log('store',store.getState().authentication.loggedInUser);
-    
+    console.log('store', store.getState().authentication.loggedInUser);
+
     setLoggedUser(store.getState().authentication.loggedInUser);
   };
 
   const addNewDevice = async (data: any) => {
-    console.log(data);
-
-    await addDevice(data).then(async () => {
+    await addDevice(data).then(async x => {
+      console.log({addedDevice: x});
       // console.log('**************' + position);
       if (position?.lat && position?.lon)
         await updateGeoLocation({
@@ -145,12 +138,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
 
     DeviceInfo.getUniqueId().then(uniqueId => {
       deviceId = uniqueId;
-      setDeviceInfo({...deviceInfo, deviceId: uniqueId});
 
       DeviceInfo.getDeviceName().then(deviceName => {
         system = DeviceInfo.getSystemName();
-        setDeviceInfo({...deviceInfo, deviceName: deviceName});
-        setDeviceInfo({...deviceInfo, system: DeviceInfo.getSystemName()});
 
         const result = requestLocationPermission();
         result.then(res => {

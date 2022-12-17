@@ -1,6 +1,10 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
-export interface InitialState {}
+export interface InitialState {
+  deviceId: string | null;
+  deviceName: string | null;
+  system: string | null;
+}
 
 export const initialState = {
   device: {user_id: ''},

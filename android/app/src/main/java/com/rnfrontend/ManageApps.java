@@ -42,12 +42,15 @@ import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.ThumbnailUtils;
 import android.media.VolumeProvider;
 import android.net.Uri;
 import android.nfc.tech.IsoDep;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
@@ -57,7 +60,9 @@ import android.os.storage.StorageVolume;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.util.Base64;
 import android.util.Log;
+import android.util.Size;
 import android.webkit.MimeTypeMap;
 
 
@@ -76,6 +81,8 @@ import org.json.JSONException;
 import org.w3c.dom.Document;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -107,19 +114,74 @@ public class ManageApps extends ReactContextBaseJavaModule {
         return "ManageApps";
     }
 
+
+    public String getThumbnailBase64(Uri uri, int mediaType)  {
+        int size = 80;
+        ContentResolver cr = getReactApplicationContext().getContentResolver();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                Bitmap bitmap = cr.loadThumbnail(uri, new Size(size, size), null);
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+                byte[] byteArray = byteArrayOutputStream .toByteArray();
+                String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+                return "data:image/jpeg;base64," + encoded;
+
+            } catch (IOException e) {
+                return null;
+            }
+        } else {
+            Long origId = Long.valueOf(uri.getLastPathSegment());
+            Bitmap bitmap = null;
+            if(mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE) {
+                bitmap = MediaStore.Images.Thumbnails
+                        .getThumbnail(cr, origId, MediaStore.Images.Thumbnails.MINI_KIND, null);
+            }else if(mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO) {
+                bitmap = MediaStore.Video.Thumbnails
+                        .getThumbnail(cr, origId, MediaStore.Images.Thumbnails.MINI_KIND, null);
+            }
+
+            if (bitmap != null) {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+                byte[] byteArray = byteArrayOutputStream .toByteArray();
+                String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+                return "data:image/jpeg;base64," + encoded;
+            }
+        }
+        return null;
+    }
+
+    public String getAudioThumbnailBase64(String path) {
+        int size = 80;
+        Bitmap bitmap = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path),
+                size, size);
+
+        if(bitmap == null) {
+            return null;
+        }
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream .toByteArray();
+        String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+        return "data:image/jpeg;base64," + encoded;
+    }
     // get media files and downloads
     @ReactMethod
     public void getImages(Promise promise) {
         Uri uri;
         Cursor cursor;
-        int column_index_data, column_index_title, column_index_size;
+        int column_index_data, column_index_title, column_index_size, column_index_id;
         WritableArray listOfAllImages = new WritableNativeArray();
-        uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
         String[] projection = {
-                        MediaStore.MediaColumns.DATA
-                        ,MediaStore.Images.Media.TITLE
-                        ,MediaStore.Images.Media.SIZE,
+                MediaStore.MediaColumns.DATA,
+                MediaStore.Images.Media.TITLE,
+                MediaStore.Images.Media.SIZE,
+                MediaStore.Images.Media._ID
+
 
         };
 
@@ -129,12 +191,18 @@ public class ManageApps extends ReactContextBaseJavaModule {
         column_index_data = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
         column_index_title = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
         column_index_size = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE);
+        column_index_id = cursor.getColumnIndex(MediaStore.MediaColumns._ID);
 
         while (cursor.moveToNext()) {
             WritableMap map = new WritableNativeMap();
             map.putString("path", cursor.getString(column_index_data));
             map.putString("name", cursor.getString(column_index_title));
             map.putInt("size", cursor.getInt(column_index_size));
+            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    cursor.getInt(column_index_id));
+            String base64Thumbnail = getThumbnailBase64(imageUri, MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE);
+            map.putString("thumbnail", base64Thumbnail);
+
             listOfAllImages.pushMap(map);
         }
         promise.resolve(listOfAllImages);
@@ -144,25 +212,34 @@ public class ManageApps extends ReactContextBaseJavaModule {
     public void getVideos(Promise promise) {
         Uri uri;
         Cursor cursor;
-        int column_index_data, column_index_title, column_index_size;
+        int column_index_data, column_index_title, column_index_size, column_index_id;
         WritableArray listOfAllVideos = new WritableNativeArray();
         uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
 
-        String[] projection = { MediaStore.MediaColumns.DATA
+        String[] projection = { MediaStore.Video.Media.DATA
                 ,MediaStore.Video.Media.TITLE
-                ,MediaStore.Video.Media.SIZE};
+                ,MediaStore.Video.Media.SIZE
+                ,MediaStore.Video.Media._ID
+        };
 
         cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
                 null, null);
 
-        column_index_data = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
-        column_index_title = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
-        column_index_size = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE);
+        column_index_data = cursor.getColumnIndex(MediaStore.Video.Media.DATA);
+        column_index_title = cursor.getColumnIndex(MediaStore.Video.Media.TITLE);
+        column_index_size = cursor.getColumnIndex(MediaStore.Video.Media.SIZE);
+        column_index_id = cursor.getColumnIndex(MediaStore.Video.Media._ID);
+
         while (cursor.moveToNext()) {
             WritableMap map = new WritableNativeMap();
             map.putString("path", cursor.getString(column_index_data));
             map.putString("name", cursor.getString(column_index_title));
             map.putInt("size", cursor.getInt(column_index_size));
+            Uri videoUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                    cursor.getInt(column_index_id));
+            map.putString("uri", videoUri.toString());
+            String base64Thumbnail = getThumbnailBase64(videoUri, MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO);
+            map.putString("thumbnail", base64Thumbnail);
 
             listOfAllVideos.pushMap(map);
         }
@@ -173,26 +250,31 @@ public class ManageApps extends ReactContextBaseJavaModule {
     public void getAudios(Promise promise) {
         Uri uri;
         Cursor cursor;
-        int column_index_data, column_index_title, column_index_size;
+        int column_index_data, column_index_title, column_index_size, column_index_albumId;
         WritableArray listOfAudios = new WritableNativeArray();
         uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
 
-        String[] projection = { MediaStore.MediaColumns.DATA
+        String[] projection = { MediaStore.Audio.Media.DATA
                 ,MediaStore.Audio.Media.TITLE
-                ,MediaStore.Audio.Media.SIZE};
+                ,MediaStore.Audio.Media.SIZE
+                ,MediaStore.Audio.Media.ALBUM_ID
+        };
 
         cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
                 null, null);
 
-        column_index_data = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
-        column_index_title = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
-        column_index_size = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE);
+        column_index_data = cursor.getColumnIndex(MediaStore.Audio.Media.DATA);
+        column_index_title = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+        column_index_size = cursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
+        column_index_albumId = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID);
+
         while (cursor.moveToNext()) {
             WritableMap map = new WritableNativeMap();
-            map.putString("path", cursor.getString(column_index_data));
+            String path = cursor.getString(column_index_data);
+            map.putString("path", path);
             map.putString("name", cursor.getString(column_index_title));
             map.putInt("size", cursor.getInt(column_index_size));
-
+            map.putString("thumbnail",  getAudioThumbnailBase64(path));
             listOfAudios.pushMap(map);
         }
         promise.resolve(listOfAudios);
@@ -200,7 +282,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getAllDownloads(Promise promise) {
-
         WritableArray listOfDownloads;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             listOfDownloads = getDownloadsMod(MediaStore.Downloads.EXTERNAL_CONTENT_URI);
@@ -1056,12 +1137,17 @@ public class ManageApps extends ReactContextBaseJavaModule {
     @ReactMethod
     public void getFileDescription(String uriString, Promise p) {
         Uri uri = Uri.parse(uriString);
-        String[] projection = { MediaStore.Files.FileColumns.DISPLAY_NAME,
-                MediaStore.Files.FileColumns.DOCUMENT_ID
+        String[] projection = {
+                MediaStore.Files.FileColumns.DISPLAY_NAME,
+                MediaStore.Files.FileColumns.DOCUMENT_ID,
         };
         Cursor cursor = getReactApplicationContext()
                 .getContentResolver()
-                .query(uri, projection, null, null, null);
+                .query(uri,
+                        projection,
+                        null,
+                        null,
+                        null);
 
         if (cursor == null) {
             p.resolve(null);
@@ -1069,14 +1155,11 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         WritableMap map = new WritableNativeMap();
         int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
-        int idIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DOCUMENT_ID);
 
         cursor.moveToFirst();
 
         String name = cursor.getString(nameIndex);
-        String id = cursor.getString(idIndex);
 
-        map.putString("id", id);
         map.putString("name", name);
 
         p.resolve(map);

@@ -78,32 +78,7 @@ const delay = (delayInms: number) => {
   return new Promise(resolve => setTimeout(() => resolve, delayInms));
 };
 
-export function fetchWithTimeout(
-  url: string,
-  options: {user_id: string},
-  time: number,
-  isDownload: boolean,
-) {
-  return setInterval(async () => {
-    try {
-      const result = await axios.post(url, options);
-
-      if (result.data?.data?.length > 0 && isDownload) {
-        for (const {fragmentID, fileName, user_id, fragment} of result.data
-          .data) {
-          const name = `${fragmentID}-${fileName}-${user_id}.json`;
-          const isExist = await ManageApps.isFileExist(name);
-          if (!isExist) {
-            console.log({name, isExist});
-            await ManageApps.saveFile(name, fragment);
-          }
-        }
-      }
-    } catch (e: any) {
-      console.log({error: e.message});
-    }
-  }, time);
-
+export function fetchWithTimeout(fn: () => Promise<void>, time: number) {
   // let timerId = setInterval(() => console.log('checking for updates'), 5000);
   // return Promise.race([
   //   axios.post(url, options.body).then((res) => {
@@ -116,7 +91,6 @@ export function fetchWithTimeout(
   //     }, 999999999999999),
   //   ),
   // ]);
-
   // while (true) {
   //   console.log('in');
   //   let res = await axios.post(
@@ -124,7 +98,6 @@ export function fetchWithTimeout(
   //     options,
   //   );
   //   console.log(res.data);
-
   //   await delay(5000);
   //   console.log('out');
   // }

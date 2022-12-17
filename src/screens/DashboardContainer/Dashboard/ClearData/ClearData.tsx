@@ -54,8 +54,6 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [thumbnails, setThumbnails] = useState([]);
   const [emptyFolders, setEmptyFolders] = useState([]);
 
-  const [triggerRerender, setTriggerRerender] = useState(false);
-
   const addId = (arr: []) => {
     arr.forEach(e => Object.assign(e, {id: nanoid(10)}));
     return arr;
@@ -79,16 +77,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const scanUserStorage = useCallback(async () => {
     try {
       setShowModal({show: true, loading: true});
-      let images = await ManageApps.getImages();
-      images = await Promise.all(
-        images.map(async (img: any) =>
-          Object.assign(img, {
-            logo: await readFile(img.path, 'base64'),
-            id: nanoid(10),
-          }),
-        ),
-      );
-      setImages(images);
+      setImages(addId(await ManageApps.getImages()));
       setVideos(addId(await ManageApps.getVideos()));
       setMusic(addId(await ManageApps.getAudios()));
       setApps(addId(await ManageApps.getAllInstalledApps()));
@@ -99,6 +88,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       console.log(e.stack);
     } finally {
       setShowData(true);
+
       setTimeout(() => setShowModal({show: false, loading: false}), 200);
     }
   }, []);
@@ -134,17 +124,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const refechByLabel = async (label: string) => {
     switch (label) {
       case 'Pictures':
-        let images = await ManageApps.getImages();
-        images = await Promise.all(
-          images.map(async (img: any) =>
-            Object.assign(img, {
-              logo: await readFile(img.path, 'base64'),
-              id: nanoid(10),
-            }),
-          ),
-        );
-
-        setImages(images);
+        setImages(addId(await ManageApps.getImages()));
         break;
       case 'Videos':
         setVideos(addId(await ManageApps.getVideos()));
@@ -220,6 +200,8 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                           fontSize: 11,
                           textAlign: 'center',
                           marginBottom: 20,
+                          color: 'black',
+                          fontWeight: 'bold',
                         }}>
                         you need to enable permission to perform this action
                       </Text>
@@ -315,7 +297,6 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                 label="Cache"
                 removeDeletedItems={removeDeletedItems}
                 size={calcSpace(apps, 'visibleCacheSize', 0)}
-                setTriggerRerender={setTriggerRerender}
                 refetchByLabel={refechByLabel}
               />
               <FilesList
