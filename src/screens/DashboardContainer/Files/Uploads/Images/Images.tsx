@@ -6,12 +6,16 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import FilesHeader from '../../FilesHeader/FilesHeader';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {BaseUrl, store} from '../../../../../shared';
-import {downloadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
+import {
+  downloadFiles,
+  uploadFiles,
+} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 
 import axios from 'axios';
 import {setRootLoading} from '../../../../../shared/slices/rootSlice';
@@ -24,19 +28,16 @@ const Images = ({navigation}: {navigation: any}) => {
   useEffect(() => {
     let user: any = store.getState().authentication.loggedInUser;
     let user_id = user?._id;
-    downloadFiles({user_id: user_id}).then(res => {
-      console.log('response from server \n' + res.data[0]);
+    downloadFiles({user_id: user_id, type: 'image'}).then(res => {
+      // console.log('response from server \n' + res.data);
       // res.data.json();
       // setDownloadedImages(res.data);
       // setImage([{uri: res.data[0]}]);
       // store.dispatch(setRootLoading(true));
       res?.data.forEach((item: string) => {
-        console.log(item);
         setImage(oldImages => [...oldImages, {uri: item ? item : ''}]);
-        console.log(image);
       });
     });
-    console.log(image);
     // store.dispatch(setRootLoading(false));
   }, []);
 
@@ -65,37 +66,29 @@ const Images = ({navigation}: {navigation: any}) => {
         // maxHeight: 200,
         // maxWidth: 200,
       },
-      async response => {
+      async (response : any )=> {
         response.assets && console.log(response.assets[0].uri);
-        if (image.length === 0 && response.assets) {
-          setImage([{uri: response.assets[0].uri}]);
-          console.log(`${BaseUrl}/logged-in-user/uploadFile${userData._id}`);
+        if (response.assets) {
+          setImage(oldImages => [...oldImages, {uri: response?.assets[0].uri ? response?.assets[0].uri : ''}]);
+          console.log(`${BaseUrl}/logged-in-user/uploadFile/${userData._id}`);
           let data = new FormData();
-          console.log(response.assets[0]);
+          // console.log(response.assets[0]);
 
           data.append('file', {
             uri: response.assets[0].uri,
             type: response.assets[0].type,
             name: response.assets[0].fileName,
           });
-          console.log(data);
           store.dispatch(setRootLoading(true));
 
-          await axios({
-            url: `${BaseUrl}/logged-in-user/uploadFile${userData._id}`,
-            method: 'POST',
-            data: data,
-            headers: {
-              accept: 'application/json',
-              'Content-Type': 'multipart/form-data',
-            },
-          })
-            .then(function (response) {
-              console.log('response :', response?.data);
+          await uploadFiles(data, userData._id)
+            .then(function (response: any) {
+              console.log('response :', response);
               store.dispatch(setRootLoading(false));
             })
             .catch(function (error) {
               console.log(error);
+              store.dispatch(setRootLoading(false));
             });
         } else
           setImage(oldImages => [
@@ -105,41 +98,71 @@ const Images = ({navigation}: {navigation: any}) => {
         store.dispatch(setRootLoading(false));
       },
     );
-    console.log(image);
     store.dispatch(setRootLoading(false));
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.containerImage}>
-        <FilesHeader />
+    <>
+      <View style={styles.container}>
+        <View style={styles.containerImage}>
+          <FilesHeader />
+        </View>
+        <FlatList
+          data={image}
+          numColumns={3}
+          style={{flex: 1}}
+          keyExtractor={item => item.uri}
+          renderItem={({item}) => {
+            return (
+              <View style={styles.inner}>
+                <Image
+                  source={{uri: item.uri}}
+                  style={{
+                    width: Dimensions.get('window').width / 4,
+                    height: Dimensions.get('window').height / 4,
+                  }}
+                  resizeMode={'contain'}
+                />
+              </View>
+            );
+          }}></FlatList>
       </View>
-      <FlatList
-        data={image}
-        numColumns={3}
-        style={{flex: 1}}
-        keyExtractor={item => item.uri}
-        renderItem={({item}) => {
-          return (
-            <View style={styles.inner}>
-              <Image
-                source={{uri: item.uri}}
-                style={{
-                  width: Dimensions.get('window').width / 4,
-                  height: Dimensions.get('window').height / 4,
-                }}
-                resizeMode={'contain'}
-              />
-            </View>
-          );
-        }}></FlatList>
-      <Pressable style={styles.button} onPress={pickImage}>
-        <Text style={styles.text}>Upload</Text>
-      </Pressable>
-    </View>
+      <View style={styles.uploadContainer}>
+        <TouchableOpacity
+          style={{
+            width: 82,
+            height: 49,
+            backgroundColor: 'white',
+            borderRadius: 15,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          onPress={pickImage}
+          >
+          <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
+        </TouchableOpacity>
+      </View>
+    </>
   );
 };
 const styles = StyleSheet.create({
+  uploadContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: '100%',
+    backgroundColor: '#F6F7FB',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingBottom: 11,
+    paddingLeft: 20,
+    paddingRight: 20,
+    paddingTop: 18,
+  },
   image: {
     width: 150,
     height: 300,

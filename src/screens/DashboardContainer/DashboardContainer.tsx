@@ -1,6 +1,6 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
-import React from 'react';
+import React, {useEffect} from 'react';
 import {StyleSheet, Image} from 'react-native';
 import {
   Account,
@@ -23,11 +23,40 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
 import {store} from '../../shared';
-import {disconnect} from '../../shared/slices/Auth/AuthSlice';
+import {
+  checkForDownloads,
+  checkForUploads,
+} from '../../shared/slices/Fragmentation/FragmentationService';
 
 const Stack = createBottomTabNavigator();
 
 const DashboardContainer = () => {
+  useEffect(() => {
+    const user_id = store.getState().authentication.userId;
+
+    const intervalDownloads = checkForDownloads({user_id} as unknown as {
+      user_id: string;
+    });
+
+    let intervalUploads: number | undefined;
+    // if (device_id) {
+    //   intervalUploads = checkForUploads({user_id} as unknown as {
+    //     user_id: string;
+    //   });
+
+    //   console.log({device_id});
+    // }
+
+    return () => {
+      if (intervalDownloads) {
+        clearInterval(intervalDownloads);
+      }
+      if (typeof intervalUploads !== 'undefined') {
+        clearInterval(intervalUploads);
+      }
+    };
+  }, []);
+
   return (
     <>
       <NavigationContainer independent={true}>
@@ -48,13 +77,10 @@ const DashboardContainer = () => {
                   iconName = focused ? 'lock-closed' : 'lock-closed-outline';
                   break;
               }
-              // You can return any component that you like here!              
+              // You can return any component that you like here!
               if (rn == 'Booingcoin') {
                 return (
-                  <Image
-                    style={{width: 35, height: 20}}
-                    source={ small_logo}
-                  />
+                  <Image style={{width: 35, height: 20}} source={small_logo} />
                 );
               }
               return (

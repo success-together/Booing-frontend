@@ -1,26 +1,35 @@
-import {StorageAccessFramework} from 'expo-file-system';
-import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Button,
-  ActivityIndicator,
-  Linking,
-  PermissionsAndroid,
-} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {View, Text, StyleSheet, Button, ActivityIndicator} from 'react-native';
 import {ReadDirItem, readFile} from 'react-native-fs';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import ManageApps from '../../../../utils/manageApps';
-import bytes from 'bytes';
 import FilesList from '../FilesList/FilesList';
-import {randomId} from '../../../../utils/util-functions';
 import {nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
-import {setRootLoading} from '../../../../shared/slices/rootSlice';
-import {store} from '../../../../shared';
 import {ScrollView} from 'react-native';
+import {Bar} from 'react-native-progress';
+
+export const Progress = ({done}: any) => {
+  const [percent, setPercent] = useState(0);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (!done) {
+        let randomNumber = Math.random();
+        while (randomNumber + percent >= 1) {
+          randomNumber = Math.random();
+        }
+
+        return setPercent(prev => prev + randomNumber);
+      }
+
+      clearInterval(intervalId);
+    }, 250);
+  }, []);
+
+  return <Bar progress={percent} height={10} />;
+};
 
 const calcSpace = (arr: {size: number}[], field = 'size', minVal = 0) =>
   arr.reduce((acc, elem) => acc + (elem as any)[field], 0) > minVal
@@ -35,61 +44,56 @@ export interface IImage extends ReadDirItem {
 function ClearData({route, navigation}: {navigation: any; route: any}) {
   const {freeDiskStorage} = route.params;
   const [showData, setShowData] = useState(false);
-  const [showModal, setShowModal] = useState({show: false, loading: false});
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [showModal, setShowModal] = useState({show: true, loading: false});
 
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
   const [apps, setApps] = useState([]);
   const [music, setMusic] = useState([]);
-
-  const [triggerRerender, setTriggerRerender] = useState(false);
+  const [thumbnails, setThumbnails] = useState([]);
+  const [emptyFolders, setEmptyFolders] = useState([]);
 
   const addId = (arr: []) => {
     arr.forEach(e => Object.assign(e, {id: nanoid(10)}));
     return arr;
   };
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const granted = await requestMultiple([
-          PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
-          PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
-        ]);
-        if (
-          Object.values(granted).every(
-            v => v === RESULTS.GRANTED || v === RESULTS.BLOCKED,
-          )
-        ) {
-          store.dispatch(setRootLoading(true));
-          console.log({granted});
-          setShowData(true);
-          let images = await ManageApps.getImages();
-          images = await Promise.all(
-            images.map(async (img: any) =>
-              Object.assign(img, {
-                logo: await readFile(img.path, 'base64'),
-                id: nanoid(10),
-              }),
-            ),
-          );
-          store.dispatch(setRootLoading(false));
+  const requestPermissions = useCallback(async () => {
+    const results = await requestMultiple([
+      PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
+      PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
+    ]);
+    const readWriteExternalStorage = Object.values(results).every(
+      v => v === RESULTS.GRANTED || v === RESULTS.BLOCKED,
+    );
 
-          setImages(images);
-          setVideos(addId(await ManageApps.getVideos()));
-          setMusic(addId(await ManageApps.getAudios()));
-          setApps(addId(await ManageApps.getAllInstalledApps()));
-          store.dispatch(setRootLoading(false));
-        }
-      } catch (e: any) {
-        console.log(e.stack);
-      }
-      store.dispatch(setRootLoading(false));
-    })();
-  }, [triggerRerender]);
+    // all file access
+    const allFilesAccess = await ManageApps.checkAllFilesAccessPermission();
+
+    setPermissionGranted(readWriteExternalStorage && allFilesAccess);
+  }, []);
+
+  const scanUserStorage = useCallback(async () => {
+    try {
+      setShowModal({show: true, loading: true});
+      setImages(addId(await ManageApps.getImages()));
+      setVideos(addId(await ManageApps.getVideos()));
+      setMusic(addId(await ManageApps.getAudios()));
+      setApps(addId(await ManageApps.getAllInstalledApps()));
+      const {thumbnails, emptyFolders} = await ManageApps.getJunkData();
+      setThumbnails(addId(thumbnails));
+      setEmptyFolders(addId(emptyFolders));
+    } catch (e: any) {
+      console.log(e.stack);
+    } finally {
+      setShowData(true);
+
+      setTimeout(() => setShowModal({show: false, loading: false}), 200);
+    }
+  }, []);
 
   const removeDeletedItems = (ids: string[], label: string) => {
-    console.log({ids, label});
     const removeItems = (setFn: Function) => {
       setFn((arr: []) => arr.filter((item: any) => !ids.includes(item.id)));
     };
@@ -103,21 +107,47 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       case 'Music':
         removeItems(setMusic);
         break;
+      case 'Cache':
+        removeItems(setApps);
+        break;
+      case 'Thumbnails':
+        removeItems(setThumbnails);
+        break;
+      case 'Empty folders':
+        removeItems(setEmptyFolders);
+        break;
       default:
         break;
     }
   };
 
-  const clearMyCache = () => {
-    setShowModal({show: true, loading: true});
-    ManageApps.clearAppVisibleCache('com.rnfrontend').then(() => {
-      setTimeout(() => {
-        setShowModal({show: true, loading: false});
-      }, 3000);
-    });
+  const refechByLabel = async (label: string) => {
+    switch (label) {
+      case 'Pictures':
+        setImages(addId(await ManageApps.getImages()));
+        break;
+      case 'Videos':
+        setVideos(addId(await ManageApps.getVideos()));
+        break;
+      case 'Music':
+        setMusic(addId(await ManageApps.getAudios()));
+        break;
+      case 'Cache':
+        setApps(addId(await ManageApps.getAllInstalledApps()));
+        break;
+      case 'Thumbnails':
+        const {thumbnails} = await ManageApps.getJunkData();
+        setThumbnails(addId(thumbnails));
+        break;
+      case 'Empty folders':
+        const {emptyFolders} = await ManageApps.getJunkData();
+        setEmptyFolders(addId(emptyFolders));
+        break;
+      default:
+        break;
+    }
   };
 
-  console.log({apps});
   return (
     <View style={styles.container}>
       {showModal.show && (
@@ -138,33 +168,49 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
             style={{
               borderRadius: 10,
               width: 200,
-              height: 120,
+              height: 150,
               padding: 10,
               zIndex: 9999,
               backgroundColor: 'white',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
             }}>
-            {showModal.loading === true ? (
-              <>
-                <Text style={{color: 'black', fontSize: 20, marginBottom: 20}}>
-                  clear my app cache
-                </Text>
-                <ActivityIndicator size="large" />
-              </>
+            {showModal.loading ? (
+              <Progress done={showData} />
             ) : (
               <View>
-                <Text style={{marginBottom: 20, color: 'black', fontSize: 16}}>
-                  sell {freeDiskStorage / 2} Gb free space for {(50000 * freeDiskStorage) / 2} Boo coin ?
-                </Text>
-                <View style={{display: 'flex', flexDirection: 'row',justifyContent : 'center'}}>
+                <View
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100%',
+                  }}>
                   <Button
-                    title="Yes"
-                    onPress={() => setShowModal({show: false, loading: false})}
+                    title="scan"
+                    disabled={!permissionGranted}
+                    onPress={async () => await scanUserStorage()}
                   />
-                  <View style={{marginLeft: 10}}></View>
-                  <Button
-                    title="No"
-                    onPress={() => setShowModal({show: false, loading: false})}
-                  />
+                  {!permissionGranted && (
+                    <View>
+                      <Text
+                        style={{
+                          fontSize: 11,
+                          textAlign: 'center',
+                          marginBottom: 20,
+                          color: 'black',
+                          fontWeight: 'bold',
+                        }}>
+                        you need to enable permission to perform this action
+                      </Text>
+                      <Button
+                        title="enable permission"
+                        onPress={async () => await requestPermissions()}
+                      />
+                    </View>
+                  )}
                 </View>
               </View>
             )}
@@ -193,45 +239,92 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         <View style={styles.main}>
           {showData && (
             <>
+              <View
+                style={{
+                  padding: 10,
+                  backgroundColor: '#FCFCFC',
+                  borderRadius: 10,
+                  shadowColor: '#000',
+                  shadowOffset: {
+                    width: 0,
+                    height: 2,
+                  },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                  elevation: 5,
+                  marginBottom: 10,
+                }}>
+                <Text
+                  style={{marginBottom: 20, color: '#9F9EB3', fontSize: 16}}>
+                  sell {freeDiskStorage / 2} Gb free space for{' '}
+                  {(50000 * freeDiskStorage) / 2} Boo coin ?
+                </Text>
+                <View
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    width: '100%',
+                    justifyContent: 'center',
+                  }}>
+                  <Button title="yes" />
+                  <View style={{marginLeft: 10}} />
+                  <Button title="no" />
+                </View>
+              </View>
               <FilesList
                 data={images as []}
                 label="Pictures"
                 size={calcSpace(images)}
                 removeDeletedItems={removeDeletedItems}
+                refetchByLabel={refechByLabel}
               />
               <FilesList
                 data={videos as []}
                 label="Videos"
                 removeDeletedItems={removeDeletedItems}
                 size={calcSpace(videos)}
+                refetchByLabel={refechByLabel}
               />
               <FilesList
                 data={music as []}
                 label="Music"
                 removeDeletedItems={removeDeletedItems}
                 size={calcSpace(music)}
+                refetchByLabel={refechByLabel}
               />
               <FilesList
-                data={
-                  apps.filter(
-                    (e: any) =>
-                      e.visibleCacheSize > 6144 || e.hiddenCacheSize > 6144,
-                  ) as []
-                }
+                data={apps.filter((e: any) => e.visibleCacheSize > 0) as []}
                 label="Cache"
                 removeDeletedItems={removeDeletedItems}
                 size={calcSpace(apps, 'visibleCacheSize', 0)}
-                setTriggerRerender={setTriggerRerender}
+                refetchByLabel={refechByLabel}
+              />
+              <FilesList
+                data={thumbnails as []}
+                label="Thumbnails"
+                removeDeletedItems={removeDeletedItems}
+                size={calcSpace(thumbnails)}
+                refetchByLabel={refechByLabel}
+              />
+              <FilesList
+                data={emptyFolders as []}
+                label="Empty folders"
+                removeDeletedItems={removeDeletedItems}
+                size={calcSpace(emptyFolders)}
+                refetchByLabel={refechByLabel}
+              />
+              <View style={{marginTop: 10}}></View>
+              <Button
+                title="free up space (manullay)"
+                onPress={async () => await ManageApps.freeSpace()}
+              />
+              <View style={{marginTop: 10}} />
+              <Button
+                title="clear all visible cache"
+                onPress={async () => await ManageApps.clearAllVisibleCache()}
               />
             </>
           )}
-          <View style={{marginTop: 10}}></View>
-          <Button
-            title="free up space (manullay)"
-            onPress={async () => await ManageApps.freeSpace()}
-          />
-          <View style={{marginTop: 10}} />
-          <Button title="clear my cache" onPress={async () => clearMyCache()} />
         </View>
       </ScrollView>
     </View>

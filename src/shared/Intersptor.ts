@@ -1,5 +1,4 @@
-
-import axios from "axios";
+import axios from 'axios';
 // import { logout, refreshMyToken } from "./slices/Auth/AuthService";
 
 const Interceptor = axios.create({
@@ -14,7 +13,7 @@ Interceptor.interceptors.request.use((config: any) => {
   // }
   config.headers.common = {
     ...config.headers.common,
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   };
   return config;
 });
@@ -23,7 +22,7 @@ Interceptor.interceptors.response.use(
   (response: any) => response,
   async (error: {
     config: any;
-    response: { status: number; data: { message: string } };
+    response: {status: number; data: {message: string}};
   }) => {
     const originalRequest = error.config;
     if (error.response) {
@@ -41,19 +40,15 @@ Interceptor.interceptors.response.use(
         // originalRequest.headers.Authorization = `Bearer ${localStorage.getItem(
         //   "token"
         // )}`;
-        return Interceptor(originalRequest).then((response: any) => {
-          console.log(response);
-        });
+        return Interceptor(originalRequest).then((response: any) => {});
       } else if (error.response.status === 401) {
         // logout();
       } else if (error.response.status === 400) {
         // alertMessage(error.response.data.message, false);
       }
-    //    else alertMessage("une erreur s'est produite ", false);
+      //    else alertMessage("une erreur s'est produite ", false);
     }
-  }
+  },
 );
-
-
 
 export default Interceptor;

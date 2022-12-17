@@ -1,46 +1,66 @@
 import bytes from 'bytes';
-import React, {ReactNode} from 'react';
+import React, {ReactNode, useEffect} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import {extractExtension} from '../../../../utils/util-functions';
+import FastImage from 'react-native-fast-image';
 
 interface FileProps {
   selected: boolean;
   onPress: (id: string) => void;
   id: string;
-  path: string;
   name: string;
-  logo?: string;
+  thumbnail?: string;
   visibleCacheSize?: number;
   Icon: (size: number, color: string) => Element;
+  loaded: () => void;
 }
 
-const Selected = () => {
+export const Selected = () => {
   return (
-    <View style={styles.selected}>
+    <View
+      style={{
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: 25,
+        height: 25,
+        backgroundColor: '#FFF',
+        borderRadius: 25 / 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 999,
+      }}>
       <Feather name="check-circle" size={19} color={'#BDECB6'} />
     </View>
   );
 };
 
 const File = ({
-  path,
   selected,
-  logo,
   id,
   name,
   visibleCacheSize,
+  thumbnail,
   onPress,
   Icon,
+  loaded,
 }: FileProps) => {
-  const extension = path ? extractExtension(path) : null;
-  const source = {uri: `data:image/${extension};base64,${logo}`};
-
+  // for items that does not have a thumbnail
+  useEffect(() => {
+    if (!thumbnail) {
+      loaded();
+    }
+  }, []);
   return (
     <TouchableOpacity onPress={() => onPress(id)} style={styles.container}>
       {selected && <Selected />}
-      {extension && logo ? (
-        <Image source={source} style={styles.image} />
+      {thumbnail ? (
+        <FastImage
+          source={{uri: thumbnail}}
+          style={styles.image}
+          onLoadEnd={loaded}
+        />
       ) : (
         <View style={{width: 80, position: 'relative'}}>
           <Text style={{padding: 10}}>{name}</Text>
@@ -55,7 +75,7 @@ const File = ({
               top: 0,
               left: 0,
               width: 80,
-              height: '100%',
+              height: 80,
               zIndex: -1,
             }}>
             {Icon(70, '#ffffff63') as ReactNode}
@@ -78,19 +98,6 @@ const styles = StyleSheet.create({
   image: {
     width: 80,
     height: 80,
-  },
-  selected: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 25,
-    height: 25,
-    backgroundColor: '#FFF',
-    borderRadius: 25 / 2,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 999,
   },
 });
 
