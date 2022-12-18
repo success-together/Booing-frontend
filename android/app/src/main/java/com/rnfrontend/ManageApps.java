@@ -76,6 +76,7 @@ import androidx.activity.result.ActivityResultRegistryOwner;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.PathUtils;
 
 import org.json.JSONException;
 import org.w3c.dom.Document;
@@ -92,6 +93,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1135,11 +1138,11 @@ public class ManageApps extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getFileDescription(String uriString, Promise p) {
+    public void getFileDescription(String uriString, Promise p) throws URISyntaxException {
         Uri uri = Uri.parse(uriString);
         String[] projection = {
                 MediaStore.Files.FileColumns.DISPLAY_NAME,
-                MediaStore.Files.FileColumns.DOCUMENT_ID,
+                MediaStore.Files.FileColumns.MIME_TYPE,
         };
         Cursor cursor = getReactApplicationContext()
                 .getContentResolver()
@@ -1154,18 +1157,40 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
 
         WritableMap map = new WritableNativeMap();
+
         int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
+        int mimetypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
+
+
 
         cursor.moveToFirst();
 
         String name = cursor.getString(nameIndex);
+        String mimeType = cursor.getString(mimetypeIndex);
 
         map.putString("name", name);
+        map.putString("data",getFileDataBase64(FileUtils.getPath(getReactApplicationContext(),uri)));
+        map.putString("type", mimeType);
 
         p.resolve(map);
         cursor.close();
     }
 
+    public String getFileDataBase64(String path) {
+        String base64 = "";
+
+        try {
+            File file = new File(path);
+            byte[] buffer = new byte[(int) file.length() + 100];
+            int length = new FileInputStream(file).read(buffer);
+            base64 = Base64.encodeToString(buffer, 0, length,
+                    Base64.DEFAULT);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return e.getMessage();
+        }
+        return base64;
+    }
 
     @ReactMethod
     public void saveFile(String name, String data, Promise p) {

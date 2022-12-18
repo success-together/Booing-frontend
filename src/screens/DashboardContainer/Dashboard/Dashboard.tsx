@@ -18,6 +18,7 @@ import {
   addDevice,
   updateGeoLocation,
 } from '../../../shared/slices/Devices/DevicesService';
+import {setDeviceId} from '../../../shared/slices/Devices/DevicesSlice';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
@@ -89,15 +90,11 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   };
 
   const getUserData = () => {
-    console.log('store', store.getState().authentication.loggedInUser);
-
     setLoggedUser(store.getState().authentication.loggedInUser);
   };
 
   const addNewDevice = async (data: any) => {
-    await addDevice(data).then(async x => {
-      console.log({addedDevice: x});
-      // console.log('**************' + position);
+    await addDevice(data).then(async () => {
       if (position?.lat && position?.lon)
         await updateGeoLocation({
           device_ref: data.device_ref,

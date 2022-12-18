@@ -39,8 +39,6 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
         name: user.name || '',
         email: user.email,
         socialMedia_ID: user.id,
-      }).then(res => {
-        console.log(res);
       });
       // Create a Google credential with the token
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
@@ -122,14 +120,9 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    // backgroundColor: "#33a1f9",
     alignItems: 'center',
     color: '#33a1f9',
     justifyContent: 'center',
-    height: '100%',
-    // flexWrap: "wrap",
-    // flexDirecton: "row",
   },
   containerImage: {
     backgroundColor: '#33a1f9',
@@ -162,10 +155,8 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   createAccount: {
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 13,
     letterSpacing: 0.25,
-    marginBottom: 50,
     color: '#8F9395',
   },
   containerSocialMedia: {

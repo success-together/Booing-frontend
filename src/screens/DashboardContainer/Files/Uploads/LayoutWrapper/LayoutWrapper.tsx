@@ -19,7 +19,6 @@ import {Logo} from '../../../../../images/export';
 import {threeVerticleDots} from '../../../../../images/export';
 import LinearGradient from 'react-native-linear-gradient';
 import Feather from 'react-native-vector-icons/Feather';
-import ManageApps from '../../../../../utils/manageApps';
 
 interface LayoutWrapperProps {
   children?: ReactNode;

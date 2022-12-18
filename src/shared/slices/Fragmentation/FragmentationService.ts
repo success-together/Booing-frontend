@@ -21,7 +21,8 @@ export const checkForDownloads = (data: {user_id: string}) => {
         }
       }
     } catch (e: any) {
-      console.log({error: e.message});
+      console.log(e);
+      throw e;
     }
   }, 60 * 1000);
 };
@@ -33,10 +34,6 @@ export const checkForUploads = (data: {user_id: string}) => {
   return setInterval(async () => {
     try {
       const result = await axios.post(url, data);
-
-      console.log({
-        result,
-      });
 
       if (result.data?.data?.length > 0) {
         const data = result.data.data;
@@ -64,7 +61,8 @@ export const checkForUploads = (data: {user_id: string}) => {
         await Promise.all(requestes);
       }
     } catch (e: any) {
-      console.log({errror: e});
+      console.log(e);
+      throw e;
     }
   }, 5 * 1000);
 };
@@ -78,20 +76,27 @@ export const downloadFiles = async (data: {user_id: string; type: string}) => {
   });
 };
 
-export const uploadFiles = async (data: FormData, user_id: string) => {
+interface UploadFilesData {
+  user_id: string;
+  files: {name: string; type: string; data: string}[];
+}
+export const uploadFiles = (data: UploadFilesData) => {
   return axios({
-    url: `${BaseUrl}/logged-in-user/uploadFile/${user_id}`,
+    url: `${BaseUrl}/logged-in-user/uploadFile`,
     method: 'POST',
     data,
     headers: {
       accept: 'application/json',
-      'Content-Type': 'multipart/form-data',
+      'Content-Type': 'application/json',
     },
-  })
-    .then(res => {
-      console.log('res upload : ', res);
-    })
-    .catch(err => {
-      console.log(err);
-    });
+  });
+
+  // } catch (e) {
+  //   console.log({
+  //     stack: e.stack,
+  //     errorMessage: e.message,
+  //     errorName: e.name,
+  //     errorCode: e.code,
+  //   });
+  // }
 };

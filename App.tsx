@@ -36,7 +36,6 @@ export default function App() {
       setIsLoading(true);
 
       let token = await AsyncStorage.getItem('token');
-      console.log(token);
       if (token) {
         setIsLoggedIn(true);
       } else {
@@ -59,10 +58,10 @@ export default function App() {
           store.getState().authentication.loggedInUser !== undefined &&
           userData
         ) {
-          checkForDownloads({
-            user_id: userData._id,
-          });
-          checkForUploads({user_id: userData._id});
+          // checkForDownloads({
+          //   user_id: userData._id,
+          // });
+          // checkForUploads({user_id: userData._id});
         }
       });
     }, 500);
