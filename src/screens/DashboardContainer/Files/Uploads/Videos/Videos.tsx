@@ -1,23 +1,13 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {FlatList, StyleSheet, Text, View} from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {StyleSheet} from 'react-native';
 import ManageApps from '../../../../../utils/manageApps';
 import {LayoutWrapper} from '../../../../exports';
 import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
-import AntDesign from 'react-native-vector-icons/AntDesign';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
-import {BaseUrl, store} from '../../../../../shared';
 import Video from 'react-native-video';
 
-const DATA = Array.from({length: 2}, (_, index) => ({
-  id: `${index}`,
-  dateUploaded: new Date(),
-  name: `FakeData${index}`,
-  progress: 0,
-  uri: '',
-}));
-
 const Videos = () => {
-  const [data, setData] = useState(DATA);
+  const [data, setData] = useState<any[]>([]);
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
     uri?: string;
@@ -30,9 +20,7 @@ const Videos = () => {
 
   const showFile = useCallback(
     (id: string) => {
-      console.log({idtoShow: id, data});
       const file = data.find(e => e.id === id);
-      console.log({file});
       if (file) {
         setIsShowingFile({show: true, uri: file.uri, title: file.name});
       }

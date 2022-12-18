@@ -45,12 +45,21 @@ const SelectableUploadWrapper = ({
       const pickedFiles = await pickItemsFn();
       if (pickedFiles && pickedFiles.length > 0) {
         const fileDescs: any[] = [];
+        const body = new FormData();
         for (const file of pickedFiles) {
-          fileDescs.push({
+          const fileDesc = {
             ...(await ManageApps.getFileDescription(file)),
             uri: file,
             id: (Math.random() * 500).toString(), // change this later
+          };
+
+          body.append('file', {
+            uri: file,
+            type: fileDesc.type,
+            name: fileDesc.name,
           });
+
+          fileDescs.push(fileDesc);
         }
 
         const newData = fileDescs
@@ -62,7 +71,6 @@ const SelectableUploadWrapper = ({
             ...prevFileDesc,
             dateUploaded: new Date(),
             progress: 0,
-            hasTriedToUpload: false,
           }));
 
         setData((prevData: any[]) => [...prevData, ...newData]);
@@ -71,28 +79,17 @@ const SelectableUploadWrapper = ({
           return;
         }
 
-        const response = await uploadFiles({
-          user_id: user_id as string,
-          files: newData.map(e => ({name: e.name, data: e.data, type: e.type})),
-        });
-
-        console.log({response: response.data});
-
-        setData((prev: []) => {
-          for (const item of newData) {
-            const e = prev.find(
-              (existingItem: any) => existingItem.id === item.id,
-            );
-            if (!e) {
-              continue;
+        const response = await uploadFiles(body, user_id);
+        if (response.status === 200) {
+          setData((prevData: any[]) => {
+            for (const {id} of fileDescs) {
+              const item = prevData.find((e: any) => e.id === id);
+              if (item) {
+                item.progress = 1;
+              }
             }
-            (e as any).hasTriedToUpload = true;
-          }
-          return [...prev];
-        });
-
-        if (response?.status === 200) {
-          console.log(response.data.data.message);
+            return [...prevData];
+          });
         }
       }
     } catch (e: any) {
@@ -101,6 +98,10 @@ const SelectableUploadWrapper = ({
       }
     }
   }, []);
+
+  const handleDelete = useCallback(async () => {
+    console.log('delete ...');
+  }, [data]);
 
   return (
     <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
@@ -137,6 +138,22 @@ const SelectableUploadWrapper = ({
         setPressHandler={setPressHandler}
       />
       <View style={styles.uploadContainer}>
+        {selectedIds.length > 0 && (
+          <TouchableOpacity
+            style={{
+              width: 82,
+              height: 49,
+              marginRight: 10,
+              backgroundColor: 'white',
+              borderRadius: 15,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={handleDelete}>
+            <Text style={{color: '#49ACFA', fontWeight: '500'}}>Delete</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={{
             width: 82,
