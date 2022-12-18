@@ -1177,9 +1177,13 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         WritableMap map = new WritableNativeMap();
 
+
         int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
         int mimetypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
+        int mimetypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
         int sizeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE);
+
+
 
         cursor.moveToFirst();
 
@@ -1197,6 +1201,8 @@ public class ManageApps extends ReactContextBaseJavaModule {
         cursor.close();
     }
 
+    public String getFileDataBase64(String path) {
+        String base64 = "";
     public String getFileDataBase64(String path) {
         String base64 = "";
 

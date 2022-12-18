@@ -109,7 +109,11 @@ export const downloadFiles = async (data: {user_id: string; type: string}) => {
   });
 };
 
-export const uploadFiles = async (data: FormData, user_id: string) => {
+interface UploadFilesData {
+  user_id: string;
+  files: {name: string; type: string; data: string}[];
+}
+export const uploadFiles = (data: UploadFilesData) => {
   return axios({
     url: `${BaseUrl}/logged-in-user/uploadFile/${user_id}`,
     // url: `http://locahlost:3001/logged-in-user/uploadFile/${user_id}`,
@@ -117,7 +121,7 @@ export const uploadFiles = async (data: FormData, user_id: string) => {
     data,
     headers: {
       accept: 'application/json',
-      'Content-Type': 'multipart/form-data',
+      'Content-Type': 'application/json',
     },
   });
 };

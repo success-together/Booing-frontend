@@ -25,7 +25,7 @@ import {small_logo} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
-import { store} from '../../shared';
+import {store} from '../../shared';
 import RecycleBin from './Files/RecycleBin/RecycleBin';
 import {
   checkForDownloads,
@@ -227,4 +227,3 @@ const DashboardContainer = () => {
 };
 
 export default DashboardContainer;
-

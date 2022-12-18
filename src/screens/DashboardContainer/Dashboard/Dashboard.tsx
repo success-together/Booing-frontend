@@ -19,6 +19,7 @@ import {
   addDevice,
   updateGeoLocation,
 } from '../../../shared/slices/Devices/DevicesService';
+import {setDeviceId} from '../../../shared/slices/Devices/DevicesSlice';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);

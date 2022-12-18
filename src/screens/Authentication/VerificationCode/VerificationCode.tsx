@@ -202,7 +202,8 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
                     flexDirection: 'row',
                     alignItems: 'center',
                     height: 60,
-                  }} onPress={onUpdatePassword}>
+                  }}
+                  onPress={onUpdatePassword}>
                   <Text style={styles.text}>Update Password</Text>
                 </Pressable>
               </LinearGradient>
@@ -376,7 +377,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
   },
