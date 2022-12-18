@@ -34,9 +34,9 @@ const DashboardContainer = () => {
   useEffect(() => {
     const user_id = store.getState().authentication.userId;
 
-    const intervalDownloads = checkForDownloads({user_id} as unknown as {
-      user_id: string;
-    });
+    // const intervalDownloads = checkForDownloads({user_id} as unknown as {
+    //   user_id: string;
+    // });
 
     let intervalUploads: number | undefined;
     // if (device_id) {
@@ -47,14 +47,14 @@ const DashboardContainer = () => {
     //   console.log({device_id});
     // }
 
-    return () => {
-      if (intervalDownloads) {
-        clearInterval(intervalDownloads);
-      }
-      if (typeof intervalUploads !== 'undefined') {
-        clearInterval(intervalUploads);
-      }
-    };
+    // return () => {
+    //   if (intervalDownloads) {
+    //     clearInterval(intervalDownloads);
+    //   }
+    //   if (typeof intervalUploads !== 'undefined') {
+    //     clearInterval(intervalUploads);
+    //   }
+    // };
   }, []);
 
   return (

@@ -1,4 +1,4 @@
-import React, {ReactNode} from 'react';
+import React, {Dispatch, ReactNode, SetStateAction} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {threeVerticleDots} from '../../../../../images/export';
@@ -7,7 +7,7 @@ import Feather from 'react-native-vector-icons/Feather';
 interface ShowFileWrapperProps {
   title?: string;
   displayComponent: ReactNode;
-  setIsShowingFile: (arg: object) => void;
+  setIsShowingFile: Dispatch<SetStateAction<any>>;
 }
 
 const ShowFileWrapper = ({

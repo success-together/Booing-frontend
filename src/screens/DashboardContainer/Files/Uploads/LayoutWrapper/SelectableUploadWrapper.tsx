@@ -7,6 +7,8 @@ import {
   View,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import {store} from '../../../../../shared';
+import {uploadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 import ManageApps from '../../../../../utils/manageApps';
 import SelectableItems from './SelectableItems';
 
@@ -26,6 +28,7 @@ const SelectableUploadWrapper = ({
   setData,
 }: SelectableUploadWrapperProps) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const user_id = store.getState().authentication.userId;
 
   const handleSelect = useCallback(
     (id: string) =>
@@ -38,30 +41,64 @@ const SelectableUploadWrapper = ({
   const uncheckAll = useCallback(() => setSelectedIds([]), [data, selectedIds]);
 
   const handleUpload = useCallback(async () => {
-    const pickedFiles = await pickItemsFn();
-    if (pickedFiles && pickedFiles.length > 0) {
-      const fileDescs: any[] = [];
-      for (const file of pickedFiles) {
-        fileDescs.push({
-          ...(await ManageApps.getFileDescription(file)),
-          uri: file,
-          id: (Math.random() * 500).toString(), // change this later
-        });
-      }
+    try {
+      const pickedFiles = await pickItemsFn();
+      if (pickedFiles && pickedFiles.length > 0) {
+        const fileDescs: any[] = [];
+        for (const file of pickedFiles) {
+          fileDescs.push({
+            ...(await ManageApps.getFileDescription(file)),
+            uri: file,
+            id: (Math.random() * 500).toString(), // change this later
+          });
+        }
 
-      setData((prevData: any[]) => [
-        ...prevData,
-        ...fileDescs
+        const newData = fileDescs
           .filter(
             fileDesc =>
-              fileDesc && !prevData.find(file => file.id === fileDesc.id),
+              fileDesc && !data.find(file => file.name === fileDesc.name),
           )
           .map(prevFileDesc => ({
             ...prevFileDesc,
             dateUploaded: new Date(),
             progress: 0,
-          })),
-      ]);
+            hasTriedToUpload: false,
+          }));
+
+        setData((prevData: any[]) => [...prevData, ...newData]);
+
+        if (!user_id) {
+          return;
+        }
+
+        const response = await uploadFiles({
+          user_id: user_id as string,
+          files: newData.map(e => ({name: e.name, data: e.data, type: e.type})),
+        });
+
+        console.log({response: response.data});
+
+        setData((prev: []) => {
+          for (const item of newData) {
+            const e = prev.find(
+              (existingItem: any) => existingItem.id === item.id,
+            );
+            if (!e) {
+              continue;
+            }
+            (e as any).hasTriedToUpload = true;
+          }
+          return [...prev];
+        });
+
+        if (response?.status === 200) {
+          console.log(response.data.data.message);
+        }
+      }
+    } catch (e: any) {
+      for (const prop in e) {
+        console.log(prop, e[prop]);
+      }
     }
   }, []);
 

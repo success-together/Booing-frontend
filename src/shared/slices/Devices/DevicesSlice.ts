@@ -7,7 +7,7 @@ export interface InitialState {
 }
 
 export const initialState = {
-  device: {user_id: ''},
+  device: {user_id: '', device_id: ''},
 };
 
 interface Device {
@@ -36,7 +36,13 @@ export const DevicesSlice = createSlice({
 
       state.device = action.payload;
     },
+    setDeviceId: (
+      state: typeof initialState,
+      action: PayloadAction<string>,
+    ) => {
+      state.device.device_id = action.payload;
+    },
   },
 });
 
-export const {setDevice} = DevicesSlice.actions;
+export const {setDevice, setDeviceId} = DevicesSlice.actions;

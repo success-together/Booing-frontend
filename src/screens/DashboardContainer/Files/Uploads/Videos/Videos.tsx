@@ -28,25 +28,6 @@ const Videos = () => {
     title: undefined,
   });
 
-  useEffect(() => {
-    const id = setTimeout(() => {
-      setData((prev: any) => {
-        const newData = [...prev];
-        newData.forEach(e => {
-          if (e.progress === 0) {
-            e.progress = 1;
-          }
-        });
-
-        return newData;
-      });
-    }, 1000);
-
-    return () => {
-      clearTimeout(id);
-    };
-  }, [data]);
-
   const showFile = useCallback(
     (id: string) => {
       console.log({idtoShow: id, data});
