@@ -15,7 +15,7 @@ const FilesHeader = () => {
     <LinearGradient
         start={{x: 0, y: 0}}
         end={{x: 0, y: 1}}
-        colors={['#33A1F9', '#6DBDFE']}
+        colors={['#33A1F9', '#33A1F9']}
         style={styles.header}>
         <View
           style={{
@@ -28,10 +28,10 @@ const FilesHeader = () => {
             marginBottom: 36,
           }}>
           <Image
-            source={Logo}
-            style={{width: 52, height: 35, position: 'absolute', left: 0}}
+            source={small_logo}
+            style={{width: 50, height: 30, position: 'absolute', left: 0}}
           />
-          <Text style={{color: 'white', fontSize: 20, fontWeight: 'bold'}}>
+          <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
             MY FILES
           </Text>
         </View>
@@ -60,6 +60,7 @@ const FilesHeader = () => {
                 backgroundColor: 'white',
                 borderRadius: 8,
                 paddingLeft: 44,
+                color: 'black',
               }}
               placeholder="Search"
               placeholderTextColor={'#9190A8'}

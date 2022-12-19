@@ -17,6 +17,8 @@ import {
   Audio,
   Documents,
   Downloads,
+  BuySpace,
+  SellSpace,
 } from '../exports';
 import {small_logo} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -90,6 +92,20 @@ const DashboardContainer = () => {
             component={ClearData}
             options={{tabBarItemStyle: {display: 'none'}}}
           />
+           <Stack.Screen
+            name="BuySpace"
+            component={BuySpace}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
+             <Stack.Screen
+            name="SellSpace"
+            component={SellSpace}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
           <Stack.Screen name="Files" component={Files} />
           <Stack.Screen
             name="Uploads"

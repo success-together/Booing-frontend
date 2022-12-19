@@ -23,3 +23,5 @@ export {default as Documents} from './DashboardContainer/Files/Uploads/Documents
 export {default as Downloads} from './DashboardContainer/Files/Uploads/Downloads/Downloads';
 export {default as Apks} from './DashboardContainer/Files/Uploads/APK/ApkFiles';
 export {default as LayoutWrapper} from './DashboardContainer/Files/Uploads/LayoutWrapper/LayoutWrapper';
+export {default as SellSpace} from './DashboardContainer/Dashboard/SellSpace/SellSpace'
+export {default as BuySpace} from './DashboardContainer/Dashboard/BuySpace/BuySpace'

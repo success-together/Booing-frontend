@@ -4,6 +4,7 @@ import {
   View,
   StyleSheet,
   Pressable,
+  ScrollView,
 } from "react-native";
 import { FilesHeader } from "../../exports";
 import AntDesign from "react-native-vector-icons/AntDesign";
@@ -18,209 +19,248 @@ const Files = ({ navigation }: { navigation: any }) => {
       <View style={styles.containerImage}>
         <FilesHeader />
       </View>
-
-      <View style={styles.recentFilesContainer}>
-        <Pressable style={styles.button} onPress={() => { navigation.navigate("Uploads") }}>
-          <Feather
-            name="folder-plus"
-            size={24}
-            color="grey"
-            style={{ marginRight: 10 }}
-          />
-          <Text style={styles.createAccount}>Upload</Text>
-        </Pressable>
-        <Pressable style={styles.button}>
-          <AntDesign
-            name="addfolder"
-            size={24}
-            color="black"
-            style={{ marginRight: 10 }}
-          />
-          <Text style={styles.text}>Folder</Text>
-        </Pressable>
-      </View>
-      <View
-        style={{
-          flexDirection: "column",
-        }}
-      >
-        <View style={{
-          flexDirection: "row",
-          justifyContent: "space-between", marginTop: 14,
-          marginBottom: 10,
-          padding:8
-        }}>
-          <View style={{flexDirection: "row",}}>
-          <Text style={styles.title} >Essentials</Text>
-            <MaterialCommunityIcons name="menu-down" size={24} color="black"/>
+      <View style={styles.body}>
+        <View style={styles.recentFilesContainer}>
+          <Pressable style={styles.button} onPress={() => { navigation.navigate("Uploads") }}>
+            <Feather
+              name="folder-plus"
+              size={24}
+              color="grey"
+              style={{ marginRight: 10 }}
+            />
+            <Text style={styles.createAccount}>Upload</Text>
+          </Pressable>
+          <Pressable style={styles.button}>
+            <AntDesign
+              name="addfolder"
+              size={24}
+              color="black"
+              style={{ marginRight: 10 }}
+            />
+            <Text style={styles.text}>Folder</Text>
+          </Pressable>
+        </View>
+        <View
+          style={{
+            flexDirection: "column",
+          }}
+        >
+          <View style={{
+            flexDirection: "row",
+            justifyContent: "space-between", marginTop: 14,
+            marginBottom: 10,
+            padding: 8
+          }}>
+            <View style={{ flexDirection: "row", }}>
+              <Text style={styles.title} >Essentials</Text>
+              <MaterialCommunityIcons name="menu-down" size={24} color="black" />
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              <Entypo style={{ marginRight: 10 }} name="text" size={24} color="black" />
+              <Feather style={{ marginRight: 10 }} name="arrow-down" size={24} color="black" />
+            </View>
           </View>
-          <View style={{flexDirection: "row",justifyContent:"space-between"}}>
-            <Entypo style={{marginRight:10}} name="text" size={24} color="black" />
-            <Feather style={{marginRight:10}} name="arrow-down" size={24} color="black" />
+
+        </View>
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.list}>
+            <FontAwesome name="folder" size={35} color="grey" />
+            <View
+              style={{
+                marginLeft: 30,
+              }}
+            >
+              <Text style={styles.createAccount}> Images</Text>
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                {" "}
+                06-Sep 21:29
+              </Text>
+            </View>
+            <View
+              style={{
+                alignContent: "flex-end",
+              }}
+            >
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                3 Items
+              </Text>
+            </View>
           </View>
-        </View>
 
-      </View>
-
-      <View style={styles.list}>
-        <FontAwesome name="folder" size={35} color="grey" />
-        <View
-          style={{
-            marginLeft: 30,
-          }}
-        >
-          <Text style={styles.createAccount}> Images</Text>
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            {" "}
-            06-Sep 21:29
-          </Text>
-        </View>
-        <View
-          style={{
-            alignContent: "flex-end",
-          }}
-        >
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            3 Items
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.list}>
-        <FontAwesome name="folder" size={35} color="grey" />
-        <View
-          style={{
-            marginLeft: 30,
-          }}
-        >
-          <Text style={styles.createAccount}> Music</Text>
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            {" "}
-            06-Sep 21:29
-          </Text>
-        </View>
-        <View
-          style={{
-            alignContent: "flex-end",
-          }}
-        >
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            3 Items
-          </Text>
-        </View>
-      </View>
-      <View style={styles.list}>
-        <FontAwesome name="folder" size={35} color="grey" />
-        <View
-          style={{
-            marginLeft: 30,
-          }}
-        >
-          <Text style={styles.createAccount}> Documents</Text>
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            {" "}
-            06-Sep 21:29
-          </Text>
-        </View>
-        <View
-          style={{
-            alignContent: "flex-end",
-          }}
-        >
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            3 Items
-          </Text>
-        </View>
-      </View>
-      <View style={styles.list}>
-        <FontAwesome name="folder" size={35} color="grey" />
-        <View
-          style={{
-            marginLeft: 30,
-          }}
-        >
-          <Text style={styles.createAccount}> Downloads</Text>
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            06-Sep 21:29
-          </Text>
-        </View>
-        <View
-          style={{
-            alignContent: "flex-end",
-          }}
-        >
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            3 Items
-          </Text>
-        </View>
-      </View>
-      <View style={styles.list}>
-        <FontAwesome name="folder" size={35} color="grey" />
-        <View
-          style={{
-            marginLeft: 30,
-          }}
-        >
-          <Text style={styles.createAccount}> Images</Text>
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            06-Sep 21:29
-          </Text>
-        </View>
-        <View
-          style={{
-            alignContent: "flex-end",
-          }}
-        >
-          <Text
-            style={{
-              color: "grey",
-            }}
-          >
-            3 Items
-          </Text>
-        </View>
+          <View style={styles.list}>
+            <FontAwesome name="folder" size={35} color="grey" />
+            <View
+              style={{
+                marginLeft: 30,
+              }}
+            >
+              <Text style={styles.createAccount}> Music</Text>
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                {" "}
+                06-Sep 21:29
+              </Text>
+            </View>
+            <View
+              style={{
+                alignContent: "flex-end",
+              }}
+            >
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                3 Items
+              </Text>
+            </View>
+          </View>
+          <View style={styles.list}>
+            <FontAwesome name="folder" size={35} color="grey" />
+            <View
+              style={{
+                marginLeft: 30,
+              }}
+            >
+              <Text style={styles.createAccount}> Documents</Text>
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                {" "}
+                06-Sep 21:29
+              </Text>
+            </View>
+            <View
+              style={{
+                alignContent: "flex-end",
+              }}
+            >
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                3 Items
+              </Text>
+            </View>
+          </View>
+          <View style={styles.list}>
+            <FontAwesome name="folder" size={35} color="grey" />
+            <View
+              style={{
+                marginLeft: 30,
+              }}
+            >
+              <Text style={styles.createAccount}> Downloads</Text>
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                06-Sep 21:29
+              </Text>
+            </View>
+            <View
+              style={{
+                alignContent: "flex-end",
+              }}
+            >
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                3 Items
+              </Text>
+            </View>
+          </View>
+          <View style={styles.list}>
+            <FontAwesome name="folder" size={35} color="grey" />
+            <View
+              style={{
+                marginLeft: 30,
+              }}
+            >
+              <Text style={styles.createAccount}> Images</Text>
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                06-Sep 21:29
+              </Text>
+            </View>
+            <View
+              style={{
+                alignContent: "flex-end",
+              }}
+            >
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                3 Items
+              </Text>
+            </View>
+          </View>
+          <View style={styles.list}>
+            <FontAwesome name="folder" size={35} color="grey" />
+            <View
+              style={{
+                marginLeft: 30,
+              }}
+            >
+              <Text style={styles.createAccount}> Videos</Text>
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                06-Sep 21:29
+              </Text>
+            </View>
+            <View
+              style={{
+                alignContent: "flex-end",
+              }}
+            >
+              <Text
+                style={{
+                  color: "grey",
+                }}
+              >
+                3 Items
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  body: {
+    flex:1
+  },
+  scrollView: {
+    flex: 1,
+    marginHorizontal: 0,
+  },
   secondScreenContainer: {
     flexDirection: "row",
   },
@@ -234,7 +274,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
     fontWeight: "bold",
     color: "black",
-    marginLeft:10
+    marginLeft: 10
   },
   container: {
     flex: 1,
@@ -250,7 +290,7 @@ const styles = StyleSheet.create({
   containerImage: {
     backgroundColor: "#33a1f9",
     width: "100%",
-    flex: 1,
+    flex: 0.4,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -290,7 +330,7 @@ const styles = StyleSheet.create({
   recentFilesContainer: {
     justifyContent: "flex-start",
     flexDirection: "row",
-    marginTop: 30,
+    marginTop: 20,
   },
 
   row3: {

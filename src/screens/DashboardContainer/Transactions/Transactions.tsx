@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   containerImage: {
     backgroundColor: "#33a1f9",
     width: "100%",
-    flex: 0.35,
+    flex: 0.4,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -198,6 +198,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 2,
+    marginTop: 10
   },
   sectionView: {
     width: "100%",
