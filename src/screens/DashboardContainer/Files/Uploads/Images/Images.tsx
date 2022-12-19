@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   container: {
-    flex: 0.9,
+    flex: 1,
     // backgroundColor: "#33a1f9",
     // alignItems: "center",
     color: '#33a1f9',
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   containerImage: {
     backgroundColor: '#33a1f9',
     width: '100%',
-    flex: 0.8,
+    flex: 0.4,
     alignItems: 'center',
     justifyContent: 'center',
   },

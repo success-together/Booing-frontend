@@ -113,7 +113,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
           onPress={async () => await loginWithFacebook()}
         />
       </View>
-      <Text style={styles.createAccount}>Use Social Login</Text>
+      <Text style={styles.title}>Use Social Login</Text>
     </View>
   );
 };
@@ -153,6 +153,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
+  },
+  title: {
+    fontSize: 17,
+    lineHeight: 21,
+    marginBottom:30,
+    letterSpacing: 0.25,
+    color:'#797D7F',
+   
+    // marginLeft: 70,
+    // marginRight: 70,
+
   },
   createAccount: {
     fontSize: 13,

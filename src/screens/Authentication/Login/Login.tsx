@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Image,
   Pressable,
-  Platform,
+  Platform, ScrollView,
   TextInput,
 } from 'react-native';
 import {Logo} from '../../../images/export';
@@ -13,6 +13,7 @@ import {login} from '../../../shared/slices/Auth/AuthService';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import SocialMediaAuth from '../../../Components/SocialMediaAuth/SocialMediaAuth';
 import LinearGradient from 'react-native-linear-gradient';
+import { Input } from 'react-native-elements';
 
 const Login = ({navigation}: {navigation: any}) => {
   const [email, setEmail] = useState<string>('');
@@ -28,94 +29,53 @@ const Login = ({navigation}: {navigation: any}) => {
   return (
     <View style={styles.container}>
       <Toast />
-      <LinearGradient
-        colors={['#33A1F9', '#6DBDFE']}
-        style={styles.containerImage}>
-        <Image style={styles.image} source={Logo} />
-      </LinearGradient>
-      <View
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'stretch',
-          width: '100%',
-          backgroundColor: 'white',
-          paddingLeft: '2.15%',
-          paddingRight: '2.15%',
-          paddingTop: '5.18%',
-          paddingBottom: '5.18%',
-          flex: 1,
-        }}>
-        <Text>Email :</Text>
-        <TextInput
-          placeholder="Enter Email Adress"
-          autoComplete={'email'}
-          onChangeText={e => setEmail(e)}
-          style={{
-            backgroundColor: '#F8F8F8',
-            borderRadius: 8,
-            marginBottom: '5.18%',
-            marginTop: 4,
-          }}
-          placeholderTextColor="#716D6D"
-        />
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-          }}>
-          <Text>Password :</Text>
-          <Text
-            style={{color: '#33A1F9', fontSize: 14}}
-            onPress={() =>
-              navigation.navigate('Verification', {
-                isSignup: false,
-              })
-            }>
-            Forget password?
-          </Text>
-        </View>
-        <TextInput
-          placeholder="Enter Password"
-          autoComplete={'password'}
-          secureTextEntry={true}
-          onChangeText={e => setPassword(e)}
-          style={{
-            backgroundColor: '#F8F8F8',
-            borderRadius: 8,
-            marginBottom: '5.18%',
-            marginTop: 4,
-          }}
-          placeholderTextColor="#716D6D"
-        />
-        <LinearGradient
-          colors={['#33A1F9', '#6DBDFE']}
-          style={{borderRadius: 8}}>
-          <Pressable
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              flexDirection: 'row',
-              alignItems: 'center',
-              height: 60,
-            }}
-            onPress={submit}>
-            <Text style={styles.text}>Login</Text>
-          </Pressable>
-        </LinearGradient>
-        <Text
-          style={styles.createAccount}
-          onPress={() => navigation.navigate('Register')}>
-          Create an account
-        </Text>
-        <SocialMediaAuth navigation={navigation} />
+      <View style={styles.containerImage}>
+      <Image style={styles.image} source={Logo} />
       </View>
+      <ScrollView style={styles.ScrollView}>
+      <Text style={styles.title}>Enter Email Adress</Text>
+      <Input
+        placeholder="Enter Email Adress"
+        autoCompleteType={'email'}
+        onChangeText={e => setEmail(e)}
+      />
+      <View style={styles.password}>
+      <Text style={styles.title}>Enter Password</Text>
+       <Text
+        style={styles.forgetPassword}
+        onPress={() =>
+          navigation.navigate('Verification', {
+            isSignup: false,
+          })
+        }>
+        Forget password ?
+      </Text>
+      </View>
+      <Input
+        placeholder="Enter Password"
+        autoCompleteType={'password'}
+        secureTextEntry={true}
+        onChangeText={e => setPassword(e)}
+      />
+      <Pressable style={styles.button} onPress={submit}>
+        <Text style={styles.text}>Login</Text>
+      </Pressable>
+      <Text
+        style={styles.createAccount}
+        onPress={() => navigation.navigate('Register')}>
+        Create an account
+      </Text>
+      <SocialMediaAuth navigation={navigation} />
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  ScrollView: {
+    flex:1,
+    padding:10
+  },
   container: {
     flex: 1,
     alignItems: 'center',
@@ -124,7 +84,9 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   containerImage: {
+    backgroundColor: '#33a1f9',
     width: '100%',
+    flex: 0.5,
     alignItems: 'center',
     justifyContent: 'center',
     height: '42.66%',
@@ -150,26 +112,40 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     letterSpacing: 0.25,
     color: 'white',
+   
+  },
+  title: {
+    fontSize: 17,
+    lineHeight: 21,
+    letterSpacing: 0.25,
+    color:'#797D7F',
+   
+    // marginLeft: 70,
+    // marginRight: 70,
+
   },
   createAccount: {
-    fontSize: 16,
+    fontSize: 17,
+    lineHeight: 21, 
     letterSpacing: 0.25,
-    marginBottom: '4.32%',
-    color: '#716D6D',
-    marginTop: 8,
-    textAlign: 'center',
+    color:'#797D7F',
+    textAlign:'center'
   },
   containerSocialMedia: {
     flexDirection: 'row',
     marginTop: 20,
     marginBottom: 20,
   },
+  password: {
+    flexDirection:'row',
+    justifyContent:'space-between'
+  },
   forgetPassword: {
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
-    marginBottom: 35,
-    color: '#8F9395',
+    color: '#33a1f9',
+    
   },
 });
 

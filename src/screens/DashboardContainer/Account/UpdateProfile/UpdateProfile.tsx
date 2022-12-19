@@ -3,23 +3,24 @@ import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 import { Input } from "react-native-elements";
 import { store } from "../../../../shared";
 import { updateProfile } from "../../../../shared/slices/Auth/AuthService";
-import Ionicons  from "react-native-vector-icons/Ionicons";
+import AntDesign from "react-native-vector-icons/AntDesign";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
+import AccountHeader from "../AccountHeader/AcountHeader";
 
 const UpdateProfile = ({ navigation }: any) => {
   const [loggedInUser, setLoggedUser] = useState<
     | {
-        name: string;
-        email: string;
-        phone: string;
-        accountVerified?: true;
-        code?: 0;
-        created_at?: string;
-        last_login?: string;
-        password?: string;
-        __v?: number;
-        _id?: string;
-      }
+      name: string;
+      email: string;
+      phone: string;
+      accountVerified?: true;
+      code?: 0;
+      created_at?: string;
+      last_login?: string;
+      password?: string;
+      __v?: number;
+      _id?: string;
+    }
     | undefined
   >(undefined);
   const [isDisabled, setIsDisabled] = useState<boolean>(true);
@@ -50,10 +51,10 @@ const UpdateProfile = ({ navigation }: any) => {
   };
 
   const onSubmit = async () => {
-    
+
     if (!isDisabled && loggedInUser?._id) {
       if (formUpdateUser.name !== "" && formUpdateUser.phone !== "")
-        await updateProfile({phone: formUpdateUser.phone,name : formUpdateUser.name , user_id: loggedInUser?._id}).then(() => {
+        await updateProfile({ phone: formUpdateUser.phone, name: formUpdateUser.name, user_id: loggedInUser?._id }).then(() => {
           navigation.navigate('Account');
         });
       else if (formUpdateUser.name === "")
@@ -74,30 +75,34 @@ const UpdateProfile = ({ navigation }: any) => {
   };
 
   return (
-    <View>
-      <View style={styles.DashboardHeader}>
-        <View style={styles.logoView}>
-          <Ionicons
+    <View style={styles.container} >
+      <View style={styles.containerHeader}>
+        <AccountHeader />
+         {/* <AntDesign
+        style={{alignSelf:'flex-end', marginRight:60}}
             onPress={() => navigation.goBack()}
-            name="ios-caret-back-circle-outline"
-            size={30}
-            color="white"
-          />
-        </View>
+            name="back"
+            size={33}
+            color="black"
+          />  */}
       </View>
-      <>
+    
+      <View style={styles.Body}>
+        <Text style={styles.title}>Email</Text>
         <Input
           placeholder="Enter Email Adress"
           autoCompleteType={"email"}
           defaultValue={loggedInUser?.email}
           disabled={true}
         />
+         <Text style={styles.title}>Username</Text>
         <Input
           placeholder="Enter User Name"
           autoCompleteType={"name"}
           defaultValue={loggedInUser?.name}
           onChangeText={(e) => onUpdateForm(e, "name")}
         />
+         <Text style={styles.title}>Phone number</Text>
         <Input
           placeholder="Enter Phone Number"
           autoCompleteType={"phone"}
@@ -105,19 +110,35 @@ const UpdateProfile = ({ navigation }: any) => {
           onChangeText={(e) => onUpdateForm(e, "phone")}
           keyboardType="numeric"
         />
-      </>
-
-      <Pressable
+        <Pressable
         style={isDisabled ? styles.disabled : styles.button}
         onPress={onSubmit}
       >
         <Text style={styles.text}>Update</Text>
       </Pressable>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F2F6F7",   
+    width: "100%",
+    // flexWrap: "wrap",
+    // flexDirecton: "row",
+  },
+  containerHeader: {
+    backgroundColor: "#33a1f9",
+    width: "100%",
+    flex: 0.6,
+  },
+  Body: {
+    flex: 1,
+    marginTop: 20,
+    padding: 20
+  },
   DashboardHeader: {
     padding: 40,
     justifyContent: "center",
@@ -143,17 +164,18 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     fontWeight: "bold",
     letterSpacing: 0.25,
-    color: "white",
+    color: "black",
     marginTop: 5,
     // marginLeft: 70,
     // marginRight: 70,
-    textAlign: "center",
+
   },
   text: {
-    fontSize: 16,
+    fontSize: 18,
     lineHeight: 21,
     letterSpacing: 0.25,
-    color: "white",
+    fontWeight: "bold",
+    color: "#49ACFA",
     marginTop: 5,
     maxWidth: "100%",
   },
@@ -177,11 +199,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 12,
     // paddingHorizontal: 140,
-    marginRight: 10,
-    marginLeft: 10,
     borderRadius: 4,
-    elevation: 3,
-    backgroundColor: "gray",
+    elevation: 4,
+    backgroundColor: "white",
   },
 });
 
