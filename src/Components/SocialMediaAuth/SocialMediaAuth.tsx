@@ -2,14 +2,11 @@ import React, {useCallback} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import FontAwesoem from 'react-native-vector-icons/FontAwesome';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import auth from '@react-native-firebase/auth';
-
-// import * as Google from "expo-auth-session/providers/google";
-// import * as WebBrowser from 'expo-web-browser'
-import axios from 'axios';
 import {store} from '../../shared';
 import {setLoggedInUser} from '../../shared/slices/Auth/AuthSlice';
 import {socialMediaSignIn} from '../../shared/slices/Auth/AuthService';
+import auth from '@react-native-firebase/auth';
+import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
 
 GoogleSignin.configure({
   webClientId:
@@ -32,49 +29,6 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
     refreshToken: string;
   };
 
-  //   const [_, googleResponse, googleAuth] = Google.useAuthRequest({
-  //     clientId:
-  //       '88763342486-q6gnqvme0kagt6n7go5o138n1jpquu5l.apps.googleusercontent.com',
-  //     androidClientId:
-  //       '88763342486-0ii3cdfcrv8huqn0savsab7li6ccfkcn.apps.googleusercontent.com',
-  //   });
-
-  //   const googleLoginOrRegister = async (accessToken: String) => {
-  //     try {
-  //       const {data} = await axios.post(
-  //         'https://auth.expo.io/ala_bouziri/Boing',
-  //         {
-  //           accessToken,
-  //         },
-  //       );
-  //       return data;
-  //     } catch (error) {
-  //       console.log('error', error);
-  //     }
-  //   };
-
-  //   useEffect(() => {
-  //     async function loginUserWithGoogle(access_Token: String) {
-  //       try {
-  //         const user = await googleLoginOrRegister(access_Token);
-  //         handleSignInUser(user);
-  //       } catch (err) {
-  //         console.log(err);
-  //       }
-  //     }
-
-  //     if (googleResponse?.type === 'success') {
-  //       const {access_Token} = googleResponse.params;
-  //       debugger;
-  //       loginUserWithGoogle(access_Token);
-  //     }
-  //   }, [googleResponse]);
-
-  //   const handleSignInUser = (user?: User | null) => {
-  //     console.log('user 2 :', user);
-  //     navigation.navigate('DashboardContainer');
-  //   };
-
   const loginWithGoogle = useCallback(async () => {
     try {
       // Check if your device supports Google Play
@@ -85,16 +39,13 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
         name: user.name || '',
         email: user.email,
         socialMedia_ID: user.id,
-      }).then((res) => {
-        console.log(res);
-        
-      })
+      });
       // Create a Google credential with the token
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
       // Sign-in the user with the credential
       await auth().signInWithCredential(googleCredential);
-      
+
       store.dispatch(setLoggedInUser(true));
       navigation.navigate('DashboardContainer');
     } catch (error: any) {
@@ -106,8 +57,35 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
     console.log('loginWithTwitter');
   }, []);
 
-  const loginWithFacebook = useCallback(() => {
-    console.log('loginWithFacebook');
+  const loginWithFacebook = useCallback(async () => {
+    try {
+      // Attempt login with permissions
+      const result = await LoginManager.logInWithPermissions([
+        'public_profile',
+        'email',
+      ]);
+
+      if (result.isCancelled) {
+        return console.log('User cancelled the login process');
+      }
+
+      // Once signed in, get the users AccesToken
+      const data = await AccessToken.getCurrentAccessToken();
+
+      if (!data) {
+        return console.log('Something went wrong obtaining access token');
+      }
+
+      // Create a Firebase credential with the AccessToken
+      const facebookCredential = auth.FacebookAuthProvider.credential(
+        data.accessToken,
+      );
+
+      // Sign-in the user with the credential
+      auth().signInWithCredential(facebookCredential);
+    } catch (e: any) {
+      console.log({message: e.message});
+    }
   }, []);
 
   return (
@@ -118,7 +96,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
           name="google"
           size={38}
           color="#33A1F9"
-          onPress={() => loginWithGoogle()}
+          onPress={async () => await loginWithGoogle()}
         />
         <FontAwesoem
           style={styles.Icon}
@@ -132,7 +110,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
           name="facebook"
           size={38}
           color="#33A1F9"
-          onPress={() => loginWithFacebook()}
+          onPress={async () => await loginWithFacebook()}
         />
       </View>
       <Text style={styles.title}>Use Social Login</Text>
@@ -142,14 +120,9 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    // backgroundColor: "#33a1f9",
     alignItems: 'center',
     color: '#33a1f9',
     justifyContent: 'center',
-    height: '100%',
-    // flexWrap: "wrap",
-    // flexDirecton: "row",
   },
   containerImage: {
     backgroundColor: '#33a1f9',
@@ -193,10 +166,8 @@ const styles = StyleSheet.create({
 
   },
   createAccount: {
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 13,
     letterSpacing: 0.25,
-    marginBottom: 50,
     color: '#8F9395',
   },
   containerSocialMedia: {

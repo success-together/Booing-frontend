@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   FlatList,
   SafeAreaView,
@@ -6,6 +6,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ViewabilityConfigCallbackPair,
+  ViewToken,
 } from 'react-native';
 
 import File from '../File/File';
@@ -17,6 +19,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import Foundation from 'react-native-vector-icons/Foundation';
+import {Circle} from 'react-native-progress';
 
 const icons = {
   Pictures: (size: number, color = '#8F8F8F') => (
@@ -57,10 +60,9 @@ const icons = {
 interface RenderFileData {
   item: {
     id: string;
-    path: string;
-    logo?: string;
     name: string;
     visibleCacheSize?: number;
+    thumbnail?: string;
   };
 }
 
@@ -75,9 +77,10 @@ interface FilesListProps {
 
 interface DeleteBtnProps {
   onPress: () => void;
+  disabled: boolean;
 }
 
-const DeleteBtn = ({onPress}: DeleteBtnProps) => {
+const DeleteBtn = ({onPress, disabled}: DeleteBtnProps) => {
   return (
     <TouchableOpacity
       style={{
@@ -86,7 +89,7 @@ const DeleteBtn = ({onPress}: DeleteBtnProps) => {
         justifyContent: 'center',
         flexDirection: 'row',
         padding: 5,
-        backgroundColor: '#CB2821',
+        backgroundColor: disabled ? 'gray' : '#CB2821',
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.25,
@@ -94,7 +97,7 @@ const DeleteBtn = ({onPress}: DeleteBtnProps) => {
         elevation: 5,
         borderRadius: 5,
       }}
-      onPress={onPress}>
+      onPress={!disabled ? onPress : undefined}>
       <Feather name="trash-2" size={20} color="#FFF" />
       <Text style={{marginLeft: 3, fontWeight: '500', color: '#FFF'}}>
         Delete
@@ -106,13 +109,40 @@ const DeleteBtn = ({onPress}: DeleteBtnProps) => {
 export default function FilesList({
   data,
   label,
-  removeDeletedItems,
   size,
   setTriggerRerender,
   refetchByLabel,
 }: FilesListProps) {
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
-  const [showDeleteBtn, setShowDeleteBtn] = useState(false);
+  const [deleteBtnProps, setDeleteBtnProps] = useState({
+    disabled: false,
+    show: false,
+  });
+  const [items, setItems] = useState([]);
+  const [iterator, setIterator] = useState<Iterator<[]>>();
+  const [viewedItems, setViewedItems] = useState<
+    {id: string; isLoaded: boolean}[]
+  >([]);
+  const [loadedItemsIds, setLoadedItemsIds] = useState<string[]>([]);
+
+  const onViewableItemsChanged = ({
+    viewableItems,
+  }: {
+    viewableItems: ViewToken[];
+  }) => {
+    setViewedItems(prev => {
+      const newViewedItems = [];
+      for (const viewToken of viewableItems) {
+        const isExist = prev.findIndex(e => e.id === viewToken.item.id) !== -1;
+        if (!isExist) {
+          newViewedItems.push({id: viewToken.item.id, isLoaded: false});
+        }
+      }
+
+      return newViewedItems.length > 0 ? [...prev, ...newViewedItems] : prev;
+    });
+  };
+  const viewabilityConfigCallbackPairs = useRef([{onViewableItemsChanged}]);
 
   const onPress = useCallback(
     (id: string) => {
@@ -149,9 +179,10 @@ export default function FilesList({
       isDeleted = await ManageApps.deleteDirs(paths);
     }
 
-    setShowDeleteBtn(false);
-    refetchByLabel(label);
+    setDeleteBtnProps({disabled: true, show: true});
+    await refetchByLabel(label);
 
+    setDeleteBtnProps({disabled: false, show: false});
     if (isDeleted) {
       return Toast.show({
         type: 'success',
@@ -176,29 +207,31 @@ export default function FilesList({
       );
     }
 
-    if (setTriggerRerender) {
-      setTriggerRerender((prev: any) => !prev);
-    }
+    setDeleteBtnProps({disabled: true, show: true});
+    await refetchByLabel(label);
 
-    setShowDeleteBtn(false);
-    refetchByLabel(label);
+    setDeleteBtnProps({disabled: false, show: false});
     Toast.show({
       text1: `cache cleared for apps ${apps.map(e => e.name).join(',')}`,
     });
   };
 
   const renderFile = useCallback(
-    ({item: {name, id, path, logo, visibleCacheSize}}: RenderFileData) => {
+    ({item: {name, id, thumbnail, visibleCacheSize}}: RenderFileData) => {
       return (
         <File
           name={name}
-          path={path}
           id={id}
-          logo={logo}
+          thumbnail={thumbnail}
           onPress={onPress}
           visibleCacheSize={visibleCacheSize}
           selected={selectedFilesIds.includes(id)}
           Icon={icons[label]}
+          loaded={() => {
+            setLoadedItemsIds(prev =>
+              prev.includes(id) ? prev : [...prev, id],
+            );
+          }}
         />
       );
     },
@@ -206,19 +239,83 @@ export default function FilesList({
   );
 
   useEffect(() => {
-    if (selectedFilesIds.length !== 0 && !showDeleteBtn) {
-      setShowDeleteBtn(true);
+    setViewedItems(prev => {
+      let changed = false;
+      for (const item of prev) {
+        if (loadedItemsIds.includes(item.id) && !item.isLoaded) {
+          item.isLoaded = true;
+          changed = true;
+        }
+      }
+
+      return changed ? [...prev] : prev;
+    });
+  }, [viewedItems, loadedItemsIds]);
+
+  useEffect(() => {
+    if (selectedFilesIds.length !== 0 && !deleteBtnProps.show) {
+      setDeleteBtnProps({show: true, disabled: false});
     }
-    if (selectedFilesIds.length === 0 && showDeleteBtn) {
-      setShowDeleteBtn(false);
+    if (selectedFilesIds.length === 0 && deleteBtnProps.show) {
+      setDeleteBtnProps({show: false, disabled: false});
     }
 
     return () => {
-      if (selectedFilesIds.length === 0 && showDeleteBtn) {
-        setShowDeleteBtn(false);
+      if (selectedFilesIds.length === 0 && deleteBtnProps.show) {
+        setDeleteBtnProps({show: false, disabled: false});
       }
     };
   }, [selectedFilesIds]);
+
+  const nextSet = useCallback(
+    (initial?: Iterator<[]>) => {
+      if (items.length === data.length) {
+        return;
+      }
+
+      if (viewedItems.filter(item => !item.isLoaded).length !== 0) {
+        return Toast.show({
+          type: 'info',
+          text1: label,
+          text2: 'please wait until full content is loaded',
+        });
+      }
+
+      if (initial) {
+        const next = initial.next();
+        if (next && !next.done) {
+          setTimeout(() => {
+            setItems(next.value);
+          }, 500);
+        }
+        return;
+      }
+
+      const next = iterator!.next();
+      if (next && !next.done) {
+        setTimeout(() => {
+          setItems(next.value);
+        }, 500);
+      }
+    },
+    [items, data, iterator],
+  );
+
+  useEffect(() => {
+    const iterator = (function* () {
+      const dataCopy: typeof data = [];
+      let prevPos = 0;
+
+      while (dataCopy.length !== data.length) {
+        dataCopy.push(...data.slice(prevPos, prevPos + 5));
+        prevPos += 5;
+        yield dataCopy;
+      }
+    })();
+
+    setIterator(iterator);
+    nextSet(iterator);
+  }, [data]);
 
   return (
     <View style={styles.container}>
@@ -233,9 +330,13 @@ export default function FilesList({
               borderBottomWidth: 1,
               borderBottomColor: '#8F8F8F',
               borderStyle: 'solid',
+              marginRight: 10,
             }}>
             {label}
           </Text>
+          {viewedItems.filter(item => !item.isLoaded).length !== 0 && (
+            <Circle size={16} indeterminate={true} />
+          )}
         </View>
         <View
           style={{
@@ -246,27 +347,34 @@ export default function FilesList({
             justifyContent: 'center',
           }}>
           <Text style={{marginRight: 10}}>{bytes(size)}</Text>
-          {showDeleteBtn && (
+          {deleteBtnProps.show && (
             <DeleteBtn
               onPress={
                 label !== 'Cache' ? onDeleteFilesPress : onDeleteAppsPress
               }
+              disabled={deleteBtnProps.disabled}
             />
           )}
         </View>
       </View>
       <SafeAreaView style={{paddingTop: 10, paddingBottom: 10}}>
-        {data.length !== 0 ? (
-          <FlatList
-            data={data}
-            renderItem={renderFile}
-            keyExtractor={item => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
-        ) : (
-          <Text style={{color: 'black'}}>No Items Found !</Text>
-        )}
+        <FlatList
+          data={items}
+          renderItem={renderFile}
+          keyExtractor={item => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          initialNumToRender={5}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={5}
+          onEndReached={() => nextSet()}
+          viewabilityConfigCallbackPairs={
+            viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
+          }
+          viewabilityConfig={{
+            minimumViewTime: 200,
+          }}
+        />
       </SafeAreaView>
     </View>
   );
@@ -285,6 +393,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     display: 'flex',
     flexDirection: 'row',
+    alignItems: 'center',
   },
   filesContainer: {
     display: 'flex',

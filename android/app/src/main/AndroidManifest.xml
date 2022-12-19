@@ -1,6 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.rnfrontend">
-
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA"/>
@@ -33,10 +32,6 @@
 
     <permission android:name="android.permission.QUERY_ALL_PACKAGES" />
 
-<!-- If your app doesn't need to access media files that other apps created,
-     set the "maxSdkVersion" attribute to "28" instead. -->
-
-
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
@@ -44,6 +39,8 @@
       android:roundIcon="@mipmap/ic_launcher_round"
       android:allowBackup="false"
       android:theme="@style/AppTheme">
+      <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
+      <meta-data android:name="com.facebook.sdk.ClientToken" android:value="@string/facebook_client_token"/>
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
@@ -57,5 +54,20 @@
             <action android:name="android.intent.action.OPEN_DOCUMENT" />
         </intent-filter>
       </activity>
+      <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
+      <activity android:name="com.facebook.FacebookActivity"
+        android:configChanges=
+                "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+        android:label="@string/app_name" />
+    <activity
+        android:name="com.facebook.CustomTabActivity"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="@string/fb_login_protocol_scheme" />
+        </intent-filter>
+    </activity>
     </application>
 </manifest>

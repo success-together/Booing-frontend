@@ -8,7 +8,14 @@ const {Circle} = Progress;
 const WIDTH = Dimensions.get('window').width;
 const NUM_COLS = 4;
 
-const Item = ({index, name, handleSelect, selected, progress}: any) => {
+const Item = ({
+  index,
+  name,
+  selected,
+  progress,
+  handlePress,
+  handleLongPress,
+}: any) => {
   const [showProgress, setShowProgress] = useState(progress !== 1);
 
   useEffect(() => {
@@ -28,7 +35,8 @@ const Item = ({index, name, handleSelect, selected, progress}: any) => {
 
   return (
     <TouchableOpacity
-      onPress={handleSelect}
+      onPress={progress === 1 ? handlePress : undefined}
+      onLongPress={progress === 1 ? handleLongPress : undefined}
       style={{
         width: (WIDTH - (NUM_COLS + 1) * 10) / NUM_COLS,
         height: (WIDTH - (NUM_COLS + 1) * 10) / NUM_COLS,

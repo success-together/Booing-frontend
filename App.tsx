@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {MutableRefObject, useRef} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {
@@ -17,6 +17,13 @@ import {
   checkForDownloads,
   checkForUploads,
 } from './src/shared/slices/Fragmentation/FragmentationService';
+import {Settings} from 'react-native-fbsdk-next';
+import {TouchableWithoutFeedback} from 'react-native';
+
+// Setting the facebook app id using setAppID
+// Remember to set CFBundleURLSchemes in Info.plist on iOS if needed
+Settings.setAppID('681969233386824');
+Settings.initializeSDK();
 
 const Stack = createNativeStackNavigator();
 
@@ -29,7 +36,6 @@ export default function App() {
       setIsLoading(true);
 
       let token = await AsyncStorage.getItem('token');
-      console.log(token);
       if (token) {
         setIsLoggedIn(true);
       } else {
@@ -52,10 +58,10 @@ export default function App() {
           store.getState().authentication.loggedInUser !== undefined &&
           userData
         ) {
-          checkForDownloads({
-            user_id: userData._id,
-          });
-          checkForUploads({user_id: userData._id});
+          // checkForDownloads({
+          //   user_id: userData._id,
+          // });
+          // checkForUploads({user_id: userData._id});
         }
       });
     }, 500);

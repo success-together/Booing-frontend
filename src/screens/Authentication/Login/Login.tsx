@@ -1,11 +1,19 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Image, Pressable, Platform, ScrollView} from 'react-native';
-import {Input} from 'react-native-elements';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Pressable,
+  Platform, ScrollView,
+  TextInput,
+} from 'react-native';
 import {Logo} from '../../../images/export';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {login} from '../../../shared/slices/Auth/AuthService';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import {SocialMediaAuth} from '../../../Components/exports';
+import SocialMediaAuth from '../../../Components/SocialMediaAuth/SocialMediaAuth';
+import LinearGradient from 'react-native-linear-gradient';
+import { Input } from 'react-native-elements';
 
 const Login = ({navigation}: {navigation: any}) => {
   const [email, setEmail] = useState<string>('');
@@ -14,7 +22,6 @@ const Login = ({navigation}: {navigation: any}) => {
   const submit = async () => {
     if (email && password)
       await login({email, password}).then(res => {
-        console.log('then');
         if (res.success) navigation.navigate('DashboardContainer');
       });
   };
@@ -23,7 +30,7 @@ const Login = ({navigation}: {navigation: any}) => {
     <View style={styles.container}>
       <Toast />
       <View style={styles.containerImage}>
-        <Image style={styles.image} source={Logo} />
+      <Image style={styles.image} source={Logo} />
       </View>
       <ScrollView style={styles.ScrollView}>
       <Text style={styles.title}>Enter Email Adress</Text>
@@ -36,7 +43,11 @@ const Login = ({navigation}: {navigation: any}) => {
       <Text style={styles.title}>Enter Password</Text>
        <Text
         style={styles.forgetPassword}
-        onPress={() => navigation.navigate('Register',{isSignup : false})}>
+        onPress={() =>
+          navigation.navigate('Verification', {
+            isSignup: false,
+          })
+        }>
         Forget password ?
       </Text>
       </View>
@@ -67,13 +78,10 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    // backgroundColor: "#33a1f9",
     alignItems: 'center',
     color: '#33a1f9',
     justifyContent: 'center',
     height: '100%',
-    // flexWrap: "wrap",
-    // flexDirecton: "row",
   },
   containerImage: {
     backgroundColor: '#33a1f9',
@@ -81,6 +89,7 @@ const styles = StyleSheet.create({
     flex: 0.5,
     alignItems: 'center',
     justifyContent: 'center',
+    height: '42.66%',
   },
   image: {
     alignItems: 'center',
@@ -99,9 +108,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#33a1f9',
   },
   text: {
-    fontSize: 16,
+    fontSize: 20,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
    

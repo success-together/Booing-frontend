@@ -1,11 +1,20 @@
 import React, {useState} from 'react';
-import {View, Text, StyleSheet, Image, Pressable, Button, ScrollView} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Pressable,
+  Button,
+  TextInput,
+ ScrollView} from 'react-native';
 import {Input} from 'react-native-elements';
 import {Logo} from '../../../images/export';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {register} from '../../../shared/slices/Auth/AuthService';
 import {SocialMediaAuth} from '../../../Components/exports';
 import {setRootLoading} from '../../../shared/slices/rootSlice';
+import LinearGradient from 'react-native-linear-gradient';
 
 function Register({navigation}: {navigation: any}) {
   const [formRegister, setFormRegister] = useState({
@@ -94,13 +103,10 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    // backgroundColor: "#33a1f9",
     alignItems: 'center',
     color: '#33a1f9',
     justifyContent: 'center',
-    height: '100%',
-    // flexWrap: "wrap",
-    // flexDirecton: "row",
+    width: '100%',
   },
   containerImage: {
     backgroundColor: '#33a1f9',
@@ -108,6 +114,7 @@ const styles = StyleSheet.create({
     flex: 0.5,
     alignItems: 'center',
     justifyContent: 'center',
+    height: '42.66%',
   },
   image: {
     alignItems: 'center',
@@ -126,9 +133,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#33a1f9',
   },
   text: {
-    fontSize: 16,
+    fontSize: 20,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
    

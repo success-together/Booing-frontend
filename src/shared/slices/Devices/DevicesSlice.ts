@@ -1,9 +1,13 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
-export interface InitialState {}
+export interface InitialState {
+  deviceId: string | null;
+  deviceName: string | null;
+  system: string | null;
+}
 
 export const initialState = {
-  device: {user_id: ''},
+  device: {user_id: '', device_id: ''},
 };
 
 interface Device {
@@ -32,7 +36,13 @@ export const DevicesSlice = createSlice({
 
       state.device = action.payload;
     },
+    setDeviceId: (
+      state: typeof initialState,
+      action: PayloadAction<string>,
+    ) => {
+      state.device.device_id = action.payload;
+    },
   },
 });
 
-export const {setDevice} = DevicesSlice.actions;
+export const {setDevice, setDeviceId} = DevicesSlice.actions;
