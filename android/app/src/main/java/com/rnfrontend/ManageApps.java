@@ -1029,6 +1029,23 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
         return directoryToBeDeleted.delete();
     }
+    @ReactMethod
+    public void pickImages(Promise promise) {
+        MainActivity.setPromise(promise);
+        MainActivity.setPickerRequestCode(4);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_PICTURES);
+        intent.setType("image/*");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, 4);
+    }
 
     @ReactMethod
     public void pickVideos(Promise promise) {

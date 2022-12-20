@@ -35,6 +35,10 @@ export const checkForUploads = (data: {user_id: string}) => {
     try {
       const result = await axios.post(url, data);
 
+      console.log({
+        result,
+      });
+
       if (result.data?.data?.length > 0) {
         const data = result.data.data;
 
@@ -76,27 +80,14 @@ export const downloadFiles = async (data: {user_id: string; type: string}) => {
   });
 };
 
-interface UploadFilesData {
-  user_id: string;
-  files: {name: string; type: string; data: string}[];
-}
-export const uploadFiles = (data: UploadFilesData) => {
+export const uploadFiles = async (data: FormData, user_id: string) => {
   return axios({
-    url: `${BaseUrl}/logged-in-user/uploadFile`,
+    url: `${BaseUrl}/logged-in-user/uploadFile/${user_id}`,
     method: 'POST',
     data,
     headers: {
       accept: 'application/json',
-      'Content-Type': 'application/json',
+      'Content-Type': 'multipart/form-data',
     },
   });
-
-  // } catch (e) {
-  //   console.log({
-  //     stack: e.stack,
-  //     errorMessage: e.message,
-  //     errorName: e.name,
-  //     errorCode: e.code,
-  //   });
-  // }
 };
