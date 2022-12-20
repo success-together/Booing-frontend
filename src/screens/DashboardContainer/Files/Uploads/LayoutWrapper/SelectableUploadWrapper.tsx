@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, {MutableRefObject, useCallback, useEffect, useState} from 'react';
 import {
   StyleSheet,
@@ -7,10 +8,11 @@ import {
   View,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {store} from '../../../../../shared';
+import {BaseUrl, store} from '../../../../../shared';
 import {uploadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 import ManageApps from '../../../../../utils/manageApps';
 import SelectableItems from './SelectableItems';
+import Toast from 'react-native-toast-message';
 
 export interface SelectableUploadWrapperProps {
   data: any[];
@@ -45,12 +47,22 @@ const SelectableUploadWrapper = ({
       const pickedFiles = await pickItemsFn();
       if (pickedFiles && pickedFiles.length > 0) {
         const fileDescs: any[] = [];
+        const body = new FormData();
         for (const file of pickedFiles) {
-          fileDescs.push({
+          const fileDesc = {
             ...(await ManageApps.getFileDescription(file)),
             uri: file,
             id: (Math.random() * 500).toString(), // change this later
+            hasTriedToUpload: false,
+          };
+
+          body.append('file', {
+            uri: file,
+            type: fileDesc.type,
+            name: fileDesc.name,
           });
+
+          fileDescs.push(fileDesc);
         }
 
         const newData = fileDescs
@@ -62,7 +74,6 @@ const SelectableUploadWrapper = ({
             ...prevFileDesc,
             dateUploaded: new Date(),
             progress: 0,
-            hasTriedToUpload: false,
           }));
 
         setData((prevData: any[]) => [...prevData, ...newData]);
@@ -71,28 +82,22 @@ const SelectableUploadWrapper = ({
           return;
         }
 
-        const response = await uploadFiles({
-          user_id: user_id as string,
-          files: newData.map(e => ({name: e.name, data: e.data, type: e.type})),
-        });
-
-        console.log({response: response.data});
-
-        setData((prev: []) => {
-          for (const item of newData) {
-            const e = prev.find(
-              (existingItem: any) => existingItem.id === item.id,
-            );
-            if (!e) {
-              continue;
+        const response = await uploadFiles(body, user_id);
+        function mergeData(obj: object) {
+          setData((prevData: any[]) => {
+            for (const {id} of fileDescs) {
+              const item = prevData.find((e: any) => e.id === id);
+              if (item) {
+                Object.assign(item, obj);
+              }
             }
-            (e as any).hasTriedToUpload = true;
-          }
-          return [...prev];
-        });
-
-        if (response?.status === 200) {
-          console.log(response.data.data.message);
+            return [...prevData];
+          });
+        }
+        if (response.status === 200) {
+          mergeData({progress: 1, hasTriedToUpload: true});
+        } else {
+          mergeData({hasTriedToUpload: true});
         }
       }
     } catch (e: any) {
@@ -101,6 +106,38 @@ const SelectableUploadWrapper = ({
       }
     }
   }, []);
+
+  const handleDelete = useCallback(async () => {
+    try {
+      const response = await axios({
+        method: 'POST',
+        url: `${BaseUrl}/logged-in-user/deleteFiles`,
+        data: {
+          files_id: selectedIds,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        setData((prev: any[]) => {
+          const newData = prev.filter(e => selectedIds.includes(e.id));
+          setSelectedIds([]);
+          return newData;
+        });
+        Toast.show({
+          text1: 'files deleted successfully !',
+        });
+      }
+    } catch (e: any) {
+      Toast.show({
+        text1: 'there was an error in delete files',
+        text2: e.message,
+      });
+    }
+  }, [data, selectedIds]);
 
   return (
     <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
@@ -137,6 +174,22 @@ const SelectableUploadWrapper = ({
         setPressHandler={setPressHandler}
       />
       <View style={styles.uploadContainer}>
+        {selectedIds.length > 0 && (
+          <TouchableOpacity
+            style={{
+              width: 82,
+              height: 49,
+              marginRight: 10,
+              backgroundColor: 'white',
+              borderRadius: 15,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={async () => await handleDelete()}>
+            <Text style={{color: '#49ACFA', fontWeight: '500'}}>Delete</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={{
             width: 82,

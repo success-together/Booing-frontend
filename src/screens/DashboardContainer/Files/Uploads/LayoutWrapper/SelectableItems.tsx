@@ -5,16 +5,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  FlatList,
-  Text,
-  TouchableHighlight,
-  TouchableWithoutFeedback,
-  TouchableWithoutFeedbackComponent,
-  View,
-} from 'react-native';
+import {FlatList, Text, TouchableWithoutFeedback, View} from 'react-native';
 import CheckBox from '../../../../../Components/CheckBox/CheckBox';
-import {store} from '../../../../../shared';
 import {useOutsideAlerter} from '../../../../../utils/util-functions';
 import Item from './Item';
 
@@ -65,7 +57,10 @@ const SelectableItems = ({
     setChecked(prev => !prev);
   }, []);
 
-  const renderItem = ({item: {name, id, progress}, index}: any) => {
+  const renderItem = ({
+    item: {name, id, progress, hasTriedToUpload},
+    index,
+  }: any) => {
     return (
       <Item
         name={name}
@@ -74,6 +69,7 @@ const SelectableItems = ({
         progress={progress}
         handleLongPress={handleLongPress(id)}
         handlePress={handlePress(id)}
+        hasTriedToUpload={hasTriedToUpload}
       />
     );
   };
