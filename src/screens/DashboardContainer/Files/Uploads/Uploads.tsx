@@ -9,10 +9,15 @@ import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import DeviceInfo from 'react-native-device-info';
 import ManageApps from '../../../../utils/manageApps';
+import bytes from 'bytes';
 
 const Uploads = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
+  const [sdCardStats, setSdCardStats] = useState({
+    fullSize: 0,
+    availableSize: 0,
+  });
 
   useEffect(() => {
     let totalStorage = 0;
@@ -29,6 +34,8 @@ const Uploads = ({navigation}: {navigation: any}) => {
       );
       //  console.log('total : ' + (freeDiskStorage / totalStorage) * 100);
     });
+
+    ManageApps.getSDcardStorageStats().then(setSdCardStats);
   }, []);
 
   return (
@@ -160,7 +167,10 @@ const Uploads = ({navigation}: {navigation: any}) => {
                 <Text style={styles.Storage2}>SD card</Text>
               </View>
               <View>
-                <Text style={styles.Storage3}>Not Inserted</Text>
+                <Text style={styles.Storage3}>
+                  {bytes(sdCardStats.availableSize)}/
+                  {bytes(sdCardStats.fullSize)}
+                </Text>
               </View>
             </View>
           </View>
