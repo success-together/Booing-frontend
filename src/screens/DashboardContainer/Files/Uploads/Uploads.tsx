@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Text, View, StyleSheet, Pressable, ScrollView} from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import FilesHeader from '../FilesHeader/FilesHeader';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
@@ -189,7 +196,9 @@ const Uploads = ({navigation}: {navigation: any}) => {
             }}>
             Recycle Bin
           </Text>
-          <View style={styles.BottomBody}>
+          <TouchableWithoutFeedback
+            style={styles.BottomBody}
+            onPress={() => navigation.navigate('RecycleBin')}>
             <View style={styles.row}>
               <EvilIcons
                 style={{marginLeft: 14}}
@@ -209,7 +218,7 @@ const Uploads = ({navigation}: {navigation: any}) => {
                 Recycle bin
               </Text>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </View>
       </ScrollView>
     </View>

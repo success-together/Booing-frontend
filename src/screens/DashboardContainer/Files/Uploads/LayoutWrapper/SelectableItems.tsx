@@ -16,7 +16,7 @@ export interface SelectableItemsProps {
   data: any[];
   setSelectedIds: (x: any) => void;
   text: string;
-  showFile: (id: string) => void;
+  showFile?: (id: string) => void;
   setPressHandler?: () => void;
 }
 
@@ -40,7 +40,9 @@ const SelectableItems = ({
         return handleSelect(id);
       }
       // show file
-      showFile(id);
+      if (showFile) {
+        showFile(id);
+      }
     },
     [isSelecting, data],
   );
@@ -58,7 +60,7 @@ const SelectableItems = ({
   }, []);
 
   const renderItem = ({
-    item: {name, id, progress, hasTriedToUpload},
+    item: {name, id, progress, hasTriedToUpload, isImage, uri},
     index,
   }: any) => {
     return (
@@ -70,6 +72,8 @@ const SelectableItems = ({
         handleLongPress={handleLongPress(id)}
         handlePress={handlePress(id)}
         hasTriedToUpload={hasTriedToUpload}
+        isImage={isImage}
+        uri={uri}
       />
     );
   };
@@ -91,6 +95,12 @@ const SelectableItems = ({
       prev.filter(e => !data.find(item => item.id === e)),
     );
   }, [data, selectedIds]);
+
+  useEffect(() => {
+    if (isSelecting === false) {
+      setSelectedIds([]);
+    }
+  }, [isSelecting]);
 
   return (
     <TouchableWithoutFeedback ref={listWrapperRef}>

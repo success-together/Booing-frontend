@@ -56,6 +56,7 @@ const Images = ({navigation}: {navigation: any}) => {
           data={data}
           pickItemsFn={() => ManageApps.pickImages()}
           setData={setData}
+          isImageWrapper={true}
         />
       )}
     </LayoutWrapper>

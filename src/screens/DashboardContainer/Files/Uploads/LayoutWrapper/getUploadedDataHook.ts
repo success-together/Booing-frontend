@@ -18,9 +18,10 @@ const useGetUploadData = async (type?: string): Promise<any> => {
       if (res.status === 200) {
         return res.data.data.map((item: any) => ({
           ...item,
-          uri: item.file,
+          uri: item.file || item.uri,
           progress: 1,
           hasTriedToUpload: true,
+          isImage: type === 'image',
         }));
       }
     } catch (e) {

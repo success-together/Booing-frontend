@@ -1161,6 +1161,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
         String[] projection = {
                 MediaStore.Files.FileColumns.DISPLAY_NAME,
                 MediaStore.Files.FileColumns.MIME_TYPE,
+                MediaStore.Files.FileColumns._ID
         };
         Cursor cursor = getReactApplicationContext()
                 .getContentResolver()
@@ -1178,17 +1179,18 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
         int mimetypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
-
-
+        int idIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID);
 
         cursor.moveToFirst();
 
         String name = cursor.getString(nameIndex);
         String mimeType = cursor.getString(mimetypeIndex);
+        String id = cursor.getString(idIndex);
 
         map.putString("name", name);
         map.putString("data",getFileDataBase64(FileUtils.getPath(getReactApplicationContext(),uri)));
         map.putString("type", mimeType);
+        map.putString("id", id);
 
         p.resolve(map);
         cursor.close();
