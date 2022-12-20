@@ -23,7 +23,7 @@ const SellSpace = () => {
                 <Text style={styles.boldtext}>1 GB</Text>
               </View>
               <View style={{ flexDirection: 'row' }}>
-                <Text style={{ color: 'red', fontSize: 18, fontWeight: 'bold', letterSpacing: 0.5 }}> GIFT : 6500 Boo </Text>
+                <Text style={{ color: 'red', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5 }}> GIFT : 6500 Boo </Text>
               </View>
               <View style={{ marginTop: 8 }}>
                 <Text style={styles.normaltext}>Sync Across Unlimited Devices</Text>
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   cardBody: {
     flexDirection: 'column',
-    padding: 14,
+    padding: 20,
     backgroundColor: 'white'
   },
   cardContainer: {
@@ -177,21 +177,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
   },
   whitetext: {
-    fontSize: 16,
+    fontSize: 14,
     lineHeight: 21,
     fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
   },
   normaltext: {
-    fontSize: 16,
+    fontSize: 14,
     lineHeight: 21,
     fontWeight: 'bold',
     letterSpacing: 0.25,
     color: '#797D7F',
   },
   boldtext: {
-    fontSize: 20,
+    fontSize: 18,
     lineHeight: 21,
     fontWeight: 'bold',
     letterSpacing: 0.25,
@@ -199,9 +199,5 @@ const styles = StyleSheet.create({
   },
   containerFolder: {
     flexDirection: 'row',
-  },
-  recentFilesContainer: {
-    flexDirection: 'row',
-    marginTop: 20,
   },
 });

@@ -19,6 +19,7 @@ import {
   Downloads,
   BuySpace,
   SellSpace,
+  Offer,
 } from '../exports';
 import {small_logo} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -118,6 +119,13 @@ const DashboardContainer = () => {
              <Stack.Screen
             name="SellSpace"
             component={SellSpace}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
+              <Stack.Screen
+            name="Offer"
+            component={Offer}
             options={{
               // headerShown: false,
               tabBarItemStyle: {display: 'none'},
