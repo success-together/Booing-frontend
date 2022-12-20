@@ -217,7 +217,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    width: '100%',
     backgroundColor: '#F6F7FB',
     display: 'flex',
     justifyContent: 'flex-end',
