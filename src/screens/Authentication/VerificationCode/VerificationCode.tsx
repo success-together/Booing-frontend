@@ -22,6 +22,7 @@ import {Logo} from '../../../images/export';
 import {
   forgetPassword,
   mailVerification,
+  updatePassword,
 } from '../../../shared/slices/Auth/AuthService';
 
 interface SegmentedAutoMovingInputProps {
@@ -127,6 +128,22 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
       });
   };
 
+  const onUpdatePassword = async () => {
+    console.log({
+      isForgotPassword: true,
+      newPassword: password,
+      user_id: userId,
+    });
+    await updatePassword({
+      currentPassword: '',
+      isForgotPassword: true,
+      newPassword: password,
+      user_id: userId,
+    }).then(res => {
+      if (res.success) navigation.navigate('Login');
+    });
+  };
+
   useEffect(() => {
     const {user_id, isSignup} = route.params;
     console.log(user_id);
@@ -185,7 +202,7 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
                     flexDirection: 'row',
                     alignItems: 'center',
                     height: 60,
-                  }}>
+                  }} onPress={onUpdatePassword}>
                   <Text style={styles.text}>Update Password</Text>
                 </Pressable>
               </LinearGradient>
@@ -359,6 +376,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     lineHeight: 21,
+    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
   },

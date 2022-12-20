@@ -37,7 +37,7 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
   const changePassword = async () => {
     console.log(updatePasswordForm);
     console.log(loggedInUser?._id);
-    
+
     if (
       updatePasswordForm.confirmPassword !== '' &&
       updatePasswordForm.currentPassword !== '' &&
@@ -48,6 +48,7 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
         currentPassword: updatePasswordForm.currentPassword,
         newPassword: updatePasswordForm.newPassword,
         user_id: loggedInUser?._id,
+        isForgotPassword: false,
       }).then(() => {
         setUpdatePasswordForm({
           confirmPassword: '',

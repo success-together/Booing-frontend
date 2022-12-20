@@ -83,6 +83,7 @@ export const downloadFiles = async (data: {user_id: string; type: string}) => {
 export const uploadFiles = async (data: FormData, user_id: string) => {
   return axios({
     url: `${BaseUrl}/logged-in-user/uploadFile/${user_id}`,
+    // url: `http://locahlost:3001/logged-in-user/uploadFile/${user_id}`,
     method: 'POST',
     data,
     headers: {
