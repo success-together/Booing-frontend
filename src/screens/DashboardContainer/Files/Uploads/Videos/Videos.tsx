@@ -1,10 +1,11 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {StyleSheet} from 'react-native';
 import ManageApps from '../../../../../utils/manageApps';
 import {LayoutWrapper} from '../../../../exports';
 import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
 import Video from 'react-native-video';
+import useGetUploadData from '../LayoutWrapper/getUploadedDataHook';
 
 const Videos = () => {
   const [data, setData] = useState<any[]>([]);
@@ -17,6 +18,12 @@ const Videos = () => {
     uri: undefined,
     title: undefined,
   });
+
+  useEffect(() => {
+    useGetUploadData('video').then(fetchedData => {
+      setData(fetchedData as any[]);
+    });
+  }, []);
 
   const showFile = useCallback(
     (id: string) => {

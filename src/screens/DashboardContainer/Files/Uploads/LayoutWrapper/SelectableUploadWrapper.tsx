@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, {MutableRefObject, useCallback, useEffect, useState} from 'react';
 import {
   StyleSheet,
@@ -7,10 +8,11 @@ import {
   View,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {store} from '../../../../../shared';
+import {BaseUrl, store} from '../../../../../shared';
 import {uploadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 import ManageApps from '../../../../../utils/manageApps';
 import SelectableItems from './SelectableItems';
+import Toast from 'react-native-toast-message';
 
 export interface SelectableUploadWrapperProps {
   data: any[];
@@ -51,6 +53,7 @@ const SelectableUploadWrapper = ({
             ...(await ManageApps.getFileDescription(file)),
             uri: file,
             id: (Math.random() * 500).toString(), // change this later
+            hasTriedToUpload: false,
           };
 
           body.append('file', {
@@ -80,16 +83,21 @@ const SelectableUploadWrapper = ({
         }
 
         const response = await uploadFiles(body, user_id);
-        if (response.status === 200) {
+        function mergeData(obj: object) {
           setData((prevData: any[]) => {
             for (const {id} of fileDescs) {
               const item = prevData.find((e: any) => e.id === id);
               if (item) {
-                item.progress = 1;
+                Object.assign(item, obj);
               }
             }
             return [...prevData];
           });
+        }
+        if (response.status === 200) {
+          mergeData({progress: 1, hasTriedToUpload: true});
+        } else {
+          mergeData({hasTriedToUpload: true});
         }
       }
     } catch (e: any) {
@@ -100,8 +108,36 @@ const SelectableUploadWrapper = ({
   }, []);
 
   const handleDelete = useCallback(async () => {
-    console.log('delete ...');
-  }, [data]);
+    try {
+      const response = await axios({
+        method: 'POST',
+        url: `${BaseUrl}/logged-in-user/deleteFiles`,
+        data: {
+          files_id: selectedIds,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        setData((prev: any[]) => {
+          const newData = prev.filter(e => selectedIds.includes(e.id));
+          setSelectedIds([]);
+          return newData;
+        });
+        Toast.show({
+          text1: 'files deleted successfully !',
+        });
+      }
+    } catch (e: any) {
+      Toast.show({
+        text1: 'there was an error in delete files',
+        text2: e.message,
+      });
+    }
+  }, [data, selectedIds]);
 
   return (
     <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
@@ -150,7 +186,7 @@ const SelectableUploadWrapper = ({
               justifyContent: 'center',
               alignItems: 'center',
             }}
-            onPress={handleDelete}>
+            onPress={async () => await handleDelete()}>
             <Text style={{color: '#49ACFA', fontWeight: '500'}}>Delete</Text>
           </TouchableOpacity>
         )}
