@@ -26,10 +26,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
 import {store} from '../../shared';
-import {
-  checkForDownloads,
-  checkForUploads,
-} from '../../shared/slices/Fragmentation/FragmentationService';
+import RecycleBin from './Files/RecycleBin/RecycleBin';
 
 const Stack = createBottomTabNavigator();
 
@@ -109,14 +106,14 @@ const DashboardContainer = () => {
             component={ClearData}
             options={{tabBarItemStyle: {display: 'none'}}}
           />
-           <Stack.Screen
+          <Stack.Screen
             name="BuySpace"
             component={BuySpace}
             options={{
               // headerShown: false,
               tabBarItemStyle: {display: 'none'},
             }}></Stack.Screen>
-             <Stack.Screen
+          <Stack.Screen
             name="SellSpace"
             component={SellSpace}
             options={{
@@ -194,6 +191,12 @@ const DashboardContainer = () => {
           <Stack.Screen
             name="Apks"
             component={Apks}
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}></Stack.Screen>
+          <Stack.Screen
+            name="RecycleBin"
+            component={RecycleBin}
             options={{
               tabBarItemStyle: {display: 'none'},
             }}></Stack.Screen>

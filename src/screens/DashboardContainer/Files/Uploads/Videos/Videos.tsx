@@ -58,6 +58,7 @@ const Videos = () => {
           data={data}
           pickItemsFn={() => ManageApps.pickVideos()}
           setData={setData}
+          isImageWrapper={false}
         />
       )}
     </LayoutWrapper>

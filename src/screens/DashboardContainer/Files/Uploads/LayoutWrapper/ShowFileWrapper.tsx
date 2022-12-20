@@ -30,7 +30,13 @@ const ShowFileWrapper = ({
           paddingBottom: 25,
           backgroundColor: '#F6F7FB',
         }}>
-        <View style={{display: 'flex', flexDirection: 'row'}}>
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            flex: 1,
+            alignItems: 'center',
+          }}>
           <AntDesign
             name="arrowleft"
             color={'black'}
@@ -45,6 +51,7 @@ const ShowFileWrapper = ({
               fontSize: 16,
               fontWeight: '700',
               marginLeft: 15,
+              flex: 1,
             }}>
             {title}
           </Text>

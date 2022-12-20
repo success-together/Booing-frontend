@@ -54,6 +54,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
+import android.os.StatFs;
 import android.os.UserHandle;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
@@ -1160,6 +1161,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
         String[] projection = {
                 MediaStore.Files.FileColumns.DISPLAY_NAME,
                 MediaStore.Files.FileColumns.MIME_TYPE,
+                MediaStore.Files.FileColumns._ID
         };
         Cursor cursor = getReactApplicationContext()
                 .getContentResolver()
@@ -1177,17 +1179,18 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
         int mimetypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
-
-
+        int idIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID);
 
         cursor.moveToFirst();
 
         String name = cursor.getString(nameIndex);
         String mimeType = cursor.getString(mimetypeIndex);
+        String id = cursor.getString(idIndex);
 
         map.putString("name", name);
         map.putString("data",getFileDataBase64(FileUtils.getPath(getReactApplicationContext(),uri)));
         map.putString("type", mimeType);
+        map.putString("id", id);
 
         p.resolve(map);
         cursor.close();
@@ -1500,4 +1503,21 @@ public class ManageApps extends ReactContextBaseJavaModule {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         getCurrentActivity().startActivityForResult(intent, 100);
     }
+
+    @ReactMethod
+    public void getSDcardStorageStats(Promise p) {
+        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+
+        long sizeOfSDcard = (long)stat.getBlockCountLong() * (long)stat.getBlockSizeLong();
+        long availableStorageOfSDcard =  (long)stat.getAvailableBlocksLong() * (long)stat.getBlockSizeLong();
+
+        WritableMap map = new WritableNativeMap();
+
+        map.putDouble("fullSize", sizeOfSDcard);
+        map.putDouble("availableSize", availableStorageOfSDcard);
+
+        p.resolve(map);
+    }
+
+
 }
