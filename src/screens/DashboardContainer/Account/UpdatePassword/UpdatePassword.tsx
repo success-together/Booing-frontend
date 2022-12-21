@@ -4,6 +4,7 @@ import {Input} from 'react-native-elements';
 import {updatePassword} from '../../../../shared/slices/Auth/AuthService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {store} from '../../../../shared';
+import AccountHeader from '../AccountHeader/AcountHeader';
 
 const UpdatePassword = ({navigation}: {navigation: any}) => {
   const [updatePasswordForm, setUpdatePasswordForm] = useState<{
@@ -100,18 +101,19 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
   }, []);
 
   return (
-    <View>
-      <View style={styles.DashboardHeader}>
-        <View style={styles.logoView}>
+    <View style={styles.container}>
+      <View style={styles.containerHeader}>
+        <AccountHeader/>
+        {/* <View style={styles.logoView}>
           <Ionicons
             onPress={() => navigation.goBack()}
             name="ios-caret-back-circle-outline"
             size={30}
             color="white"
           />
-        </View>
+        </View> */}
       </View>
-      <>
+      <View style={styles.Body}>
         <Input
           placeholder="Enter your current Password"
           autoCompleteType={'password'}
@@ -144,27 +146,44 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
           onPress={changePassword}>
           <Text style={styles.text}>Update Password</Text>
         </Pressable>
-      </>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F2F6F7",   
+    width: "100%",
+    // flexWrap: "wrap",
+    // flexDirecton: "row",
+  },
+  containerHeader: {
+    backgroundColor: "#33a1f9",
+    width: "100%",
+    flex: 0.6,
+  },
+  Body: {
+    flex: 1,
+    marginTop: 20,
+    padding: 20
+  },
   DashboardHeader: {
     padding: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#33a1f9',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#33a1f9",
   },
   logoView: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
     left: 40,
   },
   profileImage: {
     padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   logo: {
     width: 35,
@@ -173,47 +192,46 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     lineHeight: 21,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     letterSpacing: 0.25,
-    color: 'white',
+    color: "black",
     marginTop: 5,
     // marginLeft: 70,
     // marginRight: 70,
-    textAlign: 'center',
+
   },
   text: {
-    fontSize: 16,
+    fontSize: 18,
     lineHeight: 21,
     letterSpacing: 0.25,
-    color: 'white',
+    fontWeight: "bold",
+    color: "#49ACFA",
     marginTop: 5,
-    maxWidth: '100%',
+    maxWidth: "100%",
   },
   button: {
     // flexDirection:  'row',
     marginBottom: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     // paddingHorizontal: 140,
     marginRight: 10,
     marginLeft: 10,
     // borderRadius: 4,
     // elevation: 3,
-    backgroundColor: '#33a1f9',
+    backgroundColor: "#33a1f9",
   },
   disabled: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     // paddingHorizontal: 140,
-    marginRight: 10,
-    marginLeft: 10,
     borderRadius: 4,
-    elevation: 3,
-    backgroundColor: 'gray',
+    elevation: 4,
+    backgroundColor: "white",
   },
 });
 

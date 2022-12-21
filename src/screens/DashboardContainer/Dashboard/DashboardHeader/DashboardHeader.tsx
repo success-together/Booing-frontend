@@ -28,10 +28,10 @@ const DashboardHeader = ({ navigation }: { navigation: any }) => {
           <Entypo name="minus" size={35} color="white" />
           <Text style={styles.txt}>Sell Space</Text>
         </Pressable>
-        <View style={styles.column}>
+        <Pressable style={styles.column}  onPress={()=> {navigation.navigate('Offer')}}>
           <MaterialCommunityIcons name="offer" size={35} color="white" />
           <Text style={styles.txt}>Offer</Text>
-        </View>
+        </Pressable>
       </View>
     </View>
   );

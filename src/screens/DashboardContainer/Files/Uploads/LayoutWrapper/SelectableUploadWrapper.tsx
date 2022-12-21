@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, {MutableRefObject, useCallback, useEffect, useState} from 'react';
 import {
+  ScrollView,
   StyleSheet,
   Text,
   TouchableHighlight,
@@ -20,6 +21,7 @@ export interface SelectableUploadWrapperProps {
   showFile: (id: string) => void;
   pickItemsFn: () => Promise<any[]>;
   setData: (arg: any) => void;
+  isImageWrapper: boolean;
 }
 
 const SelectableUploadWrapper = ({
@@ -28,6 +30,7 @@ const SelectableUploadWrapper = ({
   showFile,
   pickItemsFn,
   setData,
+  isImageWrapper,
 }: SelectableUploadWrapperProps) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const user_id = store.getState().authentication.userId;
@@ -52,8 +55,8 @@ const SelectableUploadWrapper = ({
           const fileDesc = {
             ...(await ManageApps.getFileDescription(file)),
             uri: file,
-            id: (Math.random() * 500).toString(), // change this later
             hasTriedToUpload: false,
+            isImage: isImageWrapper,
           };
 
           body.append('file', {
@@ -123,7 +126,7 @@ const SelectableUploadWrapper = ({
 
       if (response.status === 200) {
         setData((prev: any[]) => {
-          const newData = prev.filter(e => selectedIds.includes(e.id));
+          const newData = prev.filter(e => !selectedIds.includes(e.id));
           setSelectedIds([]);
           return newData;
         });
@@ -214,7 +217,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    width: '100%',
     backgroundColor: '#F6F7FB',
     display: 'flex',
     justifyContent: 'flex-end',

@@ -35,10 +35,6 @@ export const checkForUploads = (data: {user_id: string}) => {
     try {
       const result = await axios.post(url, data);
 
-      console.log({
-        result,
-      });
-
       if (result.data?.data?.length > 0) {
         const data = result.data.data;
 
@@ -61,7 +57,6 @@ export const checkForUploads = (data: {user_id: string}) => {
             }
           }
         }
-
         await Promise.all(requestes);
       }
     } catch (e: any) {
