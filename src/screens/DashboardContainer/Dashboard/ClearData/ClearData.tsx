@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Button, ActivityIndicator} from 'react-native';
-import {ReadDirItem, readFile} from 'react-native-fs';
+import {View, Text, StyleSheet, Button} from 'react-native';
+import {ReadDirItem} from 'react-native-fs';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import ManageApps from '../../../../utils/manageApps';
