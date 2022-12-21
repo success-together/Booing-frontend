@@ -64,10 +64,13 @@ export const updateProfile = (data: {
 };
 
 export const updatePassword = (data: {
-  currentPassword: string;
+  currentPassword : string;
   newPassword: string;
   user_id: string;
+  isForgotPassword : boolean;
 }) => {
+  console.log(data);
+  
   return Executor({
     method: 'post',
     url: BaseUrl + '/logged-in-user/updatePassword',

@@ -100,7 +100,7 @@ const Account = ({ navigation }: { navigation: any }) => {
                 />
                 <Text style={styles.text}>Registred devices</Text>
               </View>
-              <Text
+              {/* <Text
                 style={{
                   marginRight: 10,
                   fontSize: 16,
@@ -108,9 +108,8 @@ const Account = ({ navigation }: { navigation: any }) => {
                   color: "#CED5D8",
                 }}
               >
-                {" "}
-                3{" "}
-              </Text>
+              
+              </Text> */}
             </Pressable>
             <Pressable style={styles.button}>
               <View style={{ flexDirection: "row" }}>
