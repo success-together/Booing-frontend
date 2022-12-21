@@ -104,7 +104,7 @@ const SelectableItems = ({
 
   return (
     <TouchableWithoutFeedback ref={listWrapperRef}>
-      <View>
+      <View style={{marginBottom: 10}}>
         <FlatList
           data={data}
           renderItem={renderItem}

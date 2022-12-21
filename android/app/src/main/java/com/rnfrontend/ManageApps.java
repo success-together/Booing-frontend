@@ -1205,8 +1205,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
             int length = new FileInputStream(file).read(buffer);
             base64 = Base64.encodeToString(buffer, 0, length,
                     Base64.DEFAULT);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (NullPointerException | IOException e) {
             return e.getMessage();
         }
         return base64;
@@ -1506,18 +1505,24 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getSDcardStorageStats(Promise p) {
-        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+        Boolean isSDPresent = android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
+        Boolean isSDSupportedDevice = Environment.isExternalStorageRemovable();
 
-        long sizeOfSDcard = (long)stat.getBlockCountLong() * (long)stat.getBlockSizeLong();
-        long availableStorageOfSDcard =  (long)stat.getAvailableBlocksLong() * (long)stat.getBlockSizeLong();
+        if(isSDSupportedDevice && isSDPresent) {
+            StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
 
-        WritableMap map = new WritableNativeMap();
+            long sizeOfSDcard = (long)stat.getBlockCountLong() * (long)stat.getBlockSizeLong();
+            long availableStorageOfSDcard =  (long)stat.getAvailableBlocksLong() * (long)stat.getBlockSizeLong();
 
-        map.putDouble("fullSize", sizeOfSDcard);
-        map.putDouble("availableSize", availableStorageOfSDcard);
+            WritableMap map = new WritableNativeMap();
 
-        p.resolve(map);
+            map.putDouble("fullSize", sizeOfSDcard);
+            map.putDouble("availableSize", availableStorageOfSDcard);
+
+            p.resolve(map);
+            return;
+        }
+
+        p.resolve(null);
     }
-
-
 }
