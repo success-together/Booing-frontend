@@ -1,14 +1,80 @@
-import React from 'react';
-import {Text, View} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
 import ManageApps from '../../../../../utils/manageApps';
 import {LayoutWrapper} from '../../../../exports';
+import useGetUploadData from '../LayoutWrapper/getUploadedDataHook';
+import Toast from 'react-native-toast-message';
+import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
+import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
+import {Text, View} from 'react-native';
+import FontAwsome from 'react-native-vector-icons/FontAwesome';
 
 const ApkFiles = () => {
+  const [data, setData] = useState<any[]>([]);
+  const [isShowingFile, setIsShowingFile] = useState<{
+    show: boolean;
+    uri?: string;
+    title?: string;
+  }>({
+    show: false,
+    uri: undefined,
+    title: undefined,
+  });
+
+  useEffect(() => {
+    useGetUploadData('apk').then(fetchedData => {
+      setData(fetchedData as any[]);
+      if (fetchedData.length === 0) {
+        return Toast.show({
+          type: 'info',
+          text1: 'no data found',
+        });
+      } else {
+        return Toast.show({
+          text1: 'data fetched successfully',
+        });
+      }
+    });
+  }, []);
+
+  const showFile = useCallback(
+    (id: string) => {
+      const file = data.find(e => e.id === id);
+      if (file) {
+        setIsShowingFile({show: true, uri: file.uri, title: file.name});
+      }
+    },
+    [data],
+  );
+
   return (
-    <LayoutWrapper
-      uploadButtonPress={async () =>
-        await ManageApps.pickApks()
-      }></LayoutWrapper>
+    <LayoutWrapper>
+      {isShowingFile.show ? (
+        <ShowFileWrapper
+          title={isShowingFile.title}
+          displayComponent={
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <FontAwsome name="android" size={200} />
+            </View>
+          }
+          setIsShowingFile={setIsShowingFile}
+        />
+      ) : (
+        <SelectableUploadWrapper
+          showFile={showFile}
+          data={data}
+          pickItemsFn={() => ManageApps.pickApks()}
+          setData={setData}
+          isImageWrapper={false}
+        />
+      )}
+    </LayoutWrapper>
   );
 };
 

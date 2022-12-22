@@ -1,13 +1,6 @@
 import axios from 'axios';
-import React, {MutableRefObject, useCallback, useEffect, useState} from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableHighlight,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {BaseUrl, store} from '../../../../../shared';
 import {uploadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
@@ -69,8 +62,8 @@ const SelectableUploadWrapper = ({
     let fileDescs: any[] = [];
     function mergeData(obj: object) {
       setData((prevData: any[]) => {
-        for (const {id} of fileDescs) {
-          const item = prevData.find((e: any) => e.id === id);
+        for (const {name} of fileDescs) {
+          const item = prevData.find((e: any) => e.name === name);
           if (item) {
             Object.assign(item, obj);
           }
@@ -89,6 +82,7 @@ const SelectableUploadWrapper = ({
             uri: file,
             hasTriedToUpload: false,
             isImage: isImageWrapper,
+            id: Math.floor(Math.random() * 9999).toString(), // change this later
           };
 
           body.append('file', {
@@ -120,7 +114,24 @@ const SelectableUploadWrapper = ({
         const response = await uploadFiles(body, user_id);
 
         if (response.status === 200) {
-          mergeData({progress: 1, hasTriedToUpload: true});
+          const data = response.data.data;
+          setData((prevData: any[]) => {
+            for (const {name} of fileDescs) {
+              const item = prevData.find((e: any) => e.name === name);
+              const fileData = data.find((e: any) =>
+                e.name.includes(item.name),
+              );
+
+              if (item && fileData) {
+                Object.assign(item, {
+                  progress: 1,
+                  hasTriedToUpload: true,
+                  id: fileData.id,
+                });
+              }
+            }
+            return [...prevData];
+          });
         } else {
           mergeData({hasTriedToUpload: true});
         }
@@ -133,7 +144,7 @@ const SelectableUploadWrapper = ({
         text2: e.response?.data?.msg || e.message,
       });
     }
-  }, []);
+  }, [setData, pickItemsFn, data]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -160,7 +171,9 @@ const SelectableUploadWrapper = ({
         });
       }
     } catch (e: any) {
+      console.log('error');
       Toast.show({
+        type: 'error',
         text1: 'there was an error in delete files',
         text2: e.message,
       });
@@ -214,7 +227,7 @@ const SelectableUploadWrapper = ({
               justifyContent: 'center',
               alignItems: 'center',
             }}
-            onPress={async () => await handleDelete()}>
+            onPress={handleDelete}>
             <Text style={{color: '#49ACFA', fontWeight: '500'}}>Delete</Text>
           </TouchableOpacity>
         )}

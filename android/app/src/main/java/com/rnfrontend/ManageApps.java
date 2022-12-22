@@ -1187,8 +1187,9 @@ public class ManageApps extends ReactContextBaseJavaModule {
         String mimeType = cursor.getString(mimetypeIndex);
         String id = cursor.getString(idIndex);
 
+
+//      map.putString("data",getFileDataBase64(FileUtils.getPath(getReactApplicationContext(),uri)));
         map.putString("name", name);
-        map.putString("data",getFileDataBase64(FileUtils.getPath(getReactApplicationContext(),uri)));
         map.putString("type", mimeType);
         map.putString("id", id);
 

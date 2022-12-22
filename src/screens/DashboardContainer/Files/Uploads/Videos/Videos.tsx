@@ -6,6 +6,7 @@ import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
 import Video from 'react-native-video';
 import useGetUploadData from '../LayoutWrapper/getUploadedDataHook';
+import Toast from 'react-native-toast-message';
 
 const Videos = () => {
   const [data, setData] = useState<any[]>([]);
@@ -22,6 +23,16 @@ const Videos = () => {
   useEffect(() => {
     useGetUploadData('video').then(fetchedData => {
       setData(fetchedData as any[]);
+      if (fetchedData.length === 0) {
+        return Toast.show({
+          type: 'info',
+          text1: 'no data found',
+        });
+      } else {
+        return Toast.show({
+          text1: 'data fetched successfully',
+        });
+      }
     });
   }, []);
 

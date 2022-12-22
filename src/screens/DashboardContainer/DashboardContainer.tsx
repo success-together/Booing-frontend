@@ -25,37 +25,44 @@ import {small_logo} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
-import {store} from '../../shared';
+import {BaseUrl, store} from '../../shared';
 import RecycleBin from './Files/RecycleBin/RecycleBin';
+import {
+  checkForDownloads,
+  checkForUploads,
+} from '../../shared/slices/Fragmentation/FragmentationService';
+import axios from 'axios';
 
 const Stack = createBottomTabNavigator();
 
 const DashboardContainer = () => {
+  const device = store.getState().devices;
+
   useEffect(() => {
     const user_id = store.getState().authentication.userId;
 
-    // const intervalDownloads = checkForDownloads({user_id} as unknown as {
-    //   user_id: string;
-    // });
+    const intervalDownloads = checkForDownloads({user_id} as unknown as {
+      user_id: string;
+    });
 
     let intervalUploads: number | undefined;
-    // if (device_id) {
-    //   intervalUploads = checkForUploads({user_id} as unknown as {
-    //     user_id: string;
-    //   });
+    intervalUploads = checkForUploads({
+      user_id,
+      deviceRef: (device as any)?.deviceId,
+    } as unknown as {
+      user_id: string;
+      deviceRef: string;
+    });
 
-    //   console.log({device_id});
-    // }
-
-    // return () => {
-    //   if (intervalDownloads) {
-    //     clearInterval(intervalDownloads);
-    //   }
-    //   if (typeof intervalUploads !== 'undefined') {
-    //     clearInterval(intervalUploads);
-    //   }
-    // };
-  }, []);
+    return () => {
+      if (intervalDownloads) {
+        clearInterval(intervalDownloads);
+      }
+      if (typeof intervalUploads !== 'undefined') {
+        clearInterval(intervalUploads);
+      }
+    };
+  }, [device]);
 
   return (
     <>
@@ -120,7 +127,7 @@ const DashboardContainer = () => {
               // headerShown: false,
               tabBarItemStyle: {display: 'none'},
             }}></Stack.Screen>
-              <Stack.Screen
+          <Stack.Screen
             name="Offer"
             component={Offer}
             options={{
