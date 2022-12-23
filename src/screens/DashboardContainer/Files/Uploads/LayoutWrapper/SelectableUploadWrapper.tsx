@@ -90,13 +90,16 @@ const SelectableUploadWrapper = ({
     let fileDescs: any[] = [];
     function mergeData(obj: object) {
       setData((prevData: any[]) => {
-        for (const {name} of fileDescs) {
-          const item = prevData.find((e: any) => e.name === name);
-          if (item) {
-            Object.assign(item, obj);
+        if (fileDescs.length > 0) {
+          for (const {name} of fileDescs) {
+            const item = prevData.find((e: any) => e.name === name);
+            if (item) {
+              Object.assign(item, obj);
+            }
           }
+          return [...prevData];
         }
-        return [...prevData];
+        return prevData;
       });
     }
 
@@ -112,6 +115,15 @@ const SelectableUploadWrapper = ({
             isImage: isImageWrapper,
             id: Math.floor(Math.random() * 9999).toString(), // change this later
           };
+
+          if (fileDesc.size >= 26214400) {
+            setIsUploadButtonDisabled(false);
+            return Toast.show({
+              type: 'info',
+              text1: 'cannot upload file(s)',
+              text2: `file (${fileDesc.name}) has exceeded the max size (25mb)`,
+            });
+          }
 
           body.append('file', {
             uri: file,
