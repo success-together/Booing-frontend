@@ -89,12 +89,12 @@ const RecycleBin = () => {
             setData(
               response.data.data.map((e: any) => ({
                 ...e,
-                  type: transformType(
+                type: transformType(
                   e.uri?.slice(e.uri?.indexOf(':') + 1, e.uri?.indexOf(';')),
                 ),
                 progress: 1,
                 hasTriedToUpload: true,
-                isImage: e.uri??.startsWith('data:image/'),
+                isImage: e.uri?.startsWith('data:image/'),
               })),
             );
           }
