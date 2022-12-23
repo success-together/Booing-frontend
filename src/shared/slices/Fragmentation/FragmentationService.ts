@@ -96,9 +96,8 @@ export const checkForUploads = ({
       }
     } catch (e: any) {
       console.log(e);
-      throw e;
     }
-  }, 5 * 1000);
+  }, 60 * 1000);
 };
 
 export const downloadFiles = async (data: {user_id: string; type: string}) => {
