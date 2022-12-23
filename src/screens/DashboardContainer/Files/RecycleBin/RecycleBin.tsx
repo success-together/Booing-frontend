@@ -8,16 +8,17 @@ import SelectableItems from '../Uploads/LayoutWrapper/SelectableItems';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import ShowFileWrapper from '../Uploads/LayoutWrapper/ShowFileWrapper';
+import {useIsFocused} from '@react-navigation/native';
 
 function transformType(type?: string) {
   if (!type) {
     return 'other';
   }
   switch (true) {
-    case type.startsWith('video'):
+    case type?.startsWith('video'):
       return 'video';
 
-    case type.startsWith('image'):
+    case type?.startsWith('image'):
       return 'image';
 
     case type === 'application/pdf' || type === 'pdf':
@@ -56,7 +57,7 @@ const RecycleBin = () => {
     uri: undefined,
     title: undefined,
   });
-
+  const isFocused: boolean = useIsFocused();
   const user_id = store.getState().authentication.userId;
 
   const handleSelect = useCallback(
@@ -71,42 +72,44 @@ const RecycleBin = () => {
   const uncheckAll = useCallback(() => setSelectedIds([]), [data, selectedIds]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        store.dispatch(setRootLoading(true));
-        const response = await axios({
-          method: 'GET',
-          url: `${BaseUrl}/logged-in-user/getDeletedFiles/${user_id}`,
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        });
+    if (isFocused) {
+      (async () => {
+        try {
+          store.dispatch(setRootLoading(true));
+          const response = await axios({
+            method: 'GET',
+            url: `${BaseUrl}/logged-in-user/getDeletedFiles/${user_id}`,
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+          });
 
-        if (response.status === 200) {
-          setData(
-            response.data.data.map((e: any) => ({
-              ...e,
-              type: transformType(
-                e.uri?.slice(e.uri?.indexOf(':') + 1, e.uri?.indexOf(';')),
-              ),
-              progress: 1,
-              hasTriedToUpload: true,
-              isImage: e.uri?.startsWith('data:image/'),
-            })),
-          );
+          if (response.status === 200) {
+            setData(
+              response.data.data.map((e: any) => ({
+                ...e,
+                  type: transformType(
+                  e.uri?.slice(e.uri?.indexOf(':') + 1, e.uri?.indexOf(';')),
+                ),
+                progress: 1,
+                hasTriedToUpload: true,
+                isImage: e.uri??.startsWith('data:image/'),
+              })),
+            );
+          }
+        } catch (e: any) {
+          return Toast.show({
+            type: 'error',
+            text1: 'there was an error with fetching delete files',
+            text2: e?.message,
+          });
+        } finally {
+          store.dispatch(setRootLoading(false));
         }
-      } catch (e: any) {
-        return Toast.show({
-          type: 'error',
-          text1: 'there was an error with fetching delete files',
-          text2: e.message,
-        });
-      } finally {
-        store.dispatch(setRootLoading(false));
-      }
-    })();
-  }, []);
+      })();
+    }
+  }, [isFocused]);
 
   const showImage = useCallback(
     (id: string) => {
