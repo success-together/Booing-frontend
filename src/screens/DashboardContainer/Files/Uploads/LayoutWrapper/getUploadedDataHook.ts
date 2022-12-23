@@ -19,13 +19,14 @@ const useGetUploadData = async (type?: string): Promise<any> => {
         },
       });
       if (res.status === 200) {
-        return res.data.data.map((item: any) => ({
-          ...item,
-          uri: item.file || item.uri,
-          progress: 1,
-          hasTriedToUpload: true,
-          isImage: type === 'image',
-        }));
+        return (
+          res.data?.data?.map((item: any) => ({
+            ...item,
+            progress: 1,
+            hasTriedToUpload: true,
+            isImage: type === 'image',
+          })) || []
+        );
       }
     } catch (e: any) {
       Toast.show({

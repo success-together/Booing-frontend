@@ -1,25 +1,27 @@
 import axios from 'axios';
-import React, {
-  MutableRefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import {Text, View} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {Image, Text, View} from 'react-native';
 import {BaseUrl, store} from '../../../../shared';
 import LayoutWrapper from '../Uploads/LayoutWrapper/LayoutWrapper';
 import Toast from 'react-native-toast-message';
 import SelectableItems from '../Uploads/LayoutWrapper/SelectableItems';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import {setRootLoading} from '../../../../shared/slices/rootSlice';
+import ShowFileWrapper from '../Uploads/LayoutWrapper/ShowFileWrapper';
 
-function transformType(type: string) {
+function transformType(type?: string) {
+  if (!type) {
+    return 'other';
+  }
   switch (true) {
     case type.startsWith('video'):
       return 'video';
 
     case type.startsWith('image'):
       return 'image';
+
+    case type === 'application/pdf' || type === 'pdf':
+      return 'pdf';
 
     default:
       return 'other';
@@ -45,6 +47,15 @@ const RecycleBin = () => {
   const [data, setData] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pressHandler, setPressHandler] = useState<any>();
+  const [isShowingFile, setIsShowingFile] = useState<{
+    show: boolean;
+    uri?: string;
+    title?: string;
+  }>({
+    show: false,
+    uri: undefined,
+    title: undefined,
+  });
 
   const user_id = store.getState().authentication.userId;
 
@@ -62,6 +73,7 @@ const RecycleBin = () => {
   useEffect(() => {
     (async () => {
       try {
+        store.dispatch(setRootLoading(true));
         const response = await axios({
           method: 'GET',
           url: `${BaseUrl}/logged-in-user/getDeletedFiles/${user_id}`,
@@ -75,10 +87,13 @@ const RecycleBin = () => {
           setData(
             response.data.data.map((e: any) => ({
               ...e,
-              type: transformType(e.type),
+              uri: e.file,
+              type: transformType(
+                e.file?.slice(e.file.indexOf(':') + 1, e.file?.indexOf(';')),
+              ),
               progress: 1,
               hasTriedToUpload: true,
-              id: e._id,
+              isImage: e.file.startsWith('data:image/'),
             })),
           );
         }
@@ -86,50 +101,83 @@ const RecycleBin = () => {
         return Toast.show({
           type: 'error',
           text1: 'there was an error with fetching delete files',
+          text2: e.message,
         });
+      } finally {
+        store.dispatch(setRootLoading(false));
       }
     })();
   }, []);
+
+  const showImage = useCallback(
+    (id: string) => {
+      const file = data.find(e => e.id === id);
+      if (file) {
+        setIsShowingFile({show: true, uri: file.uri, title: file.name});
+      }
+    },
+    [data],
+  );
+
   return (
     <LayoutWrapper setPressHandlerRoot={setPressHandler}>
-      <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginTop: 34,
-            marginBottom: 42,
-            minHeight: 24,
-          }}>
-          {selectedIds.length > 0 && (
-            <>
-              <AntDesign
-                name="close"
-                size={20}
-                color="#49ACFA"
-                onPress={uncheckAll}
-              />
-              <Text style={{marginLeft: 17, color: 'black', fontSize: 16}}>
-                {selectedIds.length} Selected
-              </Text>
-            </>
-          )}
-        </View>
-        {groupByCategory(data).map(
-          ({data, name}: {data: any[]; name: string}) => (
-            <SelectableItems
-              data={data}
-              handleSelect={handleSelect}
-              selectedIds={selectedIds}
-              text={name + 's'}
-              setSelectedIds={setSelectedIds}
-              key={name}
-              setPressHandler={pressHandler}
+      {isShowingFile.show ? (
+        <ShowFileWrapper
+          title={isShowingFile.title}
+          displayComponent={
+            <Image
+              source={{uri: isShowingFile.uri}}
+              style={{
+                flex: 1,
+              }}
+              resizeMode="contain"
             />
-          ),
-        )}
-      </View>
+          }
+          setIsShowingFile={setIsShowingFile}
+        />
+      ) : (
+        <>
+          <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
+            <View
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginTop: 34,
+                marginBottom: 42,
+                minHeight: 24,
+              }}>
+              {selectedIds.length > 0 && (
+                <>
+                  <AntDesign
+                    name="close"
+                    size={20}
+                    color="#49ACFA"
+                    onPress={uncheckAll}
+                  />
+                  <Text style={{marginLeft: 17, color: 'black', fontSize: 16}}>
+                    {selectedIds.length} Selected
+                  </Text>
+                </>
+              )}
+            </View>
+            {groupByCategory(data).map(
+              ({data: categoryData, name}: {data: any[]; name: string}) => (
+                <SelectableItems
+                  data={categoryData}
+                  handleSelect={handleSelect}
+                  selectedIds={selectedIds}
+                  text={name + 's'}
+                  setSelectedIds={setSelectedIds}
+                  key={name}
+                  setPressHandler={pressHandler}
+                  showFile={name === 'image' ? showImage : undefined}
+                />
+              ),
+            )}
+          </View>
+        </>
+      )}
     </LayoutWrapper>
   );
 };

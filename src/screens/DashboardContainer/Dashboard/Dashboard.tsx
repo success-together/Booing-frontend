@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   NativeModules,
   PermissionsAndroid,
@@ -8,37 +8,36 @@ import {
   Text,
   View,
 } from 'react-native';
-import { AnimatedCircularProgress } from 'react-native-circular-progress';
-import { DashboardHeader } from '../../exports';
+import {AnimatedCircularProgress} from 'react-native-circular-progress';
+import {DashboardHeader} from '../../exports';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Geolocation from 'react-native-geolocation-service';
 import DeviceInfo from 'react-native-device-info';
-import { store } from '../../../shared';
+import {store} from '../../../shared';
 import {
   addDevice,
   updateGeoLocation,
 } from '../../../shared/slices/Devices/DevicesService';
-import {setDeviceId} from '../../../shared/slices/Devices/DevicesSlice';
 
-const Dashboard = ({ navigation }: { navigation: any }) => {
+const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
   const [freeSpacePerCent, setFreeSpacePerCent] = useState<number>(0);
-  const [position, setPosition] = useState<{ lat: number; lon: number }>();
+  const [position, setPosition] = useState<{lat: number; lon: number}>();
   const [loggedInUser, setLoggedUser] = useState<
     | {
-      name: string;
-      email: string;
-      phone: string;
-      accountVerified?: true;
-      code?: 0;
-      created_at?: string;
-      last_login?: string;
-      password?: string;
-      __v?: number;
-      _id?: string;
-    }
+        name: string;
+        email: string;
+        phone: string;
+        accountVerified?: true;
+        code?: 0;
+        created_at?: string;
+        last_login?: string;
+        password?: string;
+        __v?: number;
+        _id?: string;
+      }
     | undefined
   >(undefined);
 
@@ -84,7 +83,7 @@ const Dashboard = ({ navigation }: { navigation: any }) => {
             // See error code charts below.
             // console.log(error.code, error.message);
           },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+          {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
         );
       }
     });
@@ -174,7 +173,7 @@ const Dashboard = ({ navigation }: { navigation: any }) => {
                 // See error code charts below.
                 // console.log(error.code, error.message);
               },
-              { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+              {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
             );
           }
         });
@@ -208,20 +207,18 @@ const Dashboard = ({ navigation }: { navigation: any }) => {
       </View>
       <ScrollView style={styles.scrollView}>
         <View style={styles.body}>
-
           <View style={styles.secondScreenContainer}>
-         
-              <AnimatedCircularProgress
-                size={80}
-                width={10}
-                fill={freeSpacePerCent}
-                tintColor="#33a1f9"
-                backgroundColor="gray">
-                {fill => (
-                  <Text style={{ color: '#33a1f9' }}>{freeSpacePerCent}%</Text>
-                )}
-              </AnimatedCircularProgress>
-            
+            <AnimatedCircularProgress
+              size={80}
+              width={10}
+              fill={freeSpacePerCent}
+              tintColor="#33a1f9"
+              backgroundColor="gray">
+              {fill => (
+                <Text style={{color: '#33a1f9'}}>{freeSpacePerCent}%</Text>
+              )}
+            </AnimatedCircularProgress>
+
             <View style={styles.storageInfoContainer}>
               <Text style={styles.txtStorage}>Storage Details</Text>
               <Text style={styles.createAccount}>
@@ -230,19 +227,24 @@ const Dashboard = ({ navigation }: { navigation: any }) => {
             </View>
             <Pressable
               style={styles.scanContainer}
-              onPress={() => navigation.navigate('ClearData', { freeDiskStorage })}>
+              onPress={() =>
+                navigation.navigate('ClearData', {freeDiskStorage})
+              }>
               <MaterialIcons name="cleaning-services" size={24} color="white" />
-              <Text style={{ color: 'white' }}>Scan</Text>
+              <Text style={{color: 'white'}}>Scan</Text>
             </Pressable>
           </View>
-          <View style={{ marginTop: 20 }}>
-            <Text style={{
-              fontSize: 18,
-              lineHeight: 21,
-              fontWeight: 'bold',
-              letterSpacing: 0.25,
-              color: 'black',
-            }}>Recent</Text>
+          <View style={{marginTop: 20}}>
+            <Text
+              style={{
+                fontSize: 18,
+                lineHeight: 21,
+                fontWeight: 'bold',
+                letterSpacing: 0.25,
+                color: 'black',
+              }}>
+              Recent
+            </Text>
           </View>
           <View style={styles.recentFilesContainer}>
             <View
@@ -258,7 +260,7 @@ const Dashboard = ({ navigation }: { navigation: any }) => {
                   padding: 25,
                   borderRadius: 10,
                   width: 144,
-                  height: 120
+                  height: 120,
                 }}>
                 <Entypo name="folder" size={60} color="#ffde6c" />
                 <Text style={styles.createAccount}>Images</Text>
@@ -271,7 +273,7 @@ const Dashboard = ({ navigation }: { navigation: any }) => {
                   borderRadius: 10,
                   marginTop: 10,
                   width: 144,
-                  height: 120
+                  height: 120,
                 }}>
                 <Entypo name="folder" size={60} color="#ffde6c" />
                 <Text style={styles.createAccount}>Music</Text>
@@ -289,8 +291,7 @@ const Dashboard = ({ navigation }: { navigation: any }) => {
                   padding: 25,
                   borderRadius: 10,
                   width: 144,
-                  height: 120
-
+                  height: 120,
                 }}>
                 <Entypo name="folder" size={60} color="#ffde6c" />
                 <Text style={styles.createAccount}>Documents</Text>
@@ -303,14 +304,13 @@ const Dashboard = ({ navigation }: { navigation: any }) => {
                   marginTop: 10,
                   borderRadius: 10,
                   width: 144,
-                  height: 120
+                  height: 120,
                 }}>
                 <Entypo name="folder" size={60} color="#ffde6c" />
                 <Text style={styles.createAccount}>Downloads</Text>
               </View>
             </View>
           </View>
-
         </View>
       </ScrollView>
     </View>
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    marginTop: 20
+    marginTop: 20,
   },
   scanContainer: {
     backgroundColor: '#33a1f9',
