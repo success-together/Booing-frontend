@@ -27,6 +27,7 @@ const SelectableUploadWrapper = ({
   isImageWrapper,
 }: SelectableUploadWrapperProps) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isUploadButtonDisabled, setIsUploadButtonDisabled] = useState(false);
   const user_id = store.getState().authentication.userId;
 
   const handleSelect = useCallback(
@@ -54,11 +55,38 @@ const SelectableUploadWrapper = ({
         });
       }
     })();
+
+    const processInterval = setInterval(() => {
+      setData((prev: any[]) => {
+        prev.forEach(item => {
+          if (item.hasTriedToUpload === false && item.progress !== 1) {
+            let random = Math.random();
+            while (random > 0.01) {
+              random = Math.random();
+            }
+
+            if (item.prgress + random === 1) {
+              return clearInterval(processInterval);
+            }
+            item.progress += random;
+          }
+        });
+
+        return [...prev];
+      });
+    }, 1000);
+
+    return () => {
+      if (processInterval) {
+        clearInterval(processInterval);
+      }
+    };
   }, []);
 
   const uncheckAll = useCallback(() => setSelectedIds([]), [data, selectedIds]);
 
   const handleUpload = useCallback(async () => {
+    setIsUploadButtonDisabled(true);
     let fileDescs: any[] = [];
     function mergeData(obj: object) {
       setData((prevData: any[]) => {
@@ -140,9 +168,11 @@ const SelectableUploadWrapper = ({
       mergeData({hasTriedToUpload: true});
       Toast.show({
         type: 'error',
-        text1: 'cannot upload file',
+        text1: 'cannot upload file(s)',
         text2: e.response?.data?.msg || e.message,
       });
+    } finally {
+      setIsUploadButtonDisabled(false);
     }
   }, [setData, pickItemsFn, data]);
 
@@ -235,13 +265,13 @@ const SelectableUploadWrapper = ({
           style={{
             width: 82,
             height: 49,
-            backgroundColor: 'white',
+            backgroundColor: isUploadButtonDisabled ? '#D9D9D9' : 'white',
             borderRadius: 15,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
           }}
-          onPress={handleUpload}>
+          onPress={isUploadButtonDisabled ? undefined : handleUpload}>
           <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
         </TouchableOpacity>
       </View>
