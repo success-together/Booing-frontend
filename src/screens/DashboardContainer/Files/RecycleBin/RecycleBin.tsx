@@ -87,17 +87,16 @@ const RecycleBin = () => {
           setData(
             response.data.data.map((e: any) => ({
               ...e,
-              uri: e.file,
               type: transformType(
-                e.file?.slice(e.file.indexOf(':') + 1, e.file?.indexOf(';')),
+                e.uri?.slice(e.uri?.indexOf(':') + 1, e.uri?.indexOf(';')),
               ),
               progress: 1,
               hasTriedToUpload: true,
-              isImage: e.file.startsWith('data:image/'),
+              isImage: e.uri?.startsWith('data:image/'),
             })),
           );
         }
-      } catch (e) {
+      } catch (e: any) {
         return Toast.show({
           type: 'error',
           text1: 'there was an error with fetching delete files',
