@@ -15,6 +15,7 @@ export {default as Uploads} from './DashboardContainer/Files/Uploads/Uploads';
 export {default as ClearData} from './DashboardContainer/Dashboard/ClearData/ClearData';
 export {default as UpdateProfile} from './DashboardContainer/Account/UpdateProfile/UpdateProfile';
 export {default as UpdatePassword} from './DashboardContainer/Account/UpdatePassword/UpdatePassword';
+export {default as InviteFriends} from './DashboardContainer/Account/InviteFriends/InviteFriends';
 export {default as Images} from './DashboardContainer/Files/Uploads/Images/Images';
 export {default as RegistredDevives} from './DashboardContainer/Account/RegistredDevices/RegistredDevices';
 export {default as Videos} from './DashboardContainer/Files/Uploads/Videos/Videos';

@@ -1,6 +1,6 @@
 import {BaseUrl, store} from '../..';
 import {Executor} from '../../Executor';
-import {setDevice} from './DevicesSlice';
+import {setDevice, setDeviceId} from './DevicesSlice';
 
 export const GetDevicesService = (data: {user_id: string}) => {
   return Executor({

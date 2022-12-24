@@ -5,6 +5,7 @@ import LayoutWrapper from '../LayoutWrapper/LayoutWrapper';
 import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
 import ManageApps from '../../../../../utils/manageApps';
+import Toast from 'react-native-toast-message';
 
 const Images = ({navigation}: {navigation: any}) => {
   const [data, setData] = useState<any[]>([]);
@@ -21,6 +22,16 @@ const Images = ({navigation}: {navigation: any}) => {
   useEffect(() => {
     useGetUploadData('image').then(fetchedData => {
       setData(fetchedData as any[]);
+      if (fetchedData.length === 0) {
+        return Toast.show({
+          type: 'info',
+          text1: 'no data found',
+        });
+      } else {
+        return Toast.show({
+          text1: 'data fetched successfully',
+        });
+      }
     });
   }, []);
 

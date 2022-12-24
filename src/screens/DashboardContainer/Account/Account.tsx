@@ -68,6 +68,27 @@ const Account = ({ navigation }: { navigation: any }) => {
                   color="#CED5D8"
                 />
               </Pressable>
+              <Pressable
+                style={styles.button}
+                onPress={() => navigation.navigate("InviteFriends")}
+              >
+                <View style={{ flexDirection: "row" }}>
+                  <FontAwesome5
+                    style={styles.icon}
+                    name="user-friends"
+                    size={20}
+                    color="#CED5D8"
+                  />
+                  <Text style={styles.text}>Invite Friends</Text>
+                </View>
+
+                <MaterialIcons
+                  style={{ marginRight: 8 }}
+                  name="arrow-forward-ios"
+                  size={20}
+                  color="#CED5D8"
+                />
+              </Pressable>
             </View>
           </View>
           <View style={styles.sectionView}>
@@ -152,7 +173,7 @@ const Account = ({ navigation }: { navigation: any }) => {
             </Pressable>
           </View>
           <View style={styles.sectionView}>
-            <Pressable style={styles.button} onPress={() => {Logout(navigation)}}>
+            <Pressable style={styles.button} onPress={() => { Logout(navigation) }}>
               <View style={{ flexDirection: "row" }}>
                 <AntDesign
                   style={styles.icon}

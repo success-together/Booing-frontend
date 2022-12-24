@@ -22,6 +22,7 @@ const Uploads = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
   const [sdCardStats, setSdCardStats] = useState({
+    present: false,
     fullSize: 0,
     availableSize: 0,
   });
@@ -42,7 +43,17 @@ const Uploads = ({navigation}: {navigation: any}) => {
       //  console.log('total : ' + (freeDiskStorage / totalStorage) * 100);
     });
 
-    ManageApps.getSDcardStorageStats().then(setSdCardStats);
+    ManageApps.getSDcardStorageStats().then(
+      (stats: (typeof sdCardStats & {present: boolean}) | null) => {
+        if (stats) {
+          return setSdCardStats({
+            present: true,
+            fullSize: stats.fullSize,
+            availableSize: stats.availableSize,
+          });
+        }
+      },
+    );
   }, []);
 
   return (
@@ -175,8 +186,11 @@ const Uploads = ({navigation}: {navigation: any}) => {
               </View>
               <View>
                 <Text style={styles.Storage3}>
-                  {bytes(sdCardStats.availableSize)}/
-                  {bytes(sdCardStats.fullSize)}
+                  {sdCardStats.present
+                    ? `${bytes(sdCardStats.availableSize)}/${bytes(
+                        sdCardStats.fullSize,
+                      )}`
+                    : 'No SD card'}
                 </Text>
               </View>
             </View>
@@ -197,9 +211,14 @@ const Uploads = ({navigation}: {navigation: any}) => {
             Recycle Bin
           </Text>
           <TouchableWithoutFeedback
-            style={styles.BottomBody}
             onPress={() => navigation.navigate('RecycleBin')}>
-            <View style={styles.row}>
+            <View
+              style={{
+                ...styles.row,
+                marginLeft: 20,
+                marginBottom: 10,
+                marginTop: 10,
+              }}>
               <EvilIcons
                 style={{marginLeft: 14}}
                 name="trash"
