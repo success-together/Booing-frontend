@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {
-  NativeModules,
   PermissionsAndroid,
   Pressable,
   ScrollView,
@@ -233,6 +232,23 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               <MaterialIcons name="cleaning-services" size={24} color="white" />
               <Text style={{color: 'white'}}>Scan</Text>
             </Pressable>
+          </View>
+          <View style={styles.secondScreenContainer}>
+            <AnimatedCircularProgress
+              size={80}
+              width={10}
+              fill={freeSpacePerCent}
+              tintColor="green"
+              backgroundColor="gray">
+              {fill => (
+                <Text style={{color: '#33a1f9'}}>{freeSpacePerCent}%</Text>
+              )}
+            </AnimatedCircularProgress>
+
+            <View style={styles.storageInfoContainer}>
+              <Text style={styles.txtStorage}>Available           1 Gb</Text>
+              <Text style={styles.createAccount}>Used                      53 Mb</Text>
+            </View>
           </View>
           <View style={{marginTop: 20}}>
             <Text
