@@ -7,6 +7,7 @@ import {setLoggedInUser} from '../../shared/slices/Auth/AuthSlice';
 import {socialMediaSignIn} from '../../shared/slices/Auth/AuthService';
 import auth from '@react-native-firebase/auth';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
+import Toast from 'react-native-toast-message';
 
 GoogleSignin.configure({
   webClientId:
@@ -35,6 +36,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
       // Get the users ID token
       const {idToken, user} = await GoogleSignin.signIn();
+
       await socialMediaSignIn({
         name: user.name || '',
         email: user.email,
@@ -49,7 +51,10 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       store.dispatch(setLoggedInUser(true));
       navigation.navigate('DashboardContainer');
     } catch (error: any) {
-      console.log({error});
+      Toast.show({
+        type: 'error',
+        text1: 'there was an error with logging with google',
+      });
     }
   }, [navigation]);
 
@@ -82,9 +87,24 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       );
 
       // Sign-in the user with the credential
-      auth().signInWithCredential(facebookCredential);
+      const {
+        user: {displayName: name, email, uid: socialMedia_ID},
+      } = await auth().signInWithCredential(facebookCredential);
+
+      if (name && email) {
+        await socialMediaSignIn({
+          name,
+          email,
+          socialMedia_ID,
+        });
+      }
+
+      navigation.navigate('DashboardContainer');
     } catch (e: any) {
-      console.log({message: e.message});
+      Toast.show({
+        type: 'error',
+        text1: 'there was an error with logging with facebook',
+      });
     }
   }, []);
 
@@ -157,13 +177,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     lineHeight: 21,
-    marginBottom:30,
+    marginBottom: 30,
     letterSpacing: 0.25,
-    color:'#797D7F',
-   
+    color: '#797D7F',
+
     // marginLeft: 70,
     // marginRight: 70,
-
   },
   createAccount: {
     fontSize: 13,

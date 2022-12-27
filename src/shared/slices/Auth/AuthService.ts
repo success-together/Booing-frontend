@@ -64,13 +64,13 @@ export const updateProfile = (data: {
 };
 
 export const updatePassword = (data: {
-  currentPassword : string;
+  currentPassword: string;
   newPassword: string;
   user_id: string;
-  isForgotPassword : boolean;
+  isForgotPassword: boolean;
 }) => {
   console.log(data);
-  
+
   return Executor({
     method: 'post',
     url: BaseUrl + '/logged-in-user/updatePassword',
@@ -93,7 +93,9 @@ export const socialMediaSignIn = (data: {
     withoutToast: true,
     successFun(data) {
       saveToken(data);
-      store.dispatch(setLoggedInUser(data.data));
+      store.dispatch(
+        setLoggedInUser({isLoggedInUser: true, user: data.data.user}),
+      );
     },
   });
 };
