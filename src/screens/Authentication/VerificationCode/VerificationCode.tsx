@@ -149,6 +149,7 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
     console.log(user_id);
     setUserId(user_id);
     setIsSignup(isSignup);
+    if (isSignup) setStep(++step);
   }, []);
 
   return (
@@ -202,7 +203,8 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
                     flexDirection: 'row',
                     alignItems: 'center',
                     height: 60,
-                  }} onPress={onUpdatePassword}>
+                  }}
+                  onPress={onUpdatePassword}>
                   <Text style={styles.text}>Update Password</Text>
                 </Pressable>
               </LinearGradient>
