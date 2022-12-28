@@ -1,5 +1,12 @@
-import React, {useCallback} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Button,
+  Pressable,
+} from 'react-native';
 import FontAwesoem from 'react-native-vector-icons/FontAwesome';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {store} from '../../shared';
@@ -7,8 +14,12 @@ import {setLoggedInUser} from '../../shared/slices/Auth/AuthSlice';
 import {socialMediaSignIn} from '../../shared/slices/Auth/AuthService';
 import auth from '@react-native-firebase/auth';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
-import Toast from 'react-native-toast-message';
+import Toast, {BaseToast} from 'react-native-toast-message';
 import {NativeModules} from 'react-native';
+import ManageApps from '../../utils/manageApps';
+import {Dialog} from 'react-native-elements';
+import LinearGradient from 'react-native-linear-gradient';
+import {isValidEmail} from '../../utils/util-functions';
 
 const {RNTwitterSignIn} = NativeModules;
 
@@ -23,6 +34,10 @@ GoogleSignin.configure({
 });
 
 const SocialMediaAuth = ({navigation}: {navigation: any}) => {
+  const [loginWithTwitterDialog, setLoginWithTwitterDialog] = useState({
+    show: false,
+    email: '',
+  });
   type User = {
     ID: number;
     firstName?: string;
@@ -64,19 +79,43 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
     }
   }, [navigation]);
 
-  const loginWithTwitter = useCallback(async () => {
-    // Perform the login request
-    const {authToken, authTokenSecret} = await RNTwitterSignIn.logIn();
+  const loginWithTwitter = useCallback(
+    async (val = true): Promise<any> => {
+      const data = await ManageApps.loginWithTwitter();
 
-    // Create a Twitter credential with the tokens
-    const twitterCredential = auth.TwitterAuthProvider.credential(
-      authToken,
-      authTokenSecret,
-    );
+      if (typeof data === 'string') {
+        if (data === 'The web operation was canceled by the user.' && val) {
+          return await loginWithTwitter(false);
+        }
 
-    // Sign-in the user with the credential
-    return auth().signInWithCredential(twitterCredential);
-  }, []);
+        return Toast.show({
+          type: 'error',
+          text1: 'there was an error with logging with twitter',
+          text2: data,
+        });
+      }
+
+      try {
+        const {name, id} = data as {
+          name: string;
+          id: string;
+        };
+
+        await socialMediaSignIn({
+          name,
+          email: loginWithTwitterDialog.email,
+          socialMedia_ID: id,
+        });
+      } catch (e: any) {
+        return Toast.show({
+          type: 'error',
+          text1: 'there was an error with logging with twitter',
+          text2: e.message,
+        });
+      }
+    },
+    [loginWithTwitterDialog, ManageApps],
+  );
 
   const loginWithFacebook = useCallback(async () => {
     try {
@@ -124,8 +163,82 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
     }
   }, []);
 
+  const submitTwitterEmail = useCallback(async () => {
+    if (
+      loginWithTwitterDialog.email &&
+      isValidEmail(loginWithTwitterDialog.email)
+    ) {
+      setLoginWithTwitterDialog(prev => ({...prev, show: false}));
+      await loginWithTwitter();
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'invalid email',
+        position: 'top',
+      });
+    }
+  }, []);
+
   return (
     <View style={styles.container}>
+      <Dialog isVisible={loginWithTwitterDialog.show}>
+        <Dialog.Title title="please enter your email to continue logging with twitter" />
+        <TextInput
+          placeholder="Enter Email Adress"
+          autoComplete={'email'}
+          onChangeText={val =>
+            setLoginWithTwitterDialog(prev => ({...prev, email: val}))
+          }
+          style={{
+            backgroundColor: '#F2F2F2',
+            borderRadius: 8,
+            marginBottom: '5.18%',
+            marginTop: 4,
+          }}
+          placeholderTextColor="#716D6D"
+        />
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'center',
+          }}>
+          <LinearGradient
+            colors={['#33A1F9', '#6DBDFE']}
+            style={{borderRadius: 8}}>
+            <Pressable
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                alignItems: 'center',
+                height: 40,
+                width: 100,
+              }}
+              onPress={() =>
+                setLoginWithTwitterDialog({show: false, email: ''})
+              }>
+              <Text style={styles.text}>Cancel</Text>
+            </Pressable>
+          </LinearGradient>
+          <LinearGradient
+            colors={['#33A1F9', '#6DBDFE']}
+            style={{borderRadius: 8, marginLeft: 10}}>
+            <Pressable
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                alignItems: 'center',
+                height: 40,
+                width: 100,
+              }}
+              onPress={submitTwitterEmail}>
+              <Text style={styles.text}>Done</Text>
+            </Pressable>
+          </LinearGradient>
+        </View>
+      </Dialog>
       <View style={styles.containerSocialMedia}>
         <FontAwesoem
           style={{marginLeft: 37, ...styles.Icon}}
@@ -139,7 +252,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
           name="twitter"
           size={38}
           color="#33A1F9"
-          onPress={async () => await loginWithTwitter()}
+          onPress={() => setLoginWithTwitterDialog({show: true, email: ''})}
         />
         <FontAwesoem
           style={styles.Icon}

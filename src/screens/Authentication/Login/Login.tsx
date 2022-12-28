@@ -9,21 +9,9 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  Pressable,
-  Platform,
-  TextInput,
-} from 'react-native';
 import {Logo} from '../../../images/export';
 import {login} from '../../../shared/slices/Auth/AuthService';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import SocialMediaAuth from '../../../Components/SocialMediaAuth/SocialMediaAuth';
-import LinearGradient from 'react-native-linear-gradient';
-import {Input} from 'react-native-elements';
 import SocialMediaAuth from '../../../Components/SocialMediaAuth/SocialMediaAuth';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -40,7 +28,6 @@ const Login = ({navigation}: {navigation: any}) => {
 
   return (
     <View style={styles.container}>
-      <Toast />
       <LinearGradient
         colors={['#33A1F9', '#6DBDFE']}
         style={styles.containerImage}>
@@ -124,6 +111,8 @@ const Login = ({navigation}: {navigation: any}) => {
         </Text>
         <SocialMediaAuth navigation={navigation} />
       </View>
+
+      <Toast />
     </View>
   );
 };
