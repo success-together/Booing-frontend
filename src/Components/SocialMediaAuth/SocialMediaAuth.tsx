@@ -8,13 +8,19 @@ import {socialMediaSignIn} from '../../shared/slices/Auth/AuthService';
 import auth from '@react-native-firebase/auth';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
 import Toast from 'react-native-toast-message';
+import {NativeModules} from 'react-native';
+
+const {RNTwitterSignIn} = NativeModules;
+
+RNTwitterSignIn.init(
+  'FZERgjOuUSS9RIpvw0kSvirTf',
+  '7Lp3zL5lIIwgo7JxfUcLo3hB8Uw03dArZtyzWFWhUQ50HqChrT',
+);
 
 GoogleSignin.configure({
   webClientId:
     '17871285593-8hiaii38s6kifagjg5dunc29bidvfj3u.apps.googleusercontent.com',
 });
-
-// WebBrowser.maybeCompleteAuthSession()
 
 const SocialMediaAuth = ({navigation}: {navigation: any}) => {
   type User = {
@@ -58,8 +64,18 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
     }
   }, [navigation]);
 
-  const loginWithTwitter = useCallback(() => {
-    console.log('loginWithTwitter');
+  const loginWithTwitter = useCallback(async () => {
+    // Perform the login request
+    const {authToken, authTokenSecret} = await RNTwitterSignIn.logIn();
+
+    // Create a Twitter credential with the tokens
+    const twitterCredential = auth.TwitterAuthProvider.credential(
+      authToken,
+      authTokenSecret,
+    );
+
+    // Sign-in the user with the credential
+    return auth().signInWithCredential(twitterCredential);
   }, []);
 
   const loginWithFacebook = useCallback(async () => {
@@ -123,7 +139,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
           name="twitter"
           size={38}
           color="#33A1F9"
-          onPress={() => loginWithTwitter()}
+          onPress={async () => await loginWithTwitter()}
         />
         <FontAwesoem
           style={styles.Icon}
