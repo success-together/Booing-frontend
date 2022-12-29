@@ -74,8 +74,8 @@ const InviteFriends = () => {
                             </Text>
                              <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center', width:'90%', marginTop:20}}>
                                 <AntDesign name='checkcircleo' color={'green'} size={20}/>
-                                <Text style={{color:'white', fontSize:14, marginLeft:0}}>
-                                    5 MM Boos When 3 Friends Buy More Space With "Plus Plan".
+                                <Text style={{color:'white', fontSize:14, marginLeft:20}}>
+                                     5 MM Boos When 3 Friends Buy More Space With "Plus Plan".
                                 </Text>
                             </View>
                             <View style={{flexDirection:'row', justifyContent:'space-between', alignItems:'center', width:'90%', marginTop:20}}>
