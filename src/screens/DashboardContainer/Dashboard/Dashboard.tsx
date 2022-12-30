@@ -7,10 +7,12 @@ import {
   Text,
   View,
 } from 'react-native';
+import * as Progress from 'react-native-progress';
 import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {DashboardHeader} from '../../exports';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Geolocation from 'react-native-geolocation-service';
 import DeviceInfo from 'react-native-device-info';
 import {store} from '../../../shared';
@@ -233,21 +235,53 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               <Text style={{color: 'white'}}>Scan</Text>
             </Pressable>
           </View>
-          <View style={styles.secondScreenContainer}>
-            <AnimatedCircularProgress
-              size={80}
-              width={10}
-              fill={freeSpacePerCent}
-              tintColor="green"
-              backgroundColor="gray">
-              {fill => (
-                <Text style={{color: '#33a1f9'}}>{freeSpacePerCent}%</Text>
-              )}
-            </AnimatedCircularProgress>
-
-            <View style={styles.storageInfoContainer}>
-              <Text style={styles.txtStorage}>Available           1 Gb</Text>
-              <Text style={styles.createAccount}>Used                      53 Mb</Text>
+          <View style={styles.thirdScreenContainer}>
+            <View
+              style={{
+                backgroundColor: '#24E72C',
+                height: '100%',
+                width: '6%',
+                borderTopLeftRadius: 20,
+                borderBottomLeftRadius: 20,
+              }}></View>
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '25%',
+                borderRightWidth: 2,
+                borderColor: '#EFF4F0',
+              }}>
+              <FontAwesome5 name="cloud" size={40} color="#33a1f9" />
+            </View>
+            <View style={styles.availbleStorage}>
+              <View style={{padding: 4}}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  <Text style={styles.available}>AVAILABLE</Text>
+                  <Text style={styles.available}> 1 GB</Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginTop: 4,
+                  }}>
+                  <Text style={styles.usedSpace}>USED</Text>
+                  <Text style={styles.usedSpace}>53 MB</Text>
+                </View>
+                <Progress.Bar
+                  progress={0.3}
+                  width={170}
+                  height={14}
+                  color="#24E72C"
+                  unfilledColor="orange"
+                  style={{marginTop: 4}}
+                />
+              </View>
             </View>
           </View>
           <View style={{marginTop: 20}}>
@@ -348,7 +382,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     alignItems: 'center',
     padding: 10,
-    borderRadius: 10,
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
     justifyContent: 'center',
   },
   secondScreenContainer: {
@@ -356,6 +391,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 10,
     width: '90%',
+    borderRadius: 20,
+  },
+  thirdScreenContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    width: '90%',
+    borderRadius: 20,
+    marginTop: 10,
+  },
+  availbleStorage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
     borderRadius: 20,
   },
   storageInfoContainer: {
@@ -368,6 +417,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
     fontWeight: 'bold',
     color: '#33a1f9',
+  },
+  available: {
+    fontSize: 18,
+    lineHeight: 21,
+    letterSpacing: 0.25,
+    fontWeight: 'bold',
+    color: '#24E72C',
   },
   container: {
     flex: 1,
@@ -414,6 +470,13 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     letterSpacing: 0.25,
     color: 'black',
+  },
+  usedSpace: {
+    fontSize: 18,
+    lineHeight: 21,
+    letterSpacing: 0.25,
+    fontWeight: 'bold',
+    color: 'orange',
   },
   containerFolder: {
     flexDirection: 'row',
