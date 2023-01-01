@@ -14,7 +14,7 @@ import {setLoggedInUser} from '../../shared/slices/Auth/AuthSlice';
 import {socialMediaSignIn} from '../../shared/slices/Auth/AuthService';
 import auth from '@react-native-firebase/auth';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
-import Toast, {BaseToast} from 'react-native-toast-message';
+import Toast from 'react-native-toast-message';
 import {NativeModules} from 'react-native';
 import ManageApps from '../../utils/manageApps';
 import {Dialog} from 'react-native-elements';
@@ -69,7 +69,6 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       // Sign-in the user with the credential
       await auth().signInWithCredential(googleCredential);
 
-      store.dispatch(setLoggedInUser(true));
       navigation.navigate('DashboardContainer');
     } catch (error: any) {
       Toast.show({

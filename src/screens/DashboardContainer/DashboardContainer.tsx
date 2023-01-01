@@ -31,6 +31,7 @@ import {
   checkForDownloads,
   checkForUploads,
 } from '../../shared/slices/Fragmentation/FragmentationService';
+import FolderPage from './Files/FolderPage/FolderPage';
 
 const Stack = createBottomTabNavigator();
 
@@ -163,6 +164,15 @@ const DashboardContainer = () => {
               tabBarItemStyle: {display: 'none'},
             }}
           />
+          <Stack.Screen
+            name="Folder"
+            component={FolderPage}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
+
           <Stack.Screen
             name="Images"
             component={Images}

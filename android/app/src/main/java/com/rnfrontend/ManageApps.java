@@ -1534,10 +1534,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
                                 WritableMap userData = new WritableNativeMap();
 
                                 userData.putString("name", user.getDisplayName());
-                                userData.putString("email",  authResult.getAdditionalUserInfo()
-                                        .getProfile().get("email").toString());
-                                userData.putString("phone", authResult.getAdditionalUserInfo().getProfile()
-                                        .get("phone").toString());
                                 userData.putString("id", user.getUid());
 
                                 p.resolve(userData);
@@ -1555,7 +1551,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
                                 WritableMap userData = new WritableNativeMap();
 
                                 userData.putString("name", user.getDisplayName());
-                                userData.putString("email", user.getEmail());
                                 userData.putString("id", user.getUid());
 
                                 p.resolve(userData);
