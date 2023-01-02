@@ -149,6 +149,7 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
     console.log(user_id);
     setUserId(user_id);
     setIsSignup(isSignup);
+    if (isSignup) setStep(++step);
   }, []);
 
   return (

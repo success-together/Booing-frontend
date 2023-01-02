@@ -20,6 +20,7 @@ import {
   BuySpace,
   SellSpace,
   Offer,
+  InviteFriends,
 } from '../exports';
 import {small_logo} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -172,7 +173,14 @@ const DashboardContainer = () => {
               tabBarItemStyle: {display: 'none'},
             }}
           />
-
+          <Stack.Screen
+            name="InviteFriends"
+            component={InviteFriends}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
           <Stack.Screen
             name="Images"
             component={Images}
