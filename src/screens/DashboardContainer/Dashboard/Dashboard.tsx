@@ -12,7 +12,7 @@ import {DashboardHeader} from '../../exports';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Geolocation from 'react-native-geolocation-service';
 import DeviceInfo from 'react-native-device-info';
-import {store} from '../../../shared';
+import {AXIOS_ERROR, BaseUrl, store} from '../../../shared';
 import {
   addDevice,
   updateGeoLocation,
@@ -21,12 +21,17 @@ import SegmentedRoundCircle from '../../../Components/SegmentedRoundCircle/Segme
 import ScanIcon from '../../../Components/ScanIcon/ScanIcon';
 import FolderIcon from '../../../Components/FolderIcon/FolderIcon';
 import LinearGradient from 'react-native-linear-gradient';
+import {setRootLoading} from '../../../shared/slices/rootSlice';
+import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
   const [freeSpacePerCent, setFreeSpacePerCent] = useState<number>(0);
   const [position, setPosition] = useState<{lat: number; lon: number}>();
+  const [recentFolders, setRecentFolders] = useState<{name: string}[]>([]);
   const [loggedInUser, setLoggedUser] = useState<
     | {
         name: string;
@@ -42,6 +47,48 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       }
     | undefined
   >(undefined);
+  const user_id = store.getState().authentication.userId;
+
+  useEffect(() => {
+    (async () => {
+      if (!user_id) {
+        return;
+      }
+
+      try {
+        store.dispatch(setRootLoading(true));
+        const response = await axios({
+          method: 'POST',
+          url: `${BaseUrl}/logged-in-user/recentDirectories`,
+          headers: {
+            Accept: 'application/json',
+            'Content-type': 'application/json',
+          },
+          data: {
+            user_id,
+          },
+        });
+
+        if (response.status === 200) {
+          const data = response.data.data;
+          setRecentFolders(data);
+        }
+      } catch (e: any) {
+        if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+          return Toast.show({
+            type: 'error',
+            text1: e.response?.data?.message,
+          });
+        }
+        Toast.show({
+          type: 'error',
+          text1: 'something went wrong cannot get recent folders',
+        });
+      } finally {
+        store.dispatch(setRootLoading(false));
+      }
+    })();
+  }, [user_id]);
 
   const requestLocationPermission = async () => {
     try {
@@ -265,73 +312,87 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               Recent
             </Text>
           </View>
-          <View style={styles.recentFilesContainer}>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                width: '100%',
-                justifyContent: 'center',
-                flex: 1,
-                marginBottom: 20,
-              }}>
+          {recentFolders.length !== 0 ? (
+            <View style={styles.recentFilesContainer}>
               <View
                 style={{
-                  backgroundColor: 'white',
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  padding: 25,
-                  borderRadius: 25,
-                  width: '38.55%',
-                  marginRight: '8.88%',
+                  width: '100%',
+                  justifyContent: 'center',
+                  flex: 1,
+                  marginBottom: 20,
                 }}>
-                <FolderIcon />
-                <Text style={styles.folderText}>Images</Text>
+                <View
+                  style={{
+                    backgroundColor: 'white',
+                    alignItems: 'center',
+                    padding: 25,
+                    borderRadius: 25,
+                    width: '38.55%',
+                    marginRight: '8.88%',
+                  }}>
+                  <FolderIcon />
+                  <Text style={styles.folderText}>
+                    {recentFolders[0]?.name}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: 'white',
+                    alignItems: 'center',
+                    padding: 25,
+                    borderRadius: 25,
+                    width: '38.55%',
+                  }}>
+                  <FolderIcon />
+                  <Text style={styles.folderText}>
+                    {recentFolders[1]?.name}
+                  </Text>
+                </View>
               </View>
-              <View
-                style={{
-                  backgroundColor: 'white',
-                  alignItems: 'center',
-                  padding: 25,
-                  borderRadius: 25,
-                  width: '38.55%',
-                }}>
-                <FolderIcon />
-                <Text style={styles.folderText}>Music</Text>
-              </View>
+              {recentFolders.length > 2 && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    width: '100%',
+                    justifyContent: 'center',
+                    flex: 1,
+                  }}>
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      alignItems: 'center',
+                      padding: 25,
+                      borderRadius: 25,
+                      width: '38.55%',
+                      marginRight: '8.88%',
+                    }}>
+                    <FolderIcon />
+                    <Text style={styles.folderText}>
+                      {recentFolders[2]?.name}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      alignItems: 'center',
+                      padding: 25,
+                      borderRadius: 25,
+                      width: '38.55%',
+                    }}>
+                    <FolderIcon />
+                    <Text style={styles.folderText}>
+                      {recentFolders[3]?.name}
+                    </Text>
+                  </View>
+                </View>
+              )}
             </View>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                width: '100%',
-                justifyContent: 'center',
-                flex: 1,
-              }}>
-              <View
-                style={{
-                  backgroundColor: 'white',
-                  alignItems: 'center',
-                  padding: 25,
-                  borderRadius: 25,
-                  width: '38.55%',
-                  marginRight: '8.88%',
-                }}>
-                <FolderIcon />
-                <Text style={styles.folderText}>Images</Text>
-              </View>
-              <View
-                style={{
-                  backgroundColor: 'white',
-                  alignItems: 'center',
-                  padding: 25,
-                  borderRadius: 25,
-                  width: '38.55%',
-                }}>
-                <FolderIcon />
-                <Text style={styles.folderText}>Music</Text>
-              </View>
-            </View>
-          </View>
+          ) : (
+            <NoDataFound />
+          )}
         </View>
       </ScrollView>
     </View>
