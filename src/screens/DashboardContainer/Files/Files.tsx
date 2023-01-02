@@ -35,6 +35,7 @@ export const FolderIcon = (props: SvgProps) => {
     </Svg>
   );
 };
+
 export const FileIcon = (props: SvgProps) => {
   return (
     <Svg width={36} height={36} fill="none" {...props}>

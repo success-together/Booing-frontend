@@ -163,19 +163,19 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
   }, []);
 
   const submitTwitterEmail = useCallback(async () => {
-    if (
-      loginWithTwitterDialog.email &&
-      isValidEmail(loginWithTwitterDialog.email)
-    ) {
-      setLoginWithTwitterDialog(prev => ({...prev, show: false}));
-      await loginWithTwitter();
-    } else {
-      Toast.show({
-        type: 'error',
-        text1: 'invalid email',
-        position: 'top',
-      });
-    }
+    // if (
+    //   loginWithTwitterDialog.email &&
+    //   isValidEmail(loginWithTwitterDialog.email)
+    // ) {
+    setLoginWithTwitterDialog(prev => ({...prev, show: false}));
+    await loginWithTwitter();
+    // } else {
+    //   Toast.show({
+    //     type: 'error',
+    //     text1: 'invalid email',
+    //     position: 'top',
+    //   });
+    // }
   }, []);
 
   return (

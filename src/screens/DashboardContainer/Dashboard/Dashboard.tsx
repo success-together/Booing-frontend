@@ -308,6 +308,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                 fontWeight: 'bold',
                 letterSpacing: 0.25,
                 color: 'black',
+                marginBottom: 10,
               }}>
               Recent
             </Text>
@@ -323,43 +324,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                   flex: 1,
                   marginBottom: 20,
                 }}>
-                <View
-                  style={{
-                    backgroundColor: 'white',
-                    alignItems: 'center',
-                    padding: 25,
-                    borderRadius: 25,
-                    width: '38.55%',
-                    marginRight: '8.88%',
-                  }}>
-                  <FolderIcon />
-                  <Text style={styles.folderText}>
-                    {recentFolders[0]?.name}
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    backgroundColor: 'white',
-                    alignItems: 'center',
-                    padding: 25,
-                    borderRadius: 25,
-                    width: '38.55%',
-                  }}>
-                  <FolderIcon />
-                  <Text style={styles.folderText}>
-                    {recentFolders[1]?.name}
-                  </Text>
-                </View>
-              </View>
-              {recentFolders.length > 2 && (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                    justifyContent: 'center',
-                    flex: 1,
-                  }}>
+                {recentFolders[0].name && (
                   <View
                     style={{
                       backgroundColor: 'white',
@@ -371,9 +336,11 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                     }}>
                     <FolderIcon />
                     <Text style={styles.folderText}>
-                      {recentFolders[2]?.name}
+                      {recentFolders[0].name}
                     </Text>
                   </View>
+                )}
+                {recentFolders[1]?.name && (
                   <View
                     style={{
                       backgroundColor: 'white',
@@ -381,14 +348,56 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                       padding: 25,
                       borderRadius: 25,
                       width: '38.55%',
+                      marginRight: '8.88%',
+                    }}>
+                    <FolderIcon />
+                    <Text style={styles.folderText}>
+                      {recentFolders[1].name}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  width: '100%',
+                  justifyContent: 'center',
+                  flex: 1,
+                }}>
+                {recentFolders[2]?.name && (
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      alignItems: 'center',
+                      padding: 25,
+                      borderRadius: 25,
+                      width: '38.55%',
+                      marginRight: '8.88%',
+                    }}>
+                    <FolderIcon />
+                    <Text style={styles.folderText}>
+                      {recentFolders[2].name}
+                    </Text>
+                  </View>
+                )}
+                {recentFolders[3]?.name && (
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      alignItems: 'center',
+                      padding: 25,
+                      borderRadius: 25,
+                      width: '38.55%',
+                      marginRight: '8.88%',
                     }}>
                     <FolderIcon />
                     <Text style={styles.folderText}>
                       {recentFolders[3]?.name}
                     </Text>
                   </View>
-                </View>
-              )}
+                )}
+              </View>
             </View>
           ) : (
             <NoDataFound />
@@ -403,10 +412,13 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     marginHorizontal: 0,
+    width: '100%',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
   },
   body: {
     flex: 1,
-    marginTop: 20,
+    width: '100%',
   },
   scanContainer: {
     backgroundColor: '#6DBDFE',
@@ -501,7 +513,10 @@ const styles = StyleSheet.create({
   recentFilesContainer: {
     flexDirection: 'column',
     marginTop: 20,
-    paddingBottom: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 40,
   },
 });
 
