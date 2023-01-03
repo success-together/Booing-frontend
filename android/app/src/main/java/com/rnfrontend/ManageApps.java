@@ -312,6 +312,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         return arr;
     }
+
     public WritableArray getDownloadsLegacy() {
         File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         WritableArray arr = new WritableNativeArray();
@@ -343,7 +344,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 filesUris.add(uri);
             }
         }
-
 
         try {
             for(Uri uri: filesUris){
@@ -380,6 +380,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
+
     public static Uri getImageContentUri(Context context, File imageFile) {
         String filePath = imageFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -451,6 +452,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
+
     public static Uri getVideoContentUri(Context context, File videoFile) {
         String filePath = videoFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -523,7 +525,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-
     public static Uri getAudioContentUri(Context context, File audioFile) {
         String filePath = audioFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -546,8 +547,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
-
-
 
     // delete cache files
     @ReactMethod
@@ -1562,4 +1561,11 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
 
     }
+
+   @ReactMethod
+    public void getExtensionFromMimeType(String mimeType, Promise p) {
+        p.resolve(MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType));
+   }
+
+
 }

@@ -6,6 +6,9 @@ import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
 import Video from 'react-native-video';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
 import Toast from 'react-native-toast-message';
+import {formatUri} from '../Videos/Videos';
+import {useIsFocused} from '@react-navigation/native';
+import RNFS from 'react-native-fs';
 
 const Audio = () => {
   const [data, setData] = useState<any[]>([]);
@@ -18,6 +21,10 @@ const Audio = () => {
     uri: undefined,
     title: undefined,
   });
+  const [removeFilesAfterFinish, setRemoveFilesAfterFinish] = useState<
+    string[]
+  >([]);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     useGetUploadData('audio').then(fetchedData => {
@@ -33,16 +40,44 @@ const Audio = () => {
         });
       }
     });
-  }, []);
+
+    return async () => {
+      if (removeFilesAfterFinish.length !== 0) {
+        for (const file of removeFilesAfterFinish) {
+          try {
+            await RNFS.unlink(file);
+            console.log(`${file} is deleted`);
+          } catch (e) {}
+        }
+      }
+    };
+  }, [isFocused]);
 
   const showFile = useCallback(
-    (id: string) => {
+    async (id: string) => {
       const file = data.find(e => e.id === id);
       if (file) {
-        setIsShowingFile({show: true, uri: file.uri, title: file.name});
+        const formated = await formatUri('audio', file.uri, file.name);
+        if (!formated) {
+          return Toast.show({
+            type: 'error',
+            text1: `cannot play audio ${file.name}`,
+            text2: e.message,
+          });
+        }
+
+        const {changed, path} = formated;
+        if (changed) {
+          setRemoveFilesAfterFinish(prev => [...new Set([...prev, path])]);
+        }
+        setIsShowingFile({
+          show: true,
+          uri: path,
+          title: file.name,
+        });
       }
     },
-    [data],
+    [data, setRemoveFilesAfterFinish, setIsShowingFile],
   );
 
   return (

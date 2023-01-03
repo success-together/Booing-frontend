@@ -1,16 +1,8 @@
 import React, {useCallback, useState} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Button,
-  Pressable,
-} from 'react-native';
+import {View, Text, StyleSheet, TextInput, Pressable} from 'react-native';
 import FontAwesoem from 'react-native-vector-icons/FontAwesome';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {store} from '../../shared';
-import {setLoggedInUser} from '../../shared/slices/Auth/AuthSlice';
 import {socialMediaSignIn} from '../../shared/slices/Auth/AuthService';
 import auth from '@react-native-firebase/auth';
 import {LoginManager, AccessToken} from 'react-native-fbsdk-next';
@@ -20,6 +12,7 @@ import ManageApps from '../../utils/manageApps';
 import {Dialog} from 'react-native-elements';
 import LinearGradient from 'react-native-linear-gradient';
 import {isValidEmail} from '../../utils/util-functions';
+import {setRootLoading} from '../../shared/slices/rootSlice';
 
 const {RNTwitterSignIn} = NativeModules;
 
@@ -38,18 +31,6 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
     show: false,
     email: '',
   });
-  type User = {
-    ID: number;
-    firstName?: string;
-    lastName?: string;
-    email: string;
-    savedProperties?: number[];
-    allowsNotifications: boolean;
-    pushToken?: string;
-    sessionID?: string;
-    accessToken: string;
-    refreshToken: string;
-  };
 
   const loginWithGoogle = useCallback(async () => {
     try {
@@ -111,9 +92,11 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
           text1: 'there was an error with logging with twitter',
           text2: e.message,
         });
+      } finally {
+        store.dispatch(setRootLoading(false));
       }
     },
-    [loginWithTwitterDialog, ManageApps],
+    [loginWithTwitterDialog],
   );
 
   const loginWithFacebook = useCallback(async () => {
@@ -160,23 +143,24 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
         text1: 'there was an error with logging with facebook',
       });
     }
-  }, []);
+  }, [navigation]);
 
   const submitTwitterEmail = useCallback(async () => {
-    // if (
-    //   loginWithTwitterDialog.email &&
-    //   isValidEmail(loginWithTwitterDialog.email)
-    // ) {
-    setLoginWithTwitterDialog(prev => ({...prev, show: false}));
-    await loginWithTwitter();
-    // } else {
-    //   Toast.show({
-    //     type: 'error',
-    //     text1: 'invalid email',
-    //     position: 'top',
-    //   });
-    // }
-  }, []);
+    if (
+      loginWithTwitterDialog.email &&
+      isValidEmail(loginWithTwitterDialog.email)
+    ) {
+      store.dispatch(setRootLoading(true));
+      setLoginWithTwitterDialog(prev => ({...prev, show: false}));
+      await loginWithTwitter();
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'invalid email',
+        position: 'top',
+      });
+    }
+  }, [loginWithTwitterDialog, loginWithTwitter, setLoginWithTwitterDialog]);
 
   return (
     <View style={styles.container}>
