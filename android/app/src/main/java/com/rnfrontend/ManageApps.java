@@ -92,7 +92,6 @@ import java.util.Map;
 import java.util.UUID;
 
 
-
 public class ManageApps extends ReactContextBaseJavaModule {
 
     static Promise promise;
@@ -1565,6 +1564,13 @@ public class ManageApps extends ReactContextBaseJavaModule {
    @ReactMethod
     public void getExtensionFromMimeType(String mimeType, Promise p) {
         p.resolve(MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType));
+   }
+
+
+   @ReactMethod
+    public void loginWithFacebook() {
+       final String EMAIL = "email";
+
    }
 
 

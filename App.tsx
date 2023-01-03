@@ -17,7 +17,7 @@ import {Settings} from 'react-native-fbsdk-next';
 
 // Setting the facebook app id using setAppID
 // Remember to set CFBundleURLSchemes in Info.plist on iOS if needed
-Settings.setAppID('681969233386824');
+Settings.setAppID('472027605133427');
 Settings.initializeSDK();
 
 const Stack = createNativeStackNavigator();

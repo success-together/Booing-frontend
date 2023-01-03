@@ -101,6 +101,8 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
 
   const loginWithFacebook = useCallback(async () => {
     try {
+      LoginManager.logOut();
+
       // Attempt login with permissions
       const result = await LoginManager.logInWithPermissions([
         'public_profile',
@@ -138,9 +140,11 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
 
       navigation.navigate('DashboardContainer');
     } catch (e: any) {
+      console.log(e);
       Toast.show({
         type: 'error',
         text1: 'there was an error with logging with facebook',
+        text2: e.message,
       });
     }
   }, [navigation]);
