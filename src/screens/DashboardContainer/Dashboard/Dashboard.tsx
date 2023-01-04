@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {
+  Image,
   PermissionsAndroid,
   Pressable,
   ScrollView,
@@ -7,25 +8,32 @@ import {
   Text,
   View,
 } from 'react-native';
-import * as Progress from 'react-native-progress';
-import {AnimatedCircularProgress} from 'react-native-circular-progress';
 import {DashboardHeader} from '../../exports';
 import Entypo from 'react-native-vector-icons/Entypo';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import * as Progress from 'react-native-progress';
 import Geolocation from 'react-native-geolocation-service';
 import DeviceInfo from 'react-native-device-info';
-import {store} from '../../../shared';
+import {AXIOS_ERROR, BaseUrl, store} from '../../../shared';
 import {
   addDevice,
   updateGeoLocation,
 } from '../../../shared/slices/Devices/DevicesService';
+import SegmentedRoundCircle from '../../../Components/SegmentedRoundCircle/SegmentedRoundCircle';
+import ScanIcon from '../../../Components/ScanIcon/ScanIcon';
+import FolderIcon from '../../../Components/FolderIcon/FolderIcon';
+import LinearGradient from 'react-native-linear-gradient';
+import {setRootLoading} from '../../../shared/slices/rootSlice';
+import axios from 'axios';
+import Toast from 'react-native-toast-message';
+import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
   const [freeSpacePerCent, setFreeSpacePerCent] = useState<number>(0);
   const [position, setPosition] = useState<{lat: number; lon: number}>();
+  const [recentFolders, setRecentFolders] = useState<{name: string}[]>([]);
   const [loggedInUser, setLoggedUser] = useState<
     | {
         name: string;
@@ -41,6 +49,48 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       }
     | undefined
   >(undefined);
+  const user_id = store.getState().authentication.userId;
+
+  useEffect(() => {
+    (async () => {
+      if (!user_id) {
+        return;
+      }
+
+      try {
+        store.dispatch(setRootLoading(true));
+        const response = await axios({
+          method: 'POST',
+          url: `${BaseUrl}/logged-in-user/recentDirectories`,
+          headers: {
+            Accept: 'application/json',
+            'Content-type': 'application/json',
+          },
+          data: {
+            user_id,
+          },
+        });
+
+        if (response.status === 200) {
+          const data = response.data.data;
+          setRecentFolders(data);
+        }
+      } catch (e: any) {
+        if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+          return Toast.show({
+            type: 'error',
+            text1: e.response?.data?.message,
+          });
+        }
+        Toast.show({
+          type: 'error',
+          text1: 'something went wrong cannot get recent folders',
+        });
+      } finally {
+        store.dispatch(setRootLoading(false));
+      }
+    })();
+  }, [user_id]);
 
   const requestLocationPermission = async () => {
     try {
@@ -203,23 +253,38 @@ const Dashboard = ({navigation}: {navigation: any}) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.containerImage}>
+      <LinearGradient
+        style={styles.containerImage}
+        colors={['#33A1F9', '#6DBDFE']}>
         <DashboardHeader navigation={navigation} />
-      </View>
-      <ScrollView style={styles.scrollView}>
+      </LinearGradient>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.body}>
           <View style={styles.secondScreenContainer}>
-            <AnimatedCircularProgress
-              size={80}
-              width={10}
-              fill={freeSpacePerCent}
-              tintColor="#33a1f9"
-              backgroundColor="gray">
-              {fill => (
-                <Text style={{color: '#33a1f9'}}>{freeSpacePerCent}%</Text>
-              )}
-            </AnimatedCircularProgress>
-
+            <SegmentedRoundCircle
+              size={100}
+              strokeWidth={14}
+              margin={0.03125}
+              stats={[
+                {
+                  color: '#33A1F9',
+                  percent: freeSpacePerCent,
+                  label: 'free space',
+                },
+                {color: '#FFC700', percent: 10, label: 'media'},
+                {color: '#4CE364', percent: 0, label: 'cache'},
+                {color: '#22215B', percent: 14, label: 'other'},
+              ]}
+              globalPercent={freeSpacePerCent}
+              globalPercentStyles={{
+                color: '#33a1f9',
+                fontWeight: 'bold',
+                fontSize: 20,
+                letterSpacing: -1,
+              }}
+            />
             <View style={styles.storageInfoContainer}>
               <Text style={styles.txtStorage}>Storage Details</Text>
               <Text style={styles.createAccount}>
@@ -231,8 +296,10 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               onPress={() =>
                 navigation.navigate('ClearData', {freeDiskStorage})
               }>
-              <MaterialIcons name="cleaning-services" size={24} color="white" />
-              <Text style={{color: 'white'}}>Scan</Text>
+              <ScanIcon />
+              <Text style={{color: 'white', fontSize: 10, marginTop: 10}}>
+                Scan
+              </Text>
             </Pressable>
           </View>
           <View style={styles.thirdScreenContainer}>
@@ -292,75 +359,100 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                 fontWeight: 'bold',
                 letterSpacing: 0.25,
                 color: 'black',
+                marginBottom: 10,
               }}>
               Recent
             </Text>
           </View>
-          <View style={styles.recentFilesContainer}>
-            <View
-              style={{
-                flexDirection: 'column',
-                alignItems: 'center',
-                marginRight: 50,
-              }}>
+          {recentFolders.length !== 0 ? (
+            <View style={styles.recentFilesContainer}>
               <View
                 style={{
-                  backgroundColor: 'white',
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  padding: 25,
-                  borderRadius: 10,
-                  width: 144,
-                  height: 120,
+                  width: '100%',
+                  justifyContent: 'center',
+                  flex: 1,
+                  marginBottom: 20,
                 }}>
-                <Entypo name="folder" size={60} color="#ffde6c" />
-                <Text style={styles.createAccount}>Images</Text>
+                {recentFolders[0].name && (
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      alignItems: 'center',
+                      padding: 25,
+                      borderRadius: 25,
+                      width: '38.55%',
+                      marginRight: '8.88%',
+                    }}>
+                    <FolderIcon />
+                    <Text style={styles.folderText}>
+                      {recentFolders[0].name}
+                    </Text>
+                  </View>
+                )}
+                {recentFolders[1]?.name && (
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      alignItems: 'center',
+                      padding: 25,
+                      borderRadius: 25,
+                      width: '38.55%',
+                      marginRight: '8.88%',
+                    }}>
+                    <FolderIcon />
+                    <Text style={styles.folderText}>
+                      {recentFolders[1].name}
+                    </Text>
+                  </View>
+                )}
               </View>
               <View
                 style={{
-                  backgroundColor: 'white',
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  padding: 25,
-                  borderRadius: 10,
-                  marginTop: 10,
-                  width: 144,
-                  height: 120,
+                  width: '100%',
+                  justifyContent: 'center',
+                  flex: 1,
                 }}>
-                <Entypo name="folder" size={60} color="#ffde6c" />
-                <Text style={styles.createAccount}>Music</Text>
+                {recentFolders[2]?.name && (
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      alignItems: 'center',
+                      padding: 25,
+                      borderRadius: 25,
+                      width: '38.55%',
+                      marginRight: '8.88%',
+                    }}>
+                    <FolderIcon />
+                    <Text style={styles.folderText}>
+                      {recentFolders[2].name}
+                    </Text>
+                  </View>
+                )}
+                {recentFolders[3]?.name && (
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      alignItems: 'center',
+                      padding: 25,
+                      borderRadius: 25,
+                      width: '38.55%',
+                      marginRight: '8.88%',
+                    }}>
+                    <FolderIcon />
+                    <Text style={styles.folderText}>
+                      {recentFolders[3]?.name}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
-            <View
-              style={{
-                flexDirection: 'column',
-                alignItems: 'center',
-              }}>
-              <View
-                style={{
-                  backgroundColor: 'white',
-                  alignItems: 'center',
-                  padding: 25,
-                  borderRadius: 10,
-                  width: 144,
-                  height: 120,
-                }}>
-                <Entypo name="folder" size={60} color="#ffde6c" />
-                <Text style={styles.createAccount}>Documents</Text>
-              </View>
-              <View
-                style={{
-                  backgroundColor: 'white',
-                  alignItems: 'center',
-                  padding: 25,
-                  marginTop: 10,
-                  borderRadius: 10,
-                  width: 144,
-                  height: 120,
-                }}>
-                <Entypo name="folder" size={60} color="#ffde6c" />
-                <Text style={styles.createAccount}>Downloads</Text>
-              </View>
-            </View>
-          </View>
+          ) : (
+            <NoDataFound />
+          )}
         </View>
       </ScrollView>
     </View>
@@ -371,45 +463,43 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     marginHorizontal: 0,
+    width: '100%',
+    paddingHorizontal: 20,
+    paddingVertical: 24,
   },
   body: {
     flex: 1,
-    marginTop: 20,
+    width: '100%',
   },
   scanContainer: {
-    backgroundColor: '#33a1f9',
+    backgroundColor: '#6DBDFE',
     flexDirection: 'column',
-    marginLeft: 10,
     alignItems: 'center',
-    padding: 10,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
     justifyContent: 'center',
+    width: 65,
+    height: 83,
+    position: 'absolute',
+    right: 9,
+    top: -6,
   },
   secondScreenContainer: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    padding: 10,
-    width: '90%',
     borderRadius: 20,
-  },
-  thirdScreenContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    width: '90%',
-    borderRadius: 20,
-    marginTop: 10,
-  },
-  availbleStorage: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 8,
-    borderRadius: 20,
+    paddingRight: 15,
+    paddingLeft: 15,
+    paddingTop: 25,
+    paddingBottom: 25,
   },
   storageInfoContainer: {
-    justifyContent: 'space-evenly',
     marginLeft: 20,
+    paddingRight: 80,
+    alignItems: 'flex-start',
+    paddingTop: 20,
   },
   txtStorage: {
     fontSize: 20,
@@ -426,6 +516,7 @@ const styles = StyleSheet.create({
     color: '#24E72C',
   },
   container: {
+    backgroundColor: '#F6F7FB',
     flex: 1,
     // backgroundColor: "#33a1f9",
     alignItems: 'center',
@@ -460,16 +551,44 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    lineHeight: 21,
     fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
   },
   createAccount: {
     fontSize: 16,
-    lineHeight: 21,
     letterSpacing: 0.25,
+    color: '#BDB8BF',
+  },
+  folderText: {
+    fontSize: 13,
     color: 'black',
+    marginTop: 5,
+  },
+  containerFolder: {
+    flexDirection: 'row',
+  },
+  recentFilesContainer: {
+    flexDirection: 'column',
+    marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 40,
+  },
+  thirdScreenContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    width: '90%',
+    borderRadius: 20,
+    marginTop: 10,
+  },
+  availbleStorage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
+    borderRadius: 20,
   },
   usedSpace: {
     fontSize: 18,
@@ -477,13 +596,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
     fontWeight: 'bold',
     color: 'orange',
-  },
-  containerFolder: {
-    flexDirection: 'row',
-  },
-  recentFilesContainer: {
-    flexDirection: 'row',
-    marginTop: 20,
   },
 });
 

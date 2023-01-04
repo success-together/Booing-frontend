@@ -378,7 +378,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
   },

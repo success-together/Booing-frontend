@@ -17,8 +17,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.IPackageStatsObserver;
-import android.content.pm.IPackageDataObserver;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
@@ -35,6 +33,14 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.RuntimeExecutionException;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.OAuthProvider;
 
 import android.content.Context;
 import android.content.pm.PackageStats;
@@ -67,23 +73,9 @@ import android.util.Size;
 import android.webkit.MimeTypeMap;
 
 
-import androidx.activity.ComponentActivity;
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultCaller;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.ActivityResultRegistry;
-import androidx.activity.result.ActivityResultRegistryOwner;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.graphics.PathUtils;
-
-import org.json.JSONException;
-import org.w3c.dom.Document;
+import androidx.annotation.NonNull;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -91,23 +83,19 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.Map;
 import java.util.UUID;
+
 
 public class ManageApps extends ReactContextBaseJavaModule {
 
     static Promise promise;
+    private FirebaseAuth firebaseAuth;
 
     ManageApps(ReactApplicationContext context) {
         super(context);
@@ -323,6 +311,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         return arr;
     }
+
     public WritableArray getDownloadsLegacy() {
         File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         WritableArray arr = new WritableNativeArray();
@@ -354,7 +343,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 filesUris.add(uri);
             }
         }
-
 
         try {
             for(Uri uri: filesUris){
@@ -391,6 +379,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
+
     public static Uri getImageContentUri(Context context, File imageFile) {
         String filePath = imageFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -462,6 +451,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
+
     public static Uri getVideoContentUri(Context context, File videoFile) {
         String filePath = videoFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -534,7 +524,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-
     public static Uri getAudioContentUri(Context context, File audioFile) {
         String filePath = audioFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -557,8 +546,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
-
-
 
     // delete cache files
     @ReactMethod
@@ -1161,7 +1148,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
         String[] projection = {
                 MediaStore.Files.FileColumns.DISPLAY_NAME,
                 MediaStore.Files.FileColumns.MIME_TYPE,
-                MediaStore.Files.FileColumns._ID
+                MediaStore.Files.FileColumns.SIZE
         };
         Cursor cursor = getReactApplicationContext()
                 .getContentResolver()
@@ -1177,21 +1164,23 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         WritableMap map = new WritableNativeMap();
 
+
         int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
         int mimetypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
-        int idIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns._ID);
+        int sizeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE);
+
+
 
         cursor.moveToFirst();
 
         String name = cursor.getString(nameIndex);
         String mimeType = cursor.getString(mimetypeIndex);
-        String id = cursor.getString(idIndex);
+        long size = cursor.getLong(sizeIndex);
 
 
-//      map.putString("data",getFileDataBase64(FileUtils.getPath(getReactApplicationContext(),uri)));
         map.putString("name", name);
         map.putString("type", mimeType);
-        map.putString("id", id);
+        map.putDouble("size", size);
 
         p.resolve(map);
         cursor.close();
@@ -1526,4 +1515,63 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         p.resolve(null);
     }
+
+    @ReactMethod
+    public void loginWithTwitter(Promise p) {
+        firebaseAuth = FirebaseAuth.getInstance();
+        OAuthProvider.Builder provider = OAuthProvider.newBuilder("twitter.com");
+        Task<AuthResult> pendingResultTask = firebaseAuth.getPendingAuthResult();
+
+        if (pendingResultTask != null) {
+            pendingResultTask
+            // There's something already here! Finish the sign-in for your user.
+                    .addOnSuccessListener(
+                            authResult -> {
+                                FirebaseUser user =  authResult.getUser();
+                               ;
+                                WritableMap userData = new WritableNativeMap();
+
+                                userData.putString("name", user.getDisplayName());
+                                userData.putString("id", user.getUid());
+
+                                p.resolve(userData);
+                            })
+                    .addOnFailureListener(
+                            e -> {
+                                p.resolve(e.getMessage());
+                            });
+        } else {
+            firebaseAuth
+                    .startActivityForSignInWithProvider(getCurrentActivity(), provider.build())
+                    .addOnSuccessListener(
+                            authResult -> {
+                                FirebaseUser user =  authResult.getUser();
+                                WritableMap userData = new WritableNativeMap();
+
+                                userData.putString("name", user.getDisplayName());
+                                userData.putString("id", user.getUid());
+
+                                p.resolve(userData);
+                            })
+                    .addOnFailureListener(
+                            e -> {
+                                p.resolve(e.getMessage());
+                            });
+        }
+
+    }
+
+   @ReactMethod
+    public void getExtensionFromMimeType(String mimeType, Promise p) {
+        p.resolve(MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType));
+   }
+
+
+   @ReactMethod
+    public void loginWithFacebook() {
+       final String EMAIL = "email";
+
+   }
+
+
 }

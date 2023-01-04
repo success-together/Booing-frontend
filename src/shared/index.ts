@@ -26,3 +26,4 @@ export const store = createStore(persistedReducer);
 export const persistor = persistStore(store);
 export const BaseUrl = 'https://boing-backend.onrender.com/booing';
 // export const BaseUrl = 'http://10.0.2.2:3001/booing';
+export const AXIOS_ERROR = 'AxiosError';

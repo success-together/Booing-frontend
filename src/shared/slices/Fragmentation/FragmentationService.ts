@@ -109,15 +109,29 @@ export const downloadFiles = async (data: {user_id: string; type: string}) => {
   });
 };
 
-export const uploadFiles = async (data: FormData, user_id: string) => {
+export const uploadFiles = (
+  data: FormData,
+  user_id: string,
+  onProgressChange: (newProgress: number) => void,
+) => {
   return axios({
     url: `${BaseUrl}/logged-in-user/uploadFile/${user_id}`,
-    // url: `http://locahlost:3001/logged-in-user/uploadFile/${user_id}`,
     method: 'POST',
     data,
     headers: {
       accept: 'application/json',
       'Content-Type': 'multipart/form-data',
+    },
+    onUploadProgress: ({progress, event}) => {
+      if (progress) {
+        return onProgressChange(progress);
+      }
+
+      if (event) {
+        const {total, loaded} = event;
+        const progress = (loaded * 100) / total / 100;
+        return onProgressChange(progress);
+      }
     },
   });
 };

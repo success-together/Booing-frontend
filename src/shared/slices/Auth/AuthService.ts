@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import {BaseUrl, store} from '../..';
 import {Login} from '../../../models/Login';
 import {Executor} from '../../Executor';
@@ -12,7 +11,6 @@ export const login = (data: Login) => {
     data,
     isSilent: false,
     successFun: (data: Login) => {
-      console.log('success fn');
       saveUserData(data);
       saveToken(data);
     },
@@ -64,13 +62,13 @@ export const updateProfile = (data: {
 };
 
 export const updatePassword = (data: {
-  currentPassword : string;
+  currentPassword: string;
   newPassword: string;
   user_id: string;
-  isForgotPassword : boolean;
+  isForgotPassword: boolean;
 }) => {
   console.log(data);
-  
+
   return Executor({
     method: 'post',
     url: BaseUrl + '/logged-in-user/updatePassword',
@@ -93,7 +91,9 @@ export const socialMediaSignIn = (data: {
     withoutToast: true,
     successFun(data) {
       saveToken(data);
-      store.dispatch(setLoggedInUser(data.data));
+      store.dispatch(
+        setLoggedInUser({isLoggedInUser: true, user: data.data.user}),
+      );
     },
   });
 };
@@ -106,17 +106,6 @@ export const forgetPassword = (data: {email: string}) => {
     isSilent: false,
     withoutToast: false,
   });
-};
-
-const saveSocialMediaUser = (data: any) => {
-  store.dispatch(setToken(data.signinToken));
-  store.dispatch(
-    setLoggedInUser({
-      isLoggedIn: true,
-      LoggedInUser: data?.data?.user,
-      userId: data?.data?.user?._id,
-    }),
-  );
 };
 
 const saveUserData = (data: any) => {

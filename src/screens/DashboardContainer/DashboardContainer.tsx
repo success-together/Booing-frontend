@@ -26,12 +26,13 @@ import {small_logo} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
-import { store} from '../../shared';
+import {store} from '../../shared';
 import RecycleBin from './Files/RecycleBin/RecycleBin';
 import {
   checkForDownloads,
   checkForUploads,
 } from '../../shared/slices/Fragmentation/FragmentationService';
+import FolderPage from './Files/FolderPage/FolderPage';
 
 const Stack = createBottomTabNavigator();
 
@@ -165,6 +166,14 @@ const DashboardContainer = () => {
             }}
           />
           <Stack.Screen
+            name="Folder"
+            component={FolderPage}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
+          <Stack.Screen
             name="InviteFriends"
             component={InviteFriends}
             options={{
@@ -236,4 +245,3 @@ const DashboardContainer = () => {
 };
 
 export default DashboardContainer;
-

@@ -12,6 +12,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableNativeArray;
 
+
 public class MainActivity extends ReactActivity {
   public static Promise promise;
   public static int pickerRequestCode;
@@ -32,15 +33,17 @@ public class MainActivity extends ReactActivity {
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
-    if(requestCode == pickerRequestCode && resultCode == Activity.RESULT_OK) {
+    if(requestCode == pickerRequestCode) {
       WritableArray arr = new WritableNativeArray();
-      if(null != data) { // checking empty selection
-        if(null != data.getClipData()) { // checking multiple selection or not
-          for(int i = 0; i < data.getClipData().getItemCount(); i++) {
-            arr.pushString(data.getClipData().getItemAt(i).getUri().toString());
+      if(resultCode == Activity.RESULT_OK) {
+        if(null != data) { // checking empty selection
+          if(null != data.getClipData()) { // checking multiple selection or not
+            for(int i = 0; i < data.getClipData().getItemCount(); i++) {
+              arr.pushString(data.getClipData().getItemAt(i).getUri().toString());
+            }
+          } else {
+            arr.pushString(data.getData().toString());
           }
-        } else {
-          arr.pushString(data.getData().toString());
         }
       }
       promise.resolve(arr);

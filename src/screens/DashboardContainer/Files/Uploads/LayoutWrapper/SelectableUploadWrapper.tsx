@@ -8,6 +8,7 @@ import ManageApps from '../../../../../utils/manageApps';
 import SelectableItems from './SelectableItems';
 import Toast from 'react-native-toast-message';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
+import NoDataFound from '../../../../../Components/NoDataFound/NoDataFound';
 
 export interface SelectableUploadWrapperProps {
   data: any[];
@@ -55,48 +56,32 @@ const SelectableUploadWrapper = ({
         });
       }
     })();
-
-    const processInterval = setInterval(() => {
-      setData((prev: any[]) => {
-        prev.forEach(item => {
-          if (item.hasTriedToUpload === false && item.progress !== 1) {
-            let random = Math.random();
-            while (random > 0.01) {
-              random = Math.random();
-            }
-
-            if (item.prgress + random === 1) {
-              return clearInterval(processInterval);
-            }
-            item.progress += random;
-          }
-        });
-
-        return [...prev];
-      });
-    }, 1000);
-
-    return () => {
-      if (processInterval) {
-        clearInterval(processInterval);
-      }
-    };
   }, []);
 
   const uncheckAll = useCallback(() => setSelectedIds([]), [data, selectedIds]);
 
   const handleUpload = useCallback(async () => {
+    if (!user_id) {
+      Toast.show({
+        type: 'error',
+        text1: 'cannot upload you are not logged in !',
+      });
+      return;
+    }
     setIsUploadButtonDisabled(true);
     let fileDescs: any[] = [];
     function mergeData(obj: object) {
       setData((prevData: any[]) => {
-        for (const {name} of fileDescs) {
-          const item = prevData.find((e: any) => e.name === name);
-          if (item) {
-            Object.assign(item, obj);
+        if (fileDescs.length > 0) {
+          for (const {name} of fileDescs) {
+            const item = prevData.find((e: any) => e.name === name);
+            if (item) {
+              Object.assign(item, obj);
+            }
           }
+          return [...prevData];
         }
-        return [...prevData];
+        return prevData;
       });
     }
 
@@ -112,6 +97,15 @@ const SelectableUploadWrapper = ({
             isImage: isImageWrapper,
             id: Math.floor(Math.random() * 9999).toString(), // change this later
           };
+
+          if (fileDesc.size >= 26214400) {
+            setIsUploadButtonDisabled(false);
+            return Toast.show({
+              type: 'info',
+              text1: 'cannot upload file(s)',
+              text2: `file (${fileDesc.name}) has exceeded the max size (25mb)`,
+            });
+          }
 
           body.append('file', {
             uri: file,
@@ -135,11 +129,9 @@ const SelectableUploadWrapper = ({
 
         setData((prevData: any[]) => [...prevData, ...newData]);
 
-        if (!user_id) {
-          return;
-        }
-
-        const response = await uploadFiles(body, user_id);
+        const response = await uploadFiles(body, user_id, newProgress => {
+          mergeData({progress: newProgress});
+        });
 
         if (response.status === 200) {
           const data = response.data.data;
@@ -171,9 +163,8 @@ const SelectableUploadWrapper = ({
         text1: 'cannot upload file(s)',
         text2: e.response?.data?.msg || e.message,
       });
-    } finally {
-      setIsUploadButtonDisabled(false);
     }
+    setIsUploadButtonDisabled(false);
   }, [setData, pickItemsFn, data]);
 
   const handleDelete = useCallback(async () => {
@@ -235,15 +226,19 @@ const SelectableUploadWrapper = ({
           </>
         )}
       </View>
-      <SelectableItems
-        data={data}
-        handleSelect={handleSelect}
-        selectedIds={selectedIds}
-        setSelectedIds={setSelectedIds}
-        text={'Today'}
-        showFile={showFile}
-        setPressHandler={setPressHandler}
-      />
+      {data.length === 0 ? (
+        <NoDataFound />
+      ) : (
+        <SelectableItems
+          data={data}
+          handleSelect={handleSelect}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
+          text={'Today'}
+          showFile={showFile}
+          setPressHandler={setPressHandler}
+        />
+      )}
       <View style={styles.uploadContainer}>
         {selectedIds.length > 0 && (
           <TouchableOpacity
