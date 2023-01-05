@@ -4,6 +4,7 @@ import {Selected} from '../../../Dashboard/File/File';
 import * as Progress from 'react-native-progress';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FastImage from 'react-native-fast-image';
+import {Loader} from '../../../../../Components/exports';
 
 const {Circle} = Progress;
 
@@ -24,6 +25,8 @@ const Item = ({
   const [showProgress, setShowProgress] = useState(progress !== 1);
   const size = (WIDTH - (NUM_COLS + 1) * 10) / NUM_COLS;
   const iconSize = size - 10;
+
+  console.log({name, hasTriedToUpload, progress});
 
   useEffect(() => {
     let id: any;
@@ -55,6 +58,30 @@ const Item = ({
             progress={progress}
             showsText={true}
             size={iconSize}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: '100%',
+              height: '100%',
+            }}
+          />
+        </View>
+      );
+    } else {
+      content = (
+        <View
+          style={{
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <Progress.Circle
+            size={iconSize}
+            indeterminate={true}
             style={{
               position: 'absolute',
               top: 0,

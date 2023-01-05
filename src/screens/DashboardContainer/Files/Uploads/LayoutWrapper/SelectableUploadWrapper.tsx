@@ -9,6 +9,7 @@ import SelectableItems from './SelectableItems';
 import Toast from 'react-native-toast-message';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import NoDataFound from '../../../../../Components/NoDataFound/NoDataFound';
+import {useIsFocused} from '@react-navigation/native';
 
 export interface SelectableUploadWrapperProps {
   data: any[];
@@ -30,6 +31,7 @@ const SelectableUploadWrapper = ({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isUploadButtonDisabled, setIsUploadButtonDisabled] = useState(false);
   const user_id = store.getState().authentication.userId;
+  const isFocused = useIsFocused();
 
   const handleSelect = useCallback(
     (id: string) =>
@@ -98,6 +100,20 @@ const SelectableUploadWrapper = ({
             id: Math.floor(Math.random() * 9999).toString(), // change this later
           };
 
+          if (
+            data.find(
+              item =>
+                item.name === fileDesc.name ||
+                item.name.includes('_' + fileDesc.name),
+            )
+          ) {
+            setIsUploadButtonDisabled(true);
+            return Toast.show({
+              type: 'info',
+              text1: 'file already uploaded',
+            });
+          }
+
           if (fileDesc.size >= 26214400) {
             setIsUploadButtonDisabled(false);
             return Toast.show({
@@ -133,9 +149,11 @@ const SelectableUploadWrapper = ({
           mergeData({progress: newProgress});
         });
 
+        console.log('uploaded');
+
         if (response.status === 200) {
           const data = response.data.data;
-          setData((prevData: any[]) => {
+          return setData((prevData: any[]) => {
             for (const {name} of fileDescs) {
               const item = prevData.find((e: any) => e.name === name);
               const fileData = data.find((e: any) =>
@@ -152,8 +170,6 @@ const SelectableUploadWrapper = ({
             }
             return [...prevData];
           });
-        } else {
-          mergeData({hasTriedToUpload: true});
         }
       }
     } catch (e: any) {

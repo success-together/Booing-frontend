@@ -107,6 +107,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       const result = await LoginManager.logInWithPermissions([
         'public_profile',
         'email',
+        'user_friends',
       ]);
 
       if (result.isCancelled) {
