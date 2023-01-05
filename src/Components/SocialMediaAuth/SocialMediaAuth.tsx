@@ -170,7 +170,10 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
   return (
     <View style={styles.container}>
       <Dialog isVisible={loginWithTwitterDialog.show}>
-        <Dialog.Title title="please enter your email to continue logging with twitter" />
+        <Dialog.Title
+          title="please enter your email to continue logging with twitter"
+          titleStyle={{color: 'black'}}
+        />
         <TextInput
           placeholder="Enter Email Adress"
           autoComplete={'email'}
