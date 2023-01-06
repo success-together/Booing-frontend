@@ -1,14 +1,15 @@
-import React, {MutableRefObject, useCallback, useEffect, useState} from 'react';
-import {
-  StyleSheet,
-  Text,
-  TouchableHighlight,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import axios from 'axios';
+import React, {useCallback, useEffect, useState} from 'react';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import {BaseUrl, store} from '../../../../../shared';
+import {uploadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 import ManageApps from '../../../../../utils/manageApps';
 import SelectableItems from './SelectableItems';
+import Toast from 'react-native-toast-message';
+import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
+import NoDataFound from '../../../../../Components/NoDataFound/NoDataFound';
+import {useIsFocused} from '@react-navigation/native';
 
 export interface SelectableUploadWrapperProps {
   data: any[];
@@ -16,6 +17,7 @@ export interface SelectableUploadWrapperProps {
   showFile: (id: string) => void;
   pickItemsFn: () => Promise<any[]>;
   setData: (arg: any) => void;
+  isImageWrapper: boolean;
 }
 
 const SelectableUploadWrapper = ({
@@ -24,8 +26,12 @@ const SelectableUploadWrapper = ({
   showFile,
   pickItemsFn,
   setData,
+  isImageWrapper,
 }: SelectableUploadWrapperProps) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isUploadButtonDisabled, setIsUploadButtonDisabled] = useState(false);
+  const user_id = store.getState().authentication.userId;
+  const isFocused = useIsFocused();
 
   const handleSelect = useCallback(
     (id: string) =>
@@ -35,35 +41,181 @@ const SelectableUploadWrapper = ({
     [data, selectedIds],
   );
 
+  useEffect(() => {
+    (async () => {
+      const results = await requestMultiple([
+        PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
+        PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
+      ]);
+      const readWriteExternalStorage = Object.values(results).every(
+        v => v === RESULTS.GRANTED || v === RESULTS.BLOCKED,
+      );
+
+      if (!readWriteExternalStorage) {
+        return Toast.show({
+          type: 'error',
+          text1: 'you need to enable permissions to upload files',
+        });
+      }
+    })();
+  }, []);
+
   const uncheckAll = useCallback(() => setSelectedIds([]), [data, selectedIds]);
 
   const handleUpload = useCallback(async () => {
-    const pickedFiles = await pickItemsFn();
-    if (pickedFiles && pickedFiles.length > 0) {
-      const fileDescs: any[] = [];
-      for (const file of pickedFiles) {
-        fileDescs.push({
-          ...(await ManageApps.getFileDescription(file)),
-          uri: file,
-          id: (Math.random() * 500).toString(), // change this later
-        });
-      }
+    if (!user_id) {
+      Toast.show({
+        type: 'error',
+        text1: 'cannot upload you are not logged in !',
+      });
+      return;
+    }
+    setIsUploadButtonDisabled(true);
+    let fileDescs: any[] = [];
+    function mergeData(obj: object) {
+      setData((prevData: any[]) => {
+        if (fileDescs.length > 0) {
+          for (const {name} of fileDescs) {
+            const item = prevData.find((e: any) => e.name === name);
+            if (item) {
+              Object.assign(item, obj);
+            }
+          }
+          return [...prevData];
+        }
+        return prevData;
+      });
+    }
 
-      setData((prevData: any[]) => [
-        ...prevData,
-        ...fileDescs
+    try {
+      const pickedFiles = await pickItemsFn();
+      if (pickedFiles && pickedFiles.length > 0) {
+        const body = new FormData();
+        for (const file of pickedFiles) {
+          const fileDesc = {
+            ...(await ManageApps.getFileDescription(file)),
+            uri: file,
+            hasTriedToUpload: false,
+            isImage: isImageWrapper,
+            id: Math.floor(Math.random() * 9999).toString(), // change this later
+          };
+
+          if (
+            data.find(
+              item =>
+                item.name === fileDesc.name ||
+                item.name.includes('_' + fileDesc.name),
+            )
+          ) {
+            setIsUploadButtonDisabled(true);
+            return Toast.show({
+              type: 'info',
+              text1: 'file already uploaded',
+            });
+          }
+
+          if (fileDesc.size >= 26214400) {
+            setIsUploadButtonDisabled(false);
+            return Toast.show({
+              type: 'info',
+              text1: 'cannot upload file(s)',
+              text2: `file (${fileDesc.name}) has exceeded the max size (25mb)`,
+            });
+          }
+
+          body.append('file', {
+            uri: file,
+            type: fileDesc.type,
+            name: fileDesc.name,
+          });
+
+          fileDescs.push(fileDesc);
+        }
+
+        const newData = fileDescs
           .filter(
             fileDesc =>
-              fileDesc && !prevData.find(file => file.id === fileDesc.id),
+              fileDesc && !data.find(file => file.name === fileDesc.name),
           )
           .map(prevFileDesc => ({
             ...prevFileDesc,
             dateUploaded: new Date(),
             progress: 0,
-          })),
-      ]);
+          }));
+
+        setData((prevData: any[]) => [...prevData, ...newData]);
+
+        const response = await uploadFiles(body, user_id, newProgress => {
+          mergeData({progress: newProgress});
+        });
+
+        console.log('uploaded');
+
+        if (response.status === 200) {
+          const data = response.data.data;
+          return setData((prevData: any[]) => {
+            for (const {name} of fileDescs) {
+              const item = prevData.find((e: any) => e.name === name);
+              const fileData = data.find((e: any) =>
+                e.name.includes(item.name),
+              );
+
+              if (item && fileData) {
+                Object.assign(item, {
+                  progress: 1,
+                  hasTriedToUpload: true,
+                  id: fileData.id,
+                });
+              }
+            }
+            return [...prevData];
+          });
+        }
+      }
+    } catch (e: any) {
+      mergeData({hasTriedToUpload: true});
+      Toast.show({
+        type: 'error',
+        text1: 'cannot upload file(s)',
+        text2: e.response?.data?.msg || e.message,
+      });
     }
-  }, []);
+    setIsUploadButtonDisabled(false);
+  }, [setData, pickItemsFn, data]);
+
+  const handleDelete = useCallback(async () => {
+    try {
+      const response = await axios({
+        method: 'POST',
+        url: `${BaseUrl}/logged-in-user/deleteFiles`,
+        data: {
+          files_id: selectedIds,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        setData((prev: any[]) => {
+          const newData = prev.filter(e => !selectedIds.includes(e.id));
+          setSelectedIds([]);
+          return newData;
+        });
+        Toast.show({
+          text1: 'files deleted successfully !',
+        });
+      }
+    } catch (e: any) {
+      console.log('error');
+      Toast.show({
+        type: 'error',
+        text1: 'there was an error in delete files',
+        text2: e.message,
+      });
+    }
+  }, [data, selectedIds]);
 
   return (
     <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
@@ -90,27 +242,47 @@ const SelectableUploadWrapper = ({
           </>
         )}
       </View>
-      <SelectableItems
-        data={data}
-        handleSelect={handleSelect}
-        selectedIds={selectedIds}
-        setSelectedIds={setSelectedIds}
-        text={'Today'}
-        showFile={showFile}
-        setPressHandler={setPressHandler}
-      />
+      {data.length === 0 ? (
+        <NoDataFound />
+      ) : (
+        <SelectableItems
+          data={data}
+          handleSelect={handleSelect}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
+          text={'Today'}
+          showFile={showFile}
+          setPressHandler={setPressHandler}
+        />
+      )}
       <View style={styles.uploadContainer}>
+        {selectedIds.length > 0 && (
+          <TouchableOpacity
+            style={{
+              width: 82,
+              height: 49,
+              marginRight: 10,
+              backgroundColor: 'white',
+              borderRadius: 15,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={handleDelete}>
+            <Text style={{color: '#49ACFA', fontWeight: '500'}}>Delete</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={{
             width: 82,
             height: 49,
-            backgroundColor: 'white',
+            backgroundColor: isUploadButtonDisabled ? '#D9D9D9' : 'white',
             borderRadius: 15,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
           }}
-          onPress={handleUpload}>
+          onPress={isUploadButtonDisabled ? undefined : handleUpload}>
           <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
         </TouchableOpacity>
       </View>
@@ -124,7 +296,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    width: '100%',
     backgroundColor: '#F6F7FB',
     display: 'flex',
     justifyContent: 'flex-end',

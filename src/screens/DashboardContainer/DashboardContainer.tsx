@@ -1,7 +1,7 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
 import React, {useEffect} from 'react';
-import {StyleSheet, Image} from 'react-native';
+import {Image} from 'react-native';
 import {
   Account,
   Apks,
@@ -17,20 +17,28 @@ import {
   Audio,
   Documents,
   Downloads,
+  BuySpace,
+  SellSpace,
+  Offer,
+  InviteFriends,
 } from '../exports';
 import {small_logo} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
 import {store} from '../../shared';
+import RecycleBin from './Files/RecycleBin/RecycleBin';
 import {
   checkForDownloads,
   checkForUploads,
 } from '../../shared/slices/Fragmentation/FragmentationService';
+import FolderPage from './Files/FolderPage/FolderPage';
 
 const Stack = createBottomTabNavigator();
 
 const DashboardContainer = () => {
+  const device = store.getState().devices;
+
   useEffect(() => {
     const user_id = store.getState().authentication.userId;
 
@@ -39,13 +47,13 @@ const DashboardContainer = () => {
     });
 
     let intervalUploads: number | undefined;
-    // if (device_id) {
-    //   intervalUploads = checkForUploads({user_id} as unknown as {
-    //     user_id: string;
-    //   });
-
-    //   console.log({device_id});
-    // }
+    intervalUploads = checkForUploads({
+      user_id,
+      deviceRef: (device as any)?.deviceId,
+    } as unknown as {
+      user_id: string;
+      deviceRef: string;
+    });
 
     return () => {
       if (intervalDownloads) {
@@ -55,7 +63,7 @@ const DashboardContainer = () => {
         clearInterval(intervalUploads);
       }
     };
-  }, []);
+  }, [device]);
 
   return (
     <>
@@ -106,6 +114,30 @@ const DashboardContainer = () => {
             component={ClearData}
             options={{tabBarItemStyle: {display: 'none'}}}
           />
+          <Stack.Screen
+            name="BuySpace"
+            component={BuySpace}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
+          <Stack.Screen
+            name="SellSpace"
+            component={SellSpace}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
+          <Stack.Screen
+            name="Offer"
+            component={Offer}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
           <Stack.Screen name="Files" component={Files} />
           <Stack.Screen
             name="Uploads"
@@ -123,56 +155,88 @@ const DashboardContainer = () => {
             options={{
               // headerShown: false,
               tabBarItemStyle: {display: 'none'},
-            }}></Stack.Screen>
+            }}
+          />
           <Stack.Screen
             name="UpdatePassword"
             component={UpdatePassword}
             options={{
               // headerShown: false,
               tabBarItemStyle: {display: 'none'},
-            }}></Stack.Screen>
+            }}
+          />
+          <Stack.Screen
+            name="Folder"
+            component={FolderPage}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
+          <Stack.Screen
+            name="InviteFriends"
+            component={InviteFriends}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
           <Stack.Screen
             name="Images"
             component={Images}
             options={{
               tabBarItemStyle: {display: 'none'},
-            }}></Stack.Screen>
+            }}
+          />
           <Stack.Screen
             name="RegistredDevices"
             component={RegistredDevices}
             options={{
               tabBarItemStyle: {display: 'none'},
-            }}></Stack.Screen>
+            }}
+          />
           <Stack.Screen
             name="Videos"
             component={Videos}
             options={{
               tabBarItemStyle: {display: 'none'},
-            }}></Stack.Screen>
+            }}
+          />
           <Stack.Screen
             name="Audio"
             component={Audio}
             options={{
               tabBarItemStyle: {display: 'none'},
-            }}></Stack.Screen>
+            }}
+          />
           <Stack.Screen
             name="Documents"
             component={Documents}
             options={{
               tabBarItemStyle: {display: 'none'},
-            }}></Stack.Screen>
+            }}
+          />
           <Stack.Screen
             name="Downloads"
             component={Downloads}
             options={{
               tabBarItemStyle: {display: 'none'},
-            }}></Stack.Screen>
+            }}
+          />
           <Stack.Screen
             name="Apks"
             component={Apks}
             options={{
               tabBarItemStyle: {display: 'none'},
-            }}></Stack.Screen>
+            }}
+          />
+          <Stack.Screen
+            name="RecycleBin"
+            component={RecycleBin}
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />
@@ -181,10 +245,3 @@ const DashboardContainer = () => {
 };
 
 export default DashboardContainer;
-
-const styles = StyleSheet.create({
-  image: {
-    width: 50,
-    height: 50,
-  },
-});

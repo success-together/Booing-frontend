@@ -15,6 +15,7 @@ export {default as Uploads} from './DashboardContainer/Files/Uploads/Uploads';
 export {default as ClearData} from './DashboardContainer/Dashboard/ClearData/ClearData';
 export {default as UpdateProfile} from './DashboardContainer/Account/UpdateProfile/UpdateProfile';
 export {default as UpdatePassword} from './DashboardContainer/Account/UpdatePassword/UpdatePassword';
+export {default as InviteFriends} from './DashboardContainer/Account/InviteFriends/InviteFriends';
 export {default as Images} from './DashboardContainer/Files/Uploads/Images/Images';
 export {default as RegistredDevives} from './DashboardContainer/Account/RegistredDevices/RegistredDevices';
 export {default as Videos} from './DashboardContainer/Files/Uploads/Videos/Videos';
@@ -23,3 +24,6 @@ export {default as Documents} from './DashboardContainer/Files/Uploads/Documents
 export {default as Downloads} from './DashboardContainer/Files/Uploads/Downloads/Downloads';
 export {default as Apks} from './DashboardContainer/Files/Uploads/APK/ApkFiles';
 export {default as LayoutWrapper} from './DashboardContainer/Files/Uploads/LayoutWrapper/LayoutWrapper';
+export {default as SellSpace} from './DashboardContainer/Dashboard/SellSpace/SellSpace'
+export {default as BuySpace} from './DashboardContainer/Dashboard/BuySpace/BuySpace'
+export {default as Offer} from './DashboardContainer/Dashboard/Offer/Offer'

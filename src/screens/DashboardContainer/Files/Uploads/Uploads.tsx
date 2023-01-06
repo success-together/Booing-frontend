@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Text, View, StyleSheet, Pressable, ScrollView} from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import FilesHeader from '../FilesHeader/FilesHeader';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
@@ -9,10 +16,16 @@ import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 import DeviceInfo from 'react-native-device-info';
 import ManageApps from '../../../../utils/manageApps';
+import bytes from 'bytes';
 
 const Uploads = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
+  const [sdCardStats, setSdCardStats] = useState({
+    present: false,
+    fullSize: 0,
+    availableSize: 0,
+  });
 
   useEffect(() => {
     let totalStorage = 0;
@@ -29,6 +42,18 @@ const Uploads = ({navigation}: {navigation: any}) => {
       );
       //  console.log('total : ' + (freeDiskStorage / totalStorage) * 100);
     });
+
+    ManageApps.getSDcardStorageStats().then(
+      (stats: (typeof sdCardStats & {present: boolean}) | null) => {
+        if (stats) {
+          return setSdCardStats({
+            present: true,
+            fullSize: stats.fullSize,
+            availableSize: stats.availableSize,
+          });
+        }
+      },
+    );
   }, []);
 
   return (
@@ -160,7 +185,13 @@ const Uploads = ({navigation}: {navigation: any}) => {
                 <Text style={styles.Storage2}>SD card</Text>
               </View>
               <View>
-                <Text style={styles.Storage3}>Not Inserted</Text>
+                <Text style={styles.Storage3}>
+                  {sdCardStats.present
+                    ? `${bytes(sdCardStats.availableSize)}/${bytes(
+                        sdCardStats.fullSize,
+                      )}`
+                    : 'No SD card'}
+                </Text>
               </View>
             </View>
           </View>
@@ -179,8 +210,15 @@ const Uploads = ({navigation}: {navigation: any}) => {
             }}>
             Recycle Bin
           </Text>
-          <View style={styles.BottomBody}>
-            <View style={styles.row}>
+          <TouchableWithoutFeedback
+            onPress={() => navigation.navigate('RecycleBin')}>
+            <View
+              style={{
+                ...styles.row,
+                marginLeft: 20,
+                marginBottom: 10,
+                marginTop: 10,
+              }}>
               <EvilIcons
                 style={{marginLeft: 14}}
                 name="trash"
@@ -199,7 +237,7 @@ const Uploads = ({navigation}: {navigation: any}) => {
                 Recycle bin
               </Text>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </View>
       </ScrollView>
     </View>

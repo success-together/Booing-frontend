@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Button, ActivityIndicator} from 'react-native';
-import {ReadDirItem, readFile} from 'react-native-fs';
+import {View, Text, StyleSheet, Button} from 'react-native';
+import {ReadDirItem} from 'react-native-fs';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import ManageApps from '../../../../utils/manageApps';
@@ -10,25 +10,21 @@ import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {ScrollView} from 'react-native';
 import {Bar} from 'react-native-progress';
 
-export const Progress = ({done}: any) => {
-  const [percent, setPercent] = useState(0);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (!done) {
-        let randomNumber = Math.random();
-        while (randomNumber + percent >= 1) {
-          randomNumber = Math.random();
-        }
-
-        return setPercent(prev => prev + randomNumber);
-      }
-
-      clearInterval(intervalId);
-    }, 250);
-  }, []);
-
-  return <Bar progress={percent} height={10} />;
+export const Progress = ({progress, text}: any) => {
+  return (
+    <View>
+      <Text
+        style={{
+          textAlign: 'center',
+          marginBottom: 20,
+          color: text === 'done !' ? 'green' : 'black',
+          fontWeight: '500',
+        }}>
+        {text}
+      </Text>
+      <Bar progress={progress} height={10} />
+    </View>
+  );
 };
 
 const calcSpace = (arr: {size: number}[], field = 'size', minVal = 0) =>
@@ -54,6 +50,11 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [thumbnails, setThumbnails] = useState([]);
   const [emptyFolders, setEmptyFolders] = useState([]);
 
+  const [progressProps, setProgressProps] = useState({
+    text: '',
+    progress: 0,
+  });
+
   const addId = (arr: []) => {
     arr.forEach(e => Object.assign(e, {id: nanoid(10)}));
     return arr;
@@ -77,13 +78,18 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const scanUserStorage = useCallback(async () => {
     try {
       setShowModal({show: true, loading: true});
+      setProgressProps(prev => ({...prev, text: 'fetching images ...'}));
       setImages(addId(await ManageApps.getImages()));
+      setProgressProps({text: 'fetching videos ...', progress: 0.25});
       setVideos(addId(await ManageApps.getVideos()));
+      setProgressProps({text: 'fetching audio files ...', progress: 0.5});
       setMusic(addId(await ManageApps.getAudios()));
       setApps(addId(await ManageApps.getAllInstalledApps()));
+      setProgressProps({text: 'fetching junk files ...', progress: 0.75});
       const {thumbnails, emptyFolders} = await ManageApps.getJunkData();
       setThumbnails(addId(thumbnails));
       setEmptyFolders(addId(emptyFolders));
+      setProgressProps({text: 'done !', progress: 1});
     } catch (e: any) {
       console.log(e.stack);
     } finally {
@@ -177,7 +183,10 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
               alignItems: 'center',
             }}>
             {showModal.loading ? (
-              <Progress done={showData} />
+              <Progress
+                progress={progressProps.progress}
+                text={progressProps.text}
+              />
             ) : (
               <View>
                 <View

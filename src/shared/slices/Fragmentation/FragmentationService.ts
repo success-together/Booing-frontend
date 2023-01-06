@@ -21,22 +21,54 @@ export const checkForDownloads = (data: {user_id: string}) => {
         }
       }
     } catch (e: any) {
-      console.log({error: e.message});
+      console.log(e);
+      throw e;
     }
   }, 60 * 1000);
 };
 
-export const checkForUploads = (data: {user_id: string}) => {
+export const checkForUploads = ({
+  user_id,
+  deviceRef,
+}: {
+  user_id: string;
+  deviceRef: string;
+}) => {
   const url = BaseUrl + '/logged-in-user/checkForUploads';
   const uploadUrl = BaseUrl + '/logged-in-user/uploadFragments';
+  let device_id: string | undefined;
 
   return setInterval(async () => {
     try {
-      const result = await axios.post(url, data);
+      if (!deviceRef) {
+        return;
+      }
 
-      console.log({
-        result,
-      });
+      if (!device_id) {
+        const deviceIdResponse = await axios({
+          method: 'POST',
+          url: `${BaseUrl}/logged-in-user/getDevices`,
+          data: {
+            user_id: user_id,
+          },
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (deviceIdResponse.status === 200) {
+          const data = deviceIdResponse.data.data;
+          const device = data.find((e: any) => e.device_ref === deviceRef);
+
+          if (device) {
+            device_id = device._id;
+          }
+        }
+        return;
+      }
+
+      const result = await axios.post(url, {device_id});
 
       if (result.data?.data?.length > 0) {
         const data = result.data.data;
@@ -60,13 +92,12 @@ export const checkForUploads = (data: {user_id: string}) => {
             }
           }
         }
-
         await Promise.all(requestes);
       }
     } catch (e: any) {
-      console.log({errror: e});
+      console.log(e);
     }
-  }, 5 * 1000);
+  }, 60 * 1000);
 };
 
 export const downloadFiles = async (data: {user_id: string; type: string}) => {
@@ -78,7 +109,11 @@ export const downloadFiles = async (data: {user_id: string; type: string}) => {
   });
 };
 
-export const uploadFiles = async (data: FormData, user_id: string) => {
+export const uploadFiles = (
+  data: FormData,
+  user_id: string,
+  onProgressChange: (newProgress: number) => void,
+) => {
   return axios({
     url: `${BaseUrl}/logged-in-user/uploadFile/${user_id}`,
     method: 'POST',
@@ -87,11 +122,16 @@ export const uploadFiles = async (data: FormData, user_id: string) => {
       accept: 'application/json',
       'Content-Type': 'multipart/form-data',
     },
-  })
-    .then(res => {
-      console.log('res upload : ', res);
-    })
-    .catch(err => {
-      console.log(err);
-    });
+    onUploadProgress: ({progress, event}) => {
+      if (progress) {
+        return onProgressChange(progress);
+      }
+
+      if (event) {
+        const {total, loaded} = event;
+        const progress = (loaded * 100) / total / 100;
+        return onProgressChange(progress);
+      }
+    },
+  });
 };

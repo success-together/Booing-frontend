@@ -1,22 +1,20 @@
-import React from "react";
-import {  Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { Logo } from "../../images/export";
+import React from 'react';
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Logo} from '../../images/export';
 
-function Home({navigation} :{navigation: any}) {
+function Home({navigation}: {navigation: any}) {
   return (
     <View style={styles.container}>
       <Image style={styles.image} source={Logo} />
       <View style={styles.containerButtons}>
         <Pressable
-          style={styles.button}
-          onPress={() => navigation.navigate("Login")}
-        >
+          style={{...styles.button, marginRight: 20}}
+          onPress={() => navigation.navigate('Login')}>
           <Text style={styles.text}>Login</Text>
         </Pressable>
         <Pressable
           style={styles.button}
-          onPress={() => navigation.navigate("Register")}
-        >
+          onPress={() => navigation.navigate('Register')}>
           <Text style={styles.text}>Signup</Text>
         </Pressable>
       </View>
@@ -27,43 +25,39 @@ function Home({navigation} :{navigation: any}) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#33a1f9",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#33a1f9',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-
   image: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-
   containerButtons: {
-    // flex: 2,
-    position: "absolute",
-    bottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    // marginBottom: 36,
+    display: 'flex',
+    position: 'absolute',
+    bottom: 48,
+    flexDirection: 'row',
+    height: 60,
+    paddingLeft: 20,
+    paddingRight: 20,
+    alignItems: 'stretch',
+    width: '100%',
   },
 
   button: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    marginRight: 10,
-    marginLeft: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 4,
     elevation: 3,
-    backgroundColor: "white",
+    backgroundColor: 'white',
+    flex: 1,
   },
 
   text: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "bold",
+    fontSize: 20,
     letterSpacing: 0.25,
-    color: "black",
+    color: '#33A1F9',
   },
 
   // inputView: {

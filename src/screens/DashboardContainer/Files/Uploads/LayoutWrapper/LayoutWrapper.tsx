@@ -1,9 +1,12 @@
 import React, {
   cloneElement,
+  Dispatch,
   JSXElementConstructor,
   MutableRefObject,
   ReactElement,
   ReactNode,
+  SetStateAction,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -19,17 +22,22 @@ import {Logo} from '../../../../../images/export';
 import {threeVerticleDots} from '../../../../../images/export';
 import LinearGradient from 'react-native-linear-gradient';
 import Feather from 'react-native-vector-icons/Feather';
-import ManageApps from '../../../../../utils/manageApps';
 
 interface LayoutWrapperProps {
   children?: ReactNode;
+  setPressHandlerRoot?: (
+    fn: Dispatch<SetStateAction<(() => void) | undefined>>,
+  ) => void;
 }
 
 interface RefWithPressHandler extends MutableRefObject<TouchableHighlight> {
   handlePress: () => void;
 }
 
-export default function LayoutWrapper({children}: LayoutWrapperProps) {
+export default function LayoutWrapper({
+  children,
+  setPressHandlerRoot,
+}: LayoutWrapperProps) {
   const rootRef = useRef() as RefWithPressHandler;
   const [pressHandler, setPressHandler] = useState<() => void>();
 
@@ -45,6 +53,12 @@ export default function LayoutWrapper({children}: LayoutWrapperProps) {
       );
     }
   }
+
+  useEffect(() => {
+    if (setPressHandlerRoot) {
+      setPressHandlerRoot(() => setPressHandler);
+    }
+  }, []);
 
   return (
     <TouchableHighlight

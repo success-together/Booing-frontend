@@ -2,7 +2,20 @@ import React, {useEffect} from 'react';
 import Feather from 'react-native-vector-icons/Feather';
 import {TouchableOpacity} from 'react-native';
 
-const CheckBox = ({checked, handleCheck, onCheck, onUncheck, style}: any) => {
+interface CheckBoxProps {
+  checked: boolean;
+  handleCheck?: () => void;
+  onCheck?: () => void;
+  onUncheck?: () => void;
+  style?: object;
+}
+const CheckBox = ({
+  checked,
+  handleCheck,
+  onCheck,
+  onUncheck,
+  style,
+}: CheckBoxProps) => {
   useEffect(() => {
     if (checked && onCheck) {
       onCheck();

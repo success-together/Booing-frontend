@@ -17,8 +17,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.IPackageStatsObserver;
-import android.content.pm.IPackageDataObserver;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
@@ -35,6 +33,14 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.RuntimeExecutionException;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.OAuthProvider;
 
 import android.content.Context;
 import android.content.pm.PackageStats;
@@ -54,6 +60,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
+import android.os.StatFs;
 import android.os.UserHandle;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
@@ -66,22 +73,9 @@ import android.util.Size;
 import android.webkit.MimeTypeMap;
 
 
-import androidx.activity.ComponentActivity;
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultCaller;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.ActivityResultRegistry;
-import androidx.activity.result.ActivityResultRegistryOwner;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import org.json.JSONException;
-import org.w3c.dom.Document;
+import androidx.annotation.NonNull;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -89,21 +83,19 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.Map;
 import java.util.UUID;
+
 
 public class ManageApps extends ReactContextBaseJavaModule {
 
     static Promise promise;
+    private FirebaseAuth firebaseAuth;
 
     ManageApps(ReactApplicationContext context) {
         super(context);
@@ -319,6 +311,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
         return arr;
     }
+
     public WritableArray getDownloadsLegacy() {
         File downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
         WritableArray arr = new WritableNativeArray();
@@ -350,7 +343,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 filesUris.add(uri);
             }
         }
-
 
         try {
             for(Uri uri: filesUris){
@@ -387,6 +379,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
+
     public static Uri getImageContentUri(Context context, File imageFile) {
         String filePath = imageFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -458,6 +451,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
+
     public static Uri getVideoContentUri(Context context, File videoFile) {
         String filePath = videoFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -530,7 +524,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
-
     public static Uri getAudioContentUri(Context context, File audioFile) {
         String filePath = audioFile.getAbsolutePath();
         Cursor cursor = context.getContentResolver().query(
@@ -553,8 +546,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         }
     }
-
-
 
     // delete cache files
     @ReactMethod
@@ -1026,6 +1017,23 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
         return directoryToBeDeleted.delete();
     }
+    @ReactMethod
+    public void pickImages(Promise promise) {
+        MainActivity.setPromise(promise);
+        MainActivity.setPickerRequestCode(4);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_PICTURES);
+        intent.setType("image/*");
+
+        // Optionally, specify a URI for the file that should appear in the
+        // system file picker when it loads.
+//        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri);
+        getCurrentActivity().startActivityForResult(intent, 4);
+    }
 
     @ReactMethod
     public void pickVideos(Promise promise) {
@@ -1135,11 +1143,12 @@ public class ManageApps extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void getFileDescription(String uriString, Promise p) {
+    public void getFileDescription(String uriString, Promise p) throws URISyntaxException {
         Uri uri = Uri.parse(uriString);
         String[] projection = {
                 MediaStore.Files.FileColumns.DISPLAY_NAME,
-                MediaStore.Files.FileColumns.DOCUMENT_ID,
+                MediaStore.Files.FileColumns.MIME_TYPE,
+                MediaStore.Files.FileColumns.SIZE
         };
         Cursor cursor = getReactApplicationContext()
                 .getContentResolver()
@@ -1154,18 +1163,43 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
 
         WritableMap map = new WritableNativeMap();
+
+
         int nameIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.DISPLAY_NAME);
+        int mimetypeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.MIME_TYPE);
+        int sizeIndex = cursor.getColumnIndex(MediaStore.Files.FileColumns.SIZE);
+
+
 
         cursor.moveToFirst();
 
         String name = cursor.getString(nameIndex);
+        String mimeType = cursor.getString(mimetypeIndex);
+        long size = cursor.getLong(sizeIndex);
+
 
         map.putString("name", name);
+        map.putString("type", mimeType);
+        map.putDouble("size", size);
 
         p.resolve(map);
         cursor.close();
     }
 
+    public String getFileDataBase64(String path) {
+        String base64 = "";
+
+        try {
+            File file = new File(path);
+            byte[] buffer = new byte[(int) file.length() + 100];
+            int length = new FileInputStream(file).read(buffer);
+            base64 = Base64.encodeToString(buffer, 0, length,
+                    Base64.DEFAULT);
+        } catch (NullPointerException | IOException e) {
+            return e.getMessage();
+        }
+        return base64;
+    }
 
     @ReactMethod
     public void saveFile(String name, String data, Promise p) {
@@ -1458,4 +1492,86 @@ public class ManageApps extends ReactContextBaseJavaModule {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         getCurrentActivity().startActivityForResult(intent, 100);
     }
+
+    @ReactMethod
+    public void getSDcardStorageStats(Promise p) {
+        Boolean isSDPresent = android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED);
+        Boolean isSDSupportedDevice = Environment.isExternalStorageRemovable();
+
+        if(isSDSupportedDevice && isSDPresent) {
+            StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+
+            long sizeOfSDcard = (long)stat.getBlockCountLong() * (long)stat.getBlockSizeLong();
+            long availableStorageOfSDcard =  (long)stat.getAvailableBlocksLong() * (long)stat.getBlockSizeLong();
+
+            WritableMap map = new WritableNativeMap();
+
+            map.putDouble("fullSize", sizeOfSDcard);
+            map.putDouble("availableSize", availableStorageOfSDcard);
+
+            p.resolve(map);
+            return;
+        }
+
+        p.resolve(null);
+    }
+
+    @ReactMethod
+    public void loginWithTwitter(Promise p) {
+        firebaseAuth = FirebaseAuth.getInstance();
+        OAuthProvider.Builder provider = OAuthProvider.newBuilder("twitter.com");
+        Task<AuthResult> pendingResultTask = firebaseAuth.getPendingAuthResult();
+
+        if (pendingResultTask != null) {
+            pendingResultTask
+            // There's something already here! Finish the sign-in for your user.
+                    .addOnSuccessListener(
+                            authResult -> {
+                                FirebaseUser user =  authResult.getUser();
+                               ;
+                                WritableMap userData = new WritableNativeMap();
+
+                                userData.putString("name", user.getDisplayName());
+                                userData.putString("id", user.getUid());
+
+                                p.resolve(userData);
+                            })
+                    .addOnFailureListener(
+                            e -> {
+                                p.resolve(e.getMessage());
+                            });
+        } else {
+            firebaseAuth
+                    .startActivityForSignInWithProvider(getCurrentActivity(), provider.build())
+                    .addOnSuccessListener(
+                            authResult -> {
+                                FirebaseUser user =  authResult.getUser();
+                                WritableMap userData = new WritableNativeMap();
+
+                                userData.putString("name", user.getDisplayName());
+                                userData.putString("id", user.getUid());
+
+                                p.resolve(userData);
+                            })
+                    .addOnFailureListener(
+                            e -> {
+                                p.resolve(e.getMessage());
+                            });
+        }
+
+    }
+
+   @ReactMethod
+    public void getExtensionFromMimeType(String mimeType, Promise p) {
+        p.resolve(MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType));
+   }
+
+
+   @ReactMethod
+    public void loginWithFacebook() {
+       final String EMAIL = "email";
+
+   }
+
+
 }

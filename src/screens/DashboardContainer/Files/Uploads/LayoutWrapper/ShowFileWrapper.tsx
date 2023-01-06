@@ -1,4 +1,4 @@
-import React, {ReactNode} from 'react';
+import React, {Dispatch, ReactNode, SetStateAction} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {threeVerticleDots} from '../../../../../images/export';
@@ -7,7 +7,7 @@ import Feather from 'react-native-vector-icons/Feather';
 interface ShowFileWrapperProps {
   title?: string;
   displayComponent: ReactNode;
-  setIsShowingFile: (arg: object) => void;
+  setIsShowingFile: Dispatch<SetStateAction<any>>;
 }
 
 const ShowFileWrapper = ({
@@ -30,7 +30,13 @@ const ShowFileWrapper = ({
           paddingBottom: 25,
           backgroundColor: '#F6F7FB',
         }}>
-        <View style={{display: 'flex', flexDirection: 'row'}}>
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            flex: 1,
+            alignItems: 'center',
+          }}>
           <AntDesign
             name="arrowleft"
             color={'black'}
@@ -45,6 +51,7 @@ const ShowFileWrapper = ({
               fontSize: 16,
               fontWeight: '700',
               marginLeft: 15,
+              flex: 1,
             }}>
             {title}
           </Text>
