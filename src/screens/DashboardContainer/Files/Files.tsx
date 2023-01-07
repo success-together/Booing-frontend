@@ -24,6 +24,7 @@ import axios from 'axios';
 import CheckBox from '../../../Components/CheckBox/CheckBox';
 import Folder, {FolderProps} from './FolderPage/Folder';
 import {setRootLoading} from '../../../shared/slices/rootSlice';
+import {useIsFocused} from '@react-navigation/native';
 
 export const FolderIcon = (props: SvgProps) => {
   return (
@@ -60,20 +61,19 @@ export const FileIcon = (props: SvgProps) => {
 interface MultipleSelectListProps {
   data: {id: string; label: string; isDirectory: boolean}[];
   label: string;
-  onSelect?: (newSelectedFiles: MultipleSelectListProps['data']) => void;
+  onSelect?: (newSelectedFiles: string[]) => void;
 }
 
 const SelectItem = ({
   id,
   label,
   isDirectory,
-}: MultipleSelectListProps['data']['0']) => {
-  const [isChecked, setIsChecked] = useState(false);
-
-  const handleCheck = useCallback(() => {
-    setIsChecked(prev => !prev);
-  }, [setIsChecked]);
-
+  handleSelect,
+  checked,
+}: MultipleSelectListProps['data']['0'] & {
+  handleSelect: () => void;
+  checked: boolean;
+}) => {
   return (
     <TouchableOpacity
       key={id}
@@ -85,8 +85,8 @@ const SelectItem = ({
         flexDirection: 'row',
         alignItems: 'center',
       }}
-      onPress={handleCheck}>
-      <CheckBox checked={isChecked} handleCheck={handleCheck} />
+      onPress={handleSelect}>
+      <CheckBox checked={checked} handleCheck={handleSelect} />
       <View style={{marginLeft: 10}} />
       {isDirectory ? <FolderIcon /> : <FileIcon />}
       <Text style={{marginLeft: 10}}>{label}</Text>
@@ -100,6 +100,7 @@ export const MultipleSelectList = ({
   onSelect,
 }: MultipleSelectListProps) => {
   const [items, setItems] = useState(data);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
@@ -108,17 +109,16 @@ export const MultipleSelectList = ({
 
   useEffect(() => {
     if (onSelect) {
-      onSelect(items);
+      onSelect(selectedItems);
     }
-  }, [items]);
+  }, [selectedItems]);
 
   const filterItems = useCallback(
     (val: string) => {
       setSearchText(val);
 
       if (val === '') {
-        setItems(data);
-        return;
+        return setItems(data);
       }
 
       setItems(prev =>
@@ -128,6 +128,14 @@ export const MultipleSelectList = ({
       );
     },
     [setSearchText],
+  );
+
+  const handleSelect = useCallback(
+    (id: string) => () =>
+      setSelectedItems(prev =>
+        prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id],
+      ),
+    [],
   );
 
   return (
@@ -155,7 +163,12 @@ export const MultipleSelectList = ({
         }}
         showsVerticalScrollIndicator={false}>
         {items.map(item => (
-          <SelectItem {...item} key={item.id} />
+          <SelectItem
+            handleSelect={handleSelect(item.id)}
+            checked={selectedItems.includes(item.id)}
+            {...item}
+            key={item.id}
+          />
         ))}
       </ScrollView>
     </View>
@@ -163,12 +176,11 @@ export const MultipleSelectList = ({
 };
 
 const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
-  const [selectedFiles, setSelectedFiles] = useState<
-    {id: string; label: string; isDirectory: boolean}[]
-  >([]);
+  const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
   const [files, setFiles] = useState([]);
   const [name, setName] = useState('');
   const user_id = store.getState().authentication.userId;
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     (async () => {
@@ -219,7 +231,7 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         store.dispatch(setRootLoading(false));
       }
     })();
-  }, [user_id]);
+  }, [user_id, isFocused]);
 
   const submitHandler = useCallback(async () => {
     if (name.trim() === '') {
@@ -247,7 +259,7 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         data: {
           user_id,
           name,
-          filesIds: selectedFiles.map(({id}) => id),
+          filesIds: selectedFilesIds,
         },
       });
 
@@ -269,7 +281,7 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         text1: 'something went wrong cannot get folder',
       });
     }
-  }, [name, user_id, axios, Toast]);
+  }, [name, user_id, selectedFilesIds]);
 
   const cancelHandler = useCallback(() => {
     closeModel();
@@ -304,7 +316,9 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
       <MultipleSelectList
         data={files}
         label="search file/folder name"
-        onSelect={newSelectedFiles => setSelectedFiles(newSelectedFiles)}
+        onSelect={newSelectedFilesIds =>
+          setSelectedFilesIds(newSelectedFilesIds)
+        }
       />
       <View
         style={{
@@ -353,10 +367,14 @@ const Files = ({navigation}: {navigation: any}) => {
   const [folders, setFolders] = useState([]);
   const [isCreatedFolderShown, setIsCreateFolderShown] = useState(false);
   const user_id = store.getState().authentication.userId;
+  const isFocused = useIsFocused();
 
   const fetchFolders = useCallback(async () => {
     if (!user_id) {
-      return;
+      return Toast.show({
+        type: 'error',
+        text1: 'cannot get folders, you are not logged in !',
+      });
     }
 
     try {
@@ -375,7 +393,6 @@ const Files = ({navigation}: {navigation: any}) => {
 
       if (response.status === 200) {
         const data = response.data.data;
-        console.log({data});
         setFolders(data);
       }
     } catch (e: any) {
@@ -396,7 +413,7 @@ const Files = ({navigation}: {navigation: any}) => {
 
   useEffect(() => {
     fetchFolders();
-  }, [user_id]);
+  }, [user_id, isFocused]);
 
   const showCreateFolder = useCallback(() => {
     setIsCreateFolderShown(true);
@@ -411,7 +428,13 @@ const Files = ({navigation}: {navigation: any}) => {
 
   const navigateToFolder = useCallback(
     (id: string) => () => {
-      navigation.navigate('Folder', {id});
+      navigation.navigate({
+        name: 'Folder',
+        params: {
+          id,
+          historyStack: [id],
+        },
+      });
     },
     [],
   );
@@ -479,6 +502,7 @@ const Files = ({navigation}: {navigation: any}) => {
                 {...folderProps}
                 showFolder={navigateToFolder(folderProps.id)}
                 key={folderProps.id}
+                reload={() => fetchFolders()}
               />
             ))
           )}

@@ -13,14 +13,19 @@ import NoDataFound from '../../../../Components/NoDataFound/NoDataFound';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 
 const FolderPage = ({navigation, route}: any) => {
-  const [folderData, setFolderData] = useState({name: '', items: []});
+  const [folderData, setFolderData] = useState({id: '', name: '', items: []});
   const user_id = store.getState().authentication.userId;
-  const {id} = route.params;
 
   useEffect(() => {
+    const {id} = route?.params;
+    setFolderData(prev => ({...prev, id}));
     (async () => {
-      if (!user_id) {
-        return;
+      if (!user_id || !id) {
+        return Toast.show({
+          type: 'error',
+          text1:
+            'cannot fetch folder, you are not logged in or folder id is invalid !',
+        });
       }
       try {
         store.dispatch(setRootLoading(true));
@@ -47,6 +52,7 @@ const FolderPage = ({navigation, route}: any) => {
             text1: e.response?.data?.message,
           });
         }
+        console.log(e);
         Toast.show({
           type: 'error',
           text1: 'something went wrong cannot get folder',
@@ -59,10 +65,30 @@ const FolderPage = ({navigation, route}: any) => {
 
   const showFolder = useCallback(
     (id: string) => () => {
-      navigation.setParams({id});
+      const historyStack = route.params?.historyStack || [folderData.id];
+      historyStack[historyStack.length - 1] !== id && historyStack.push(id);
+
+      navigation.navigate('Folder', {id, historyStack});
     },
-    [],
+    [route, navigation],
   );
+
+  const goBack = useCallback(() => {
+    const historyStack = route.params?.historyStack;
+    if (historyStack) {
+      historyStack.pop();
+      if (historyStack.length !== 0) {
+        navigation.navigate('Folder', {
+          id: historyStack[historyStack.length - 1],
+          historyStack,
+        });
+      } else {
+        navigation.navigate('Files');
+      }
+    } else {
+      navigation.navigate('Files');
+    }
+  }, [route, folderData, navigation]);
 
   return (
     <View style={{flexDirection: 'column', flex: 1}}>
@@ -101,7 +127,7 @@ const FolderPage = ({navigation, route}: any) => {
               name="arrow-back-ios"
               size={20}
               color="white"
-              onPress={() => navigation.goBack()}
+              onPress={goBack}
               style={{marginRight: 10}}
             />
             <View
@@ -161,6 +187,7 @@ const FolderPage = ({navigation, route}: any) => {
                   {...(item as FolderProps)}
                   key={item.id}
                   showFolder={showFolder(item.id)}
+                  reload={showFolder(folderData.id)}
                 />
               ) : (
                 <File {...(item as FileProps)} key={item.id} />

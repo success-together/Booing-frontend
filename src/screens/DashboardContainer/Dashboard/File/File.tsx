@@ -62,7 +62,7 @@ const File = ({
           onLoadEnd={loaded}
         />
       ) : (
-        <View style={{width: 80, position: 'relative'}}>
+        <View style={{width: 80, position: 'relative', minHeight: 80}}>
           <Text style={{padding: 10}}>{name}</Text>
           {visibleCacheSize && (
             <Text style={{color: 'black', padding: 5}}>

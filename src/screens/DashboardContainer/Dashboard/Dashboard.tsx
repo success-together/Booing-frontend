@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import {DashboardHeader} from '../../exports';
@@ -27,13 +28,20 @@ import {setRootLoading} from '../../../shared/slices/rootSlice';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
+import {useIsFocused} from '@react-navigation/native';
+
+const formatRecentFolderName = (name: string) => {
+  return name.length <= 10 ? name : name.slice(0, 10) + '...';
+};
 
 const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
   const [freeSpacePerCent, setFreeSpacePerCent] = useState<number>(0);
   const [position, setPosition] = useState<{lat: number; lon: number}>();
-  const [recentFolders, setRecentFolders] = useState<{name: string}[]>([]);
+  const [recentFolders, setRecentFolders] = useState<
+    {name: string; id: string}[]
+  >([]);
   const [loggedInUser, setLoggedUser] = useState<
     | {
         name: string;
@@ -49,12 +57,16 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       }
     | undefined
   >(undefined);
+  const isFocused = useIsFocused();
   const user_id = store.getState().authentication.userId;
 
   useEffect(() => {
     (async () => {
       if (!user_id) {
-        return;
+        return Toast.show({
+          type: 'error',
+          text1: 'cannot get recent folders, you are not logged in !',
+        });
       }
 
       try {
@@ -90,7 +102,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
         store.dispatch(setRootLoading(false));
       }
     })();
-  }, [user_id]);
+  }, [user_id, isFocused]);
 
   const requestLocationPermission = async () => {
     try {
@@ -364,95 +376,124 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               Recent
             </Text>
           </View>
-          {recentFolders.length !== 0 ? (
-            <View style={styles.recentFilesContainer}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  width: '100%',
-                  justifyContent: 'center',
-                  flex: 1,
-                  marginBottom: 20,
-                }}>
-                {recentFolders[0].name && (
-                  <View
-                    style={{
-                      backgroundColor: 'white',
-                      alignItems: 'center',
-                      padding: 25,
-                      borderRadius: 25,
-                      width: '38.55%',
-                      marginRight: '8.88%',
-                    }}>
-                    <FolderIcon />
-                    <Text style={styles.folderText}>
-                      {recentFolders[0].name}
-                    </Text>
-                  </View>
-                )}
-                {recentFolders[1]?.name && (
-                  <View
-                    style={{
-                      backgroundColor: 'white',
-                      alignItems: 'center',
-                      padding: 25,
-                      borderRadius: 25,
-                      width: '38.55%',
-                      marginRight: '8.88%',
-                    }}>
-                    <FolderIcon />
-                    <Text style={styles.folderText}>
-                      {recentFolders[1].name}
-                    </Text>
-                  </View>
-                )}
+          <View
+            style={{
+              width: '100%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            {recentFolders.length !== 0 ? (
+              <View style={styles.recentFilesContainer}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    width: '100%',
+                    justifyContent: 'center',
+                    flex: 1,
+                    marginBottom: 20,
+                  }}>
+                  {recentFolders[0].name && (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        alignItems: 'center',
+                        padding: 25,
+                        borderRadius: 25,
+                        width: '38.55%',
+                        marginRight: '8.88%',
+                      }}
+                      onPress={() =>
+                        navigation.navigate('Folder', {
+                          id: recentFolders[0].id,
+                          historyStack: [recentFolders[0].id],
+                        })
+                      }>
+                      <FolderIcon />
+                      <Text style={styles.folderText}>
+                        {formatRecentFolderName(recentFolders[0].name)}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  {recentFolders[1]?.name && (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        alignItems: 'center',
+                        padding: 25,
+                        borderRadius: 25,
+                        width: '38.55%',
+                      }}
+                      onPress={() =>
+                        navigation.navigate('Folder', {
+                          id: recentFolders[1].id,
+                          historyStack: [recentFolders[1].id],
+                        })
+                      }>
+                      <FolderIcon />
+                      <Text style={styles.folderText}>
+                        {formatRecentFolderName(recentFolders[1].name)}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    width: '100%',
+                    justifyContent: 'center',
+                    flex: 1,
+                  }}>
+                  {recentFolders[2]?.name && (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        alignItems: 'center',
+                        padding: 25,
+                        borderRadius: 25,
+                        width: '38.55%',
+                        marginRight: '8.88%',
+                      }}
+                      onPress={() =>
+                        navigation.navigate('Folder', {
+                          id: recentFolders[2].id,
+                          historyStack: [recentFolders[2].id],
+                        })
+                      }>
+                      <FolderIcon />
+                      <Text style={styles.folderText}>
+                        {formatRecentFolderName(recentFolders[2].name)}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                  {recentFolders[3]?.name && (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: 'white',
+                        alignItems: 'center',
+                        padding: 25,
+                        borderRadius: 25,
+                        width: '38.55%',
+                      }}
+                      onPress={() =>
+                        navigation.navigate('Folder', {
+                          id: recentFolders[3].id,
+                          historyStack: [recentFolders[3].id],
+                        })
+                      }>
+                      <FolderIcon />
+                      <Text style={styles.folderText}>
+                        {formatRecentFolderName(recentFolders[3]?.name)}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  width: '100%',
-                  justifyContent: 'center',
-                  flex: 1,
-                }}>
-                {recentFolders[2]?.name && (
-                  <View
-                    style={{
-                      backgroundColor: 'white',
-                      alignItems: 'center',
-                      padding: 25,
-                      borderRadius: 25,
-                      width: '38.55%',
-                      marginRight: '8.88%',
-                    }}>
-                    <FolderIcon />
-                    <Text style={styles.folderText}>
-                      {recentFolders[2].name}
-                    </Text>
-                  </View>
-                )}
-                {recentFolders[3]?.name && (
-                  <View
-                    style={{
-                      backgroundColor: 'white',
-                      alignItems: 'center',
-                      padding: 25,
-                      borderRadius: 25,
-                      width: '38.55%',
-                      marginRight: '8.88%',
-                    }}>
-                    <FolderIcon />
-                    <Text style={styles.folderText}>
-                      {recentFolders[3]?.name}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-          ) : (
-            <NoDataFound />
-          )}
+            ) : (
+              <NoDataFound style={{marginBottom: 50}} />
+            )}
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -496,8 +537,8 @@ const styles = StyleSheet.create({
     paddingBottom: 25,
   },
   storageInfoContainer: {
-    marginLeft: 20,
-    paddingRight: 80,
+    marginLeft: 10,
+    paddingRight: 70,
     alignItems: 'flex-start',
     paddingTop: 20,
   },
@@ -564,6 +605,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'black',
     marginTop: 5,
+    textAlign: 'center',
   },
   containerFolder: {
     flexDirection: 'row',
@@ -575,6 +617,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     marginBottom: 40,
+    flex: 1,
   },
   thirdScreenContainer: {
     flexDirection: 'row',

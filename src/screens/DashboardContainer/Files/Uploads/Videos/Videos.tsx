@@ -65,13 +65,14 @@ const Videos = () => {
       }
     });
 
-    return async () => {
+    return () => {
       if (removeFilesAfterFinish.length !== 0) {
         for (const file of removeFilesAfterFinish) {
-          try {
-            await RNFS.unlink(file);
-            console.log(`${file} is deleted`);
-          } catch (e) {}
+          RNFS.unlink(file)
+            .then(() => {
+              console.log(`${file} is deleted`);
+            })
+            .catch(e => {});
         }
       }
     };
@@ -86,7 +87,6 @@ const Videos = () => {
           return Toast.show({
             type: 'error',
             text1: `cannot play video ${file.name}`,
-            text2: e.message,
           });
         }
 

@@ -7,6 +7,7 @@ import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
+import {useIsFocused} from '@react-navigation/native';
 
 const Documents = () => {
   const [data, setData] = useState<any[]>([]);
@@ -19,6 +20,7 @@ const Documents = () => {
     uri: undefined,
     title: undefined,
   });
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     useGetUploadData('doc').then(fetchedData => {
@@ -34,7 +36,7 @@ const Documents = () => {
         });
       }
     });
-  }, []);
+  }, [isFocused]);
 
   const showFile = useCallback(
     (id: string) => {

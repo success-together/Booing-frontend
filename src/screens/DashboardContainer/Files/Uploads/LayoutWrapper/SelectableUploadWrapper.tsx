@@ -1,6 +1,12 @@
 import axios from 'axios';
 import React, {useCallback, useEffect, useState} from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {BaseUrl, store} from '../../../../../shared';
 import {uploadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
@@ -9,7 +15,6 @@ import SelectableItems from './SelectableItems';
 import Toast from 'react-native-toast-message';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import NoDataFound from '../../../../../Components/NoDataFound/NoDataFound';
-import {useIsFocused} from '@react-navigation/native';
 
 export interface SelectableUploadWrapperProps {
   data: any[];
@@ -31,7 +36,6 @@ const SelectableUploadWrapper = ({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isUploadButtonDisabled, setIsUploadButtonDisabled] = useState(false);
   const user_id = store.getState().authentication.userId;
-  const isFocused = useIsFocused();
 
   const handleSelect = useCallback(
     (id: string) =>
@@ -64,11 +68,10 @@ const SelectableUploadWrapper = ({
 
   const handleUpload = useCallback(async () => {
     if (!user_id) {
-      Toast.show({
+      return Toast.show({
         type: 'error',
         text1: 'cannot upload you are not logged in !',
       });
-      return;
     }
     setIsUploadButtonDisabled(true);
     let fileDescs: any[] = [];
@@ -104,17 +107,19 @@ const SelectableUploadWrapper = ({
             data.find(
               item =>
                 item.name === fileDesc.name ||
-                item.name.includes('_' + fileDesc.name),
+                (item.name.includes('_' + fileDesc.name) &&
+                  item.progress === 1),
             )
           ) {
-            setIsUploadButtonDisabled(true);
+            setIsUploadButtonDisabled(false);
             return Toast.show({
               type: 'info',
               text1: 'file already uploaded',
             });
           }
 
-          if (fileDesc.size >= 26214400) {
+          if (fileDesc.size >= 25000000) {
+            // 25mb
             setIsUploadButtonDisabled(false);
             return Toast.show({
               type: 'info',
@@ -149,10 +154,9 @@ const SelectableUploadWrapper = ({
           mergeData({progress: newProgress});
         });
 
-        console.log('uploaded');
-
         if (response.status === 200) {
           const data = response.data.data;
+          setIsUploadButtonDisabled(false);
           return setData((prevData: any[]) => {
             for (const {name} of fileDescs) {
               const item = prevData.find((e: any) => e.name === name);
@@ -181,7 +185,7 @@ const SelectableUploadWrapper = ({
       });
     }
     setIsUploadButtonDisabled(false);
-  }, [setData, pickItemsFn, data]);
+  }, [pickItemsFn, data, user_id, uploadFiles]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -276,13 +280,14 @@ const SelectableUploadWrapper = ({
           style={{
             width: 82,
             height: 49,
-            backgroundColor: isUploadButtonDisabled ? '#D9D9D9' : 'white',
+            backgroundColor: 'white',
             borderRadius: 15,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
           }}
-          onPress={isUploadButtonDisabled ? undefined : handleUpload}>
+          disabled={isUploadButtonDisabled}
+          onPress={handleUpload}>
           <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
         </TouchableOpacity>
       </View>
