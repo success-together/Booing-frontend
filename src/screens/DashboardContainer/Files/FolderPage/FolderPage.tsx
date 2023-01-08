@@ -325,14 +325,30 @@ const FolderPage = ({navigation, route}: any) => {
           setUploadProgress(prev => ({...prev, progress: newProgress}));
         });
         if (response.status === 200) {
-          setIsUploadButtonDisabled(false);
-          store.dispatch(setRootLoading(false));
-          setUploadProgress({progress: 0, show: false});
-          Toast.show({
-            type: 'success',
-            text1: 'files uploaded successfully',
+          const files_ids = response.data.data.map(({id}: any) => id);
+          const addFileToFolderResponse = await axios({
+            method: 'POST',
+            url: `${BaseUrl}/logged-in-user/addFilesToDirectory/${folderData.id}`,
+            data: {
+              files_ids,
+              user_id,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
           });
-          return showFolder(folderData.id)();
+
+          if (addFileToFolderResponse.status === 200) {
+            setIsUploadButtonDisabled(false);
+            store.dispatch(setRootLoading(false));
+            setUploadProgress({progress: 0, show: false});
+            Toast.show({
+              type: 'success',
+              text1: 'files uploaded successfully',
+            });
+            return showFolder(folderData.id)();
+          }
         }
       }
     } catch (e: any) {
