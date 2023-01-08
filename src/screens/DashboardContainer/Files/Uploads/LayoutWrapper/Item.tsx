@@ -26,8 +26,6 @@ const Item = ({
   const size = (WIDTH - (NUM_COLS + 1) * 10) / NUM_COLS;
   const iconSize = size - 10;
 
-  console.log({name, hasTriedToUpload, progress});
-
   useEffect(() => {
     let id: any;
     if (progress === 1) {
@@ -92,6 +90,9 @@ const Item = ({
               height: '100%',
             }}
           />
+          <Text style={{position: 'absolute', top: 30, left: 4, fontSize: 10}}>
+            fragmentation...
+          </Text>
         </View>
       );
     }

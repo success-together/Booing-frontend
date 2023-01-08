@@ -7,6 +7,7 @@ import {useCallback, useEffect, useState} from 'react';
 import useGetUploadData from '../LayoutWrapper/getUploadedDataHook';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Toast from 'react-native-toast-message';
+import {useIsFocused} from '@react-navigation/native';
 
 const Downloads = () => {
   const [data, setData] = useState<any[]>([]);
@@ -19,6 +20,7 @@ const Downloads = () => {
     uri: undefined,
     title: undefined,
   });
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     useGetUploadData('download').then(fetchedData => {
@@ -34,7 +36,7 @@ const Downloads = () => {
         });
       }
     });
-  }, []);
+  }, [isFocused]);
 
   const showFile = useCallback(
     (id: string) => {

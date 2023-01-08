@@ -16,7 +16,7 @@ const ShowFileWrapper = ({
   setIsShowingFile,
 }: ShowFileWrapperProps) => {
   return (
-    <View style={{flex: 1, display: 'flex', backgroundColor: 'red'}}>
+    <View style={{flex: 1, display: 'flex'}}>
       <View
         style={{
           display: 'flex',

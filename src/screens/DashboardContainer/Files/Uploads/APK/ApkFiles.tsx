@@ -7,6 +7,7 @@ import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
 import {Text, View} from 'react-native';
 import FontAwsome from 'react-native-vector-icons/FontAwesome';
+import {useIsFocused} from '@react-navigation/native';
 
 const ApkFiles = () => {
   const [data, setData] = useState<any[]>([]);
@@ -19,6 +20,7 @@ const ApkFiles = () => {
     uri: undefined,
     title: undefined,
   });
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     useGetUploadData('apk').then(fetchedData => {
@@ -34,7 +36,7 @@ const ApkFiles = () => {
         });
       }
     });
-  }, []);
+  }, [isFocused]);
 
   const showFile = useCallback(
     (id: string) => {

@@ -9,6 +9,7 @@ import {nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {ScrollView} from 'react-native';
 import {Bar} from 'react-native-progress';
+import {useIsFocused} from '@react-navigation/native';
 
 export const Progress = ({progress, text}: any) => {
   return (
@@ -55,8 +56,10 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
     progress: 0,
   });
 
+  const isFocused = useIsFocused();
+
   const addId = (arr: []) => {
-    arr.forEach(e => Object.assign(e, {id: nanoid(10)}));
+    arr.forEach(e => ((e as any).id = nanoid(20)));
     return arr;
   };
 
@@ -153,6 +156,13 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         break;
     }
   };
+
+  useEffect(() => {
+    if (isFocused) {
+      setProgressProps({text: '', progress: 0});
+      scanUserStorage();
+    }
+  }, [isFocused]);
 
   return (
     <View style={styles.container}>

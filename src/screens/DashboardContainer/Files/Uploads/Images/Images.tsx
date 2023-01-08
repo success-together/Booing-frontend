@@ -6,6 +6,7 @@ import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
 import ManageApps from '../../../../../utils/manageApps';
 import Toast from 'react-native-toast-message';
+import {useIsFocused} from '@react-navigation/native';
 
 const Images = ({navigation}: {navigation: any}) => {
   const [data, setData] = useState<any[]>([]);
@@ -18,6 +19,7 @@ const Images = ({navigation}: {navigation: any}) => {
     uri: undefined,
     title: undefined,
   });
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     useGetUploadData('image').then(fetchedData => {
@@ -33,7 +35,7 @@ const Images = ({navigation}: {navigation: any}) => {
         });
       }
     });
-  }, []);
+  }, [isFocused]);
 
   const showFile = useCallback(
     (id: string) => {

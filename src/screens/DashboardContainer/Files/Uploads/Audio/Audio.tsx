@@ -41,12 +41,13 @@ const Audio = () => {
       }
     });
 
-    return async () => {
+    return () => {
       if (removeFilesAfterFinish.length !== 0) {
         for (const file of removeFilesAfterFinish) {
           try {
-            await RNFS.unlink(file);
-            console.log(`${file} is deleted`);
+            RNFS.unlink(file).then(() => {
+              console.log(`${file} is deleted`);
+            });
           } catch (e) {}
         }
       }
@@ -62,7 +63,6 @@ const Audio = () => {
           return Toast.show({
             type: 'error',
             text1: `cannot play audio ${file.name}`,
-            text2: e.message,
           });
         }
 

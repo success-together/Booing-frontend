@@ -20,6 +20,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import Feather from 'react-native-vector-icons/Feather';
 import Foundation from 'react-native-vector-icons/Foundation';
 import {Circle} from 'react-native-progress';
+import NoDataFound from '../../../../Components/NoDataFound/NoDataFound';
 
 const icons = {
   Pictures: (size: number, color = '#8F8F8F') => (
@@ -110,7 +111,6 @@ export default function FilesList({
   data,
   label,
   size,
-  setTriggerRerender,
   refetchByLabel,
 }: FilesListProps) {
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
@@ -184,12 +184,13 @@ export default function FilesList({
 
     setDeleteBtnProps({disabled: false, show: false});
     if (isDeleted) {
+      setSelectedFilesIds([]);
       return Toast.show({
         type: 'success',
         text1: 'items deleted successfully',
       });
     }
-  }, [selectedFilesIds]);
+  }, [selectedFilesIds, data]);
 
   const onDeleteAppsPress = async () => {
     const apps = selectedFilesIds.reduce<any[]>((acc, id) => {
@@ -287,6 +288,8 @@ export default function FilesList({
           setTimeout(() => {
             setItems(next.value);
           }, 500);
+        } else {
+          setItems([]);
         }
         return;
       }
@@ -296,6 +299,8 @@ export default function FilesList({
         setTimeout(() => {
           setItems(next.value);
         }, 500);
+      } else {
+        setItems([]);
       }
     },
     [items, data, iterator],
@@ -358,23 +363,27 @@ export default function FilesList({
         </View>
       </View>
       <SafeAreaView style={{paddingTop: 10, paddingBottom: 10}}>
-        <FlatList
-          data={items}
-          renderItem={renderFile}
-          keyExtractor={item => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          initialNumToRender={5}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={5}
-          onEndReached={() => nextSet()}
-          viewabilityConfigCallbackPairs={
-            viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
-          }
-          viewabilityConfig={{
-            minimumViewTime: 200,
-          }}
-        />
+        {data.length === 0 ? (
+          <NoDataFound />
+        ) : (
+          <FlatList
+            data={items}
+            renderItem={renderFile}
+            keyExtractor={item => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            initialNumToRender={5}
+            removeClippedSubviews={true}
+            maxToRenderPerBatch={5}
+            onEndReached={() => nextSet()}
+            viewabilityConfigCallbackPairs={
+              viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
+            }
+            viewabilityConfig={{
+              minimumViewTime: 200,
+            }}
+          />
+        )}
       </SafeAreaView>
     </View>
   );

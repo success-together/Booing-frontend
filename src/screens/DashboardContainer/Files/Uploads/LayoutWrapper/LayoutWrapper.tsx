@@ -12,6 +12,7 @@ import React, {
 } from 'react';
 import {
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,

@@ -2,7 +2,7 @@ import React from 'react';
 import {View, Text} from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
-const NoDataFound = () => {
+const NoDataFound = ({style}: {style?: object}) => {
   return (
     <View
       style={{
@@ -15,6 +15,7 @@ const NoDataFound = () => {
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+        ...style,
       }}>
       <Text
         style={{
