@@ -176,62 +176,8 @@ export const MultipleSelectList = ({
 };
 
 const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
-  const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
-  const [files, setFiles] = useState([]);
   const [name, setName] = useState('');
   const user_id = store.getState().authentication.userId;
-  const isFocused = useIsFocused();
-
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!user_id) {
-          return Toast.show({
-            type: 'error',
-            text1: 'cannot create folder, you are not logged in !',
-          });
-        }
-
-        store.dispatch(setRootLoading(true));
-
-        const response = await axios({
-          method: 'POST',
-          url: `${BaseUrl}/logged-in-user/getMyFiles`,
-          headers: {
-            Accept: 'application/json',
-            'Content-type': 'application/json',
-          },
-          data: {
-            user_id,
-          },
-        });
-
-        if (response.status === 200) {
-          const data = response.data.data;
-          setFiles(
-            data.map(({id, name, isDirectory}: any) => ({
-              id,
-              label: name,
-              isDirectory,
-            })),
-          );
-        }
-      } catch (e: any) {
-        if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
-          return Toast.show({
-            type: 'error',
-            text1: e.response?.data?.message,
-          });
-        }
-        Toast.show({
-          type: 'error',
-          text1: 'something went wrong cannot get folder',
-        });
-      } finally {
-        store.dispatch(setRootLoading(false));
-      }
-    })();
-  }, [user_id, isFocused]);
 
   const submitHandler = useCallback(async () => {
     if (name.trim() === '') {
@@ -259,7 +205,6 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         data: {
           user_id,
           name,
-          filesIds: selectedFilesIds,
         },
       });
 
@@ -281,7 +226,7 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         text1: 'something went wrong cannot get folder',
       });
     }
-  }, [name, user_id, selectedFilesIds]);
+  }, [name, user_id]);
 
   const cancelHandler = useCallback(() => {
     closeModel();
@@ -309,16 +254,6 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
           marginTop: 4,
         }}
         placeholderTextColor="#716D6D"
-      />
-      <Text style={{marginBottom: 10, color: 'black', fontWeight: '500'}}>
-        select files or folders you want to put inside :
-      </Text>
-      <MultipleSelectList
-        data={files}
-        label="search file/folder name"
-        onSelect={newSelectedFilesIds =>
-          setSelectedFilesIds(newSelectedFilesIds)
-        }
       />
       <View
         style={{
