@@ -9,7 +9,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Toast from 'react-native-toast-message';
 import {useIsFocused} from '@react-navigation/native';
 
-const Downloads = () => {
+const Downloads = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
@@ -49,7 +49,7 @@ const Downloads = () => {
   );
 
   return (
-    <LayoutWrapper>
+    <LayoutWrapper onBackPress={() => navigation.navigate('Uplaods')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

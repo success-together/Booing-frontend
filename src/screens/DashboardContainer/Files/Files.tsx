@@ -377,7 +377,7 @@ const Files = ({navigation}: {navigation: any}) => {
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
-        <FilesHeader />
+        <FilesHeader onBackPress={() => navigation.navigate('Dashboard')} />
       </View>
       <View style={styles.body}>
         <View style={styles.recentFilesContainer}>

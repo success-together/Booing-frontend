@@ -9,7 +9,7 @@ import {Text, View} from 'react-native';
 import FontAwsome from 'react-native-vector-icons/FontAwesome';
 import {useIsFocused} from '@react-navigation/native';
 
-const ApkFiles = () => {
+const ApkFiles = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
@@ -49,7 +49,7 @@ const ApkFiles = () => {
   );
 
   return (
-    <LayoutWrapper>
+    <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

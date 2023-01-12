@@ -80,7 +80,7 @@ function groupByCategory(data: any[]) {
   }, []);
 }
 
-const RecycleBin = () => {
+const RecycleBin = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pressHandler, setPressHandler] = useState<any>();
@@ -313,7 +313,9 @@ const RecycleBin = () => {
   }, [user_id, selectedIds]);
 
   return (
-    <LayoutWrapper setPressHandlerRoot={setPressHandler}>
+    <LayoutWrapper
+      setPressHandlerRoot={setPressHandler}
+      onBackPress={() => navigation.navigate('Uploads')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

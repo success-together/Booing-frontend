@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -24,6 +25,7 @@ import {MultipleSelectList} from '../Files';
 import {Dialog} from 'react-native-elements';
 import ManageApps from '../../../../utils/manageApps';
 import {uploadFiles} from '../../../../shared/slices/Fragmentation/FragmentationService';
+import {Pie} from 'react-native-progress';
 
 const AddFiles = ({handleHide, reload, id}: any) => {
   const [files, setFiles] = useState([]);
@@ -313,6 +315,21 @@ const FolderPage = ({navigation, route}: any) => {
             });
           }
 
+          if (
+            folderData.items.find(
+              (item: any) =>
+                item.name === fileDesc.name ||
+                item.name.includes('_' + fileDesc.name),
+            )
+          ) {
+            setIsUploadButtonDisabled(false);
+            store.dispatch(setRootLoading(false));
+            return Toast.show({
+              type: 'info',
+              text1: 'file already uploaded',
+            });
+          }
+
           body.append('file', {
             uri: file,
             type: fileDesc.type,
@@ -365,6 +382,7 @@ const FolderPage = ({navigation, route}: any) => {
         type: 'error',
         text1: 'something went wrong cannot uplaod files',
       });
+      throw e;
     }
     setUploadProgress({progress: 0, show: false});
     setIsUploadButtonDisabled(false);
@@ -476,7 +494,7 @@ const FolderPage = ({navigation, route}: any) => {
           </View>
         </LinearGradient>
       </View>
-      <View
+      <ScrollView
         style={{
           flex: 1,
           paddingHorizontal: '4.67%',
@@ -504,7 +522,7 @@ const FolderPage = ({navigation, route}: any) => {
         ) : (
           <NoDataFound />
         )}
-      </View>
+      </ScrollView>
       {isAddingFolders && (
         <Dialog isVisible={true}>
           <AddFiles
@@ -515,7 +533,16 @@ const FolderPage = ({navigation, route}: any) => {
         </Dialog>
       )}
       {uploadProgress.show && (
-        <Dialog isVisible={true}>{uploadProgress.progress}</Dialog>
+        <Dialog isVisible={true}>
+          <View
+            style={{
+              width: '100%',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Pie progress={uploadProgress.progress} size={50} />
+          </View>
+        </Dialog>
       )}
       <View style={styles.uploadContainer}>
         <TouchableOpacity
@@ -546,10 +573,6 @@ const styles = StyleSheet.create({
     paddingRight: 36,
   },
   uploadContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: '#F6F7FB',
     display: 'flex',
     justifyContent: 'flex-end',
