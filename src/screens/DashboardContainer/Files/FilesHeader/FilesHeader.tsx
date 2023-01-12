@@ -3,8 +3,9 @@ import {StyleSheet, Text, TextInput, View, Image} from 'react-native';
 import {Logo, small_logo, threeVerticleDots} from '../../../../images/export';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
-const FilesHeader = () => {
+const FilesHeader = ({onBackPress}: any) => {
   return (
     <LinearGradient
       start={{x: 0, y: 0}}
@@ -36,6 +37,12 @@ const FilesHeader = () => {
           justifyContent: 'space-between',
           alignItems: 'center',
         }}>
+        <MaterialIcons
+          name="arrow-back-ios"
+          size={20}
+          color="white"
+          onPress={onBackPress}
+        />
         <View
           style={{
             display: 'flex',

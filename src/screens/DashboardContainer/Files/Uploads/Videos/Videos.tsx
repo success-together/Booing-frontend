@@ -34,7 +34,7 @@ export const formatUri = async (
   return {changed: false, path: file};
 };
 
-const Videos = () => {
+const Videos = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
@@ -105,7 +105,7 @@ const Videos = () => {
   );
 
   return (
-    <LayoutWrapper>
+    <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

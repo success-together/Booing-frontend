@@ -10,7 +10,7 @@ import {formatUri} from '../Videos/Videos';
 import {useIsFocused} from '@react-navigation/native';
 import RNFS from 'react-native-fs';
 
-const Audio = () => {
+const Audio = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
@@ -81,7 +81,7 @@ const Audio = () => {
   );
 
   return (
-    <LayoutWrapper>
+    <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

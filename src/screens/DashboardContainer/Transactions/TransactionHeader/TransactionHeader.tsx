@@ -1,21 +1,21 @@
-import React from "react";
-import { StyleSheet, Text, TextInput, View, Image } from "react-native";
-import { Logo, small_logo, threeVerticleDots } from "../../../../images/export";
-import { Input } from "react-native-elements";
-import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
-import Icon from "react-native-vector-icons/FontAwesome";
-import Entypo from "react-native-vector-icons/Entypo";
-import Feather from "react-native-vector-icons/Feather";
-import Ionicons from "react-native-vector-icons/Ionicons";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import React from 'react';
+import {StyleSheet, Text, TextInput, View, Image} from 'react-native';
+import {Logo, small_logo, threeVerticleDots} from '../../../../images/export';
+import {Input} from 'react-native-elements';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import Entypo from 'react-native-vector-icons/Entypo';
+import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
 
-const TransactionsHeader = () => {
+const TransactionsHeader = ({navigation}: any) => {
   return (
     <LinearGradient
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
+      start={{x: 0, y: 0}}
+      end={{x: 0, y: 1}}
       colors={['#33A1F9', '#33A1F9']}
       style={styles.header}>
       <View
@@ -30,9 +30,9 @@ const TransactionsHeader = () => {
         }}>
         <Image
           source={small_logo}
-          style={{ width: 50, height: 30, position: 'absolute', left: 0 }}
+          style={{width: 50, height: 30, position: 'absolute', left: 0}}
         />
-        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+        <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
           TRANSACTION
         </Text>
       </View>
@@ -43,6 +43,12 @@ const TransactionsHeader = () => {
           justifyContent: 'space-between',
           alignItems: 'center',
         }}>
+        <MaterialIcons
+          name="arrow-back-ios"
+          size={20}
+          color="white"
+          onPress={() => navigation.navigate('Dashboard')}
+        />
         <View
           style={{
             display: 'flex',
@@ -52,7 +58,7 @@ const TransactionsHeader = () => {
           <Feather
             name="search"
             size={24}
-            style={{ position: 'absolute', zIndex: 900, top: 10, left: 13 }}
+            style={{position: 'absolute', zIndex: 900, top: 10, left: 13}}
           />
           <TextInput
             style={{
@@ -69,7 +75,12 @@ const TransactionsHeader = () => {
         </View>
         <View style={styles.materialIcons}>
           <MaterialIcons name="filter-list" size={25} color="white" />
-          <MaterialIcons style={{marginLeft:10}} name="arrow-downward" size={25} color="white" />
+          <MaterialIcons
+            style={{marginLeft: 10}}
+            name="arrow-downward"
+            size={25}
+            color="white"
+          />
         </View>
       </View>
     </LinearGradient>
