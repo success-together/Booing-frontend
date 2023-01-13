@@ -135,3 +135,12 @@ export const uploadFiles = (
     },
   });
 };
+
+export const userUsedStorage = async (data: {user_id: string;}) => {
+  return Executor({
+    method: 'get',
+    url: `${BaseUrl}/logged-in-user/getUsedSpace/${data.user_id}`,
+    isSilent: false,
+    withoutToast: true,
+  });
+};

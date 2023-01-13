@@ -29,6 +29,7 @@ import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
 import {useIsFocused} from '@react-navigation/native';
+import { userUsedStorage } from '../../../shared/slices/Fragmentation/FragmentationService';
 
 const formatRecentFolderName = (name: string) => {
   return name.length <= 10 ? name : name.slice(0, 10) + '...';
@@ -38,6 +39,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
   const [freeSpacePerCent, setFreeSpacePerCent] = useState<number>(0);
+  const [usedStorage, setUsedStorage] = useState<number>(0);
+  const [availabledStorage, setAvailableStorage] = useState<number>(1);
+  const [usedStoragePerGiga, setUsedStoragePerGiga] = useState<number>(0);
   const [position, setPosition] = useState<{lat: number; lon: number}>();
   const [recentFolders, setRecentFolders] = useState<
     {name: string; id: string}[]
@@ -244,6 +248,35 @@ const Dashboard = ({navigation}: {navigation: any}) => {
     });
   }, []);
 
+  const getUserUsedStorage = async () => {
+    try {
+      let user: any = store.getState().authentication.loggedInUser;
+      if (user?._id)
+        await userUsedStorage({user_id: user?._id}).then(res => {
+          console.log(res.data[0].total);
+          setUsedStorage(res.data[0].total);
+          setAvailableStorage(Number(((1000000000-res.data[0].total) / 1000000).toFixed(1)));
+          setUsedStoragePerGiga(Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)))
+          console.log(usedStoragePerGiga);
+          
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const bytesToSize = ((bytes:number) => {
+    var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    if (bytes == 0) return 'n/a';
+    var i = Math.floor(Math.log(bytes) / Math.log(1024));
+    if (i == 0) return bytes + ' ' + sizes[i];
+    return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
+  });
+
+  useEffect(() =>{
+   getUserUsedStorage()
+  }, [])
+
   // useEffect(() => {
   //   console.log(Device.brand);
   //   if (Device.isDevice && Device.brand) {
@@ -341,7 +374,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                     justifyContent: 'space-between',
                   }}>
                   <Text style={styles.available}>AVAILABLE</Text>
-                  <Text style={styles.available}> 1 GB</Text>
+                  <Text style={styles.available}> {availabledStorage} {availabledStorage == 1 ?  'GB' : 'MB'}</Text>
                 </View>
                 <View
                   style={{
@@ -350,14 +383,14 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                     marginTop: 4,
                   }}>
                   <Text style={styles.usedSpace}>USED</Text>
-                  <Text style={styles.usedSpace}>53 MB</Text>
+                  <Text style={styles.usedSpace}> {bytesToSize(usedStorage)}</Text>
                 </View>
                 <Progress.Bar
-                  progress={0.3}
+                  progress={usedStoragePerGiga}
                   width={170}
                   height={14}
-                  color="#24E72C"
-                  unfilledColor="orange"
+                  color="orange"
+                  unfilledColor="#24E72C"
                   style={{marginTop: 4}}
                 />
               </View>
