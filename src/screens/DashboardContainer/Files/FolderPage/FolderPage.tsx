@@ -201,8 +201,129 @@ const AddFiles = ({handleHide, reload, id}: any) => {
   );
 };
 
+// from backend (needs to be sync with backend)
+const types = {
+  document: (type: string) => {
+    const arr = [
+      'text/csv',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/html',
+      'text/calendar',
+      'text/javascript',
+      'application/json',
+      'application/ld+json',
+      'text/javascript',
+      'application/vnd.oasis.opendocument.spreadsheet',
+      'application/vnd.oasis.opendocument.text',
+      'application/pdf',
+      'application/x-httpd-php',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/rtf',
+      'application/x-sh',
+      'text/plain',
+      'application/xhtml+xml',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/xml',
+      'application/vnd.mozilla.xul+xml',
+    ];
+
+    return arr.includes(type) || arr.find(e => e.includes(type));
+  },
+  apk: (type: string) => type === 'application/vnd.android.package-archive',
+  video: (type: string) => type?.startsWith('video/'),
+  audio: (type: string) => type?.startsWith('audio/'),
+  image: (type: string) => type?.startsWith('image/'),
+  download(type: string) {
+    return (
+      !this.document(type) &&
+      !this.apk(type) &&
+      !this.video(type) &&
+      !this.audio(type) &&
+      !this.image(type)
+    );
+  },
+};
+
+const transformType = (type: string | null) => {
+  if (type === null) {
+    return type;
+  }
+
+  const validType = Object.keys(types).find(key => (types as any)[key](type));
+  if (validType) {
+    return validType;
+  }
+
+  return null;
+};
+
+interface ListProps {
+  label: string | null;
+  items: (FileProps | FolderProps)[];
+}
+
+const groupByType = (folderData: any) => {
+  return folderData.items.reduce(
+    (acc: ListProps[], item: FolderProps | FileProps) => {
+      const exist = acc.find(e => e.label === item.type);
+      if (exist) {
+        exist.items.push(item);
+      } else {
+        acc.push({label: transformType(item.type), items: [item]});
+      }
+
+      return acc;
+    },
+    [],
+  );
+};
+
+const renderItems = (
+  showFolder: (id: string) => () => void,
+  id: string,
+  list: ListProps,
+) => {
+  const items = list.items.map((item: FolderProps | FileProps) =>
+    item.isDirectory ? (
+      <Folder
+        {...(item as FolderProps)}
+        key={item.id}
+        showFolder={showFolder(item.id)}
+        reload={showFolder(id)}
+      />
+    ) : (
+      <File {...(item as FileProps)} key={item.id} />
+    ),
+  );
+
+  return !list.label ? (
+    <>{items}</>
+  ) : (
+    <View>
+      <Text
+        style={{
+          color: 'black',
+          fontSize: 16,
+          fontWeight: '500',
+          marginBottom: 10,
+        }}>
+        {list.label + '(s)'}
+      </Text>
+      {items}
+    </View>
+  );
+};
+
 const FolderPage = ({navigation, route}: any) => {
-  const [folderData, setFolderData] = useState({id: '', name: '', items: []});
+  const [folderData, setFolderData] = useState({
+    id: '',
+    name: '',
+    type: '',
+    items: [],
+  });
   const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
   const [isAddingFolders, setIsAddingFolders] = useState(false);
   const [isUploadButtonDisabled, setIsUploadButtonDisabled] = useState(false);
@@ -502,22 +623,8 @@ const FolderPage = ({navigation, route}: any) => {
           backgroundColor: '#F6F7FB',
         }}>
         {folderData.items.length !== 0 ? (
-          folderData.items.map(
-            (
-              item:
-                | (FolderProps & {isDirectory: boolean})
-                | (FileProps & {isDirectory: boolean}),
-            ) =>
-              item.isDirectory ? (
-                <Folder
-                  {...(item as FolderProps)}
-                  key={item.id}
-                  showFolder={showFolder(item.id)}
-                  reload={showFolder(folderData.id)}
-                />
-              ) : (
-                <File {...(item as FileProps)} key={item.id} />
-              ),
+          groupByType(folderData).map((list: ListProps) =>
+            renderItems(showFolder, folderData.id, list),
           )
         ) : (
           <NoDataFound />

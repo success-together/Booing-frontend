@@ -23,7 +23,7 @@ const Documents = ({navigation}: any) => {
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    useGetUploadData('doc').then(fetchedData => {
+    useGetUploadData('document').then(fetchedData => {
       setData(fetchedData as any[]);
       if (fetchedData.length === 0) {
         return Toast.show({
