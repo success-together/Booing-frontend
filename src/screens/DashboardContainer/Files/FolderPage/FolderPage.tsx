@@ -91,56 +91,58 @@ const AddFiles = ({handleHide, reload, id}: any) => {
   }, [user_id, selectedFilesIds, handleHide, reload, id]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        if (!user_id) {
-          return Toast.show({
-            type: 'error',
-            text1: 'cannot get files to add, you are not logged in !',
+    if (isFocused) {
+      (async () => {
+        try {
+          if (!user_id) {
+            return Toast.show({
+              type: 'error',
+              text1: 'cannot get files to add, you are not logged in !',
+            });
+          }
+
+          store.dispatch(setRootLoading(true));
+
+          const response = await axios({
+            method: 'POST',
+            url: `${BaseUrl}/logged-in-user/getMyFiles`,
+            headers: {
+              Accept: 'application/json',
+              'Content-type': 'application/json',
+            },
+            data: {
+              user_id,
+            },
           });
-        }
 
-        store.dispatch(setRootLoading(true));
-
-        const response = await axios({
-          method: 'POST',
-          url: `${BaseUrl}/logged-in-user/getMyFiles`,
-          headers: {
-            Accept: 'application/json',
-            'Content-type': 'application/json',
-          },
-          data: {
-            user_id,
-          },
-        });
-
-        if (response.status === 200) {
-          const data = response.data.data;
-          setFiles(
-            data
-              .filter((item: any) => item.id !== id)
-              .map(({id, name, isDirectory}: any) => ({
-                id,
-                label: name,
-                isDirectory,
-              })),
-          );
-        }
-      } catch (e: any) {
-        if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
-          return Toast.show({
+          if (response.status === 200) {
+            const data = response.data.data;
+            setFiles(
+              data
+                .filter((item: any) => item.id !== id)
+                .map(({id, name, isDirectory}: any) => ({
+                  id,
+                  label: name,
+                  isDirectory,
+                })),
+            );
+          }
+        } catch (e: any) {
+          if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+            return Toast.show({
+              type: 'error',
+              text1: e.response?.data?.message,
+            });
+          }
+          Toast.show({
             type: 'error',
-            text1: e.response?.data?.message,
+            text1: 'something went wrong cannot get files to add',
           });
+        } finally {
+          store.dispatch(setRootLoading(false));
         }
-        Toast.show({
-          type: 'error',
-          text1: 'something went wrong cannot get files to add',
-        });
-      } finally {
-        store.dispatch(setRootLoading(false));
-      }
-    })();
+      })();
+    }
   }, [user_id, isFocused]);
 
   return (

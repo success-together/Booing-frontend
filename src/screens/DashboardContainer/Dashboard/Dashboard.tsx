@@ -65,47 +65,50 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   const user_id = store.getState().authentication.userId;
 
   useEffect(() => {
-    (async () => {
-      if (!user_id) {
-        return Toast.show({
-          type: 'error',
-          text1: 'cannot get recent folders, you are not logged in !',
-        });
-      }
-
-      try {
-        store.dispatch(setRootLoading(true));
-        const response = await axios({
-          method: 'POST',
-          url: `${BaseUrl}/logged-in-user/recentDirectories`,
-          headers: {
-            Accept: 'application/json',
-            'Content-type': 'application/json',
-          },
-          data: {
-            user_id,
-          },
-        });
-
-        if (response.status === 200) {
-          const data = response.data.data;
-          setRecentFolders(data);
-        }
-      } catch (e: any) {
-        if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+    if (isFocused) {
+      (async () => {
+        if (!user_id) {
+          store.dispatch(setRootLoading(false));
           return Toast.show({
             type: 'error',
-            text1: e.response?.data?.message,
+            text1: 'cannot get recent folders, you are not logged in !',
           });
         }
-        Toast.show({
-          type: 'error',
-          text1: 'something went wrong cannot get recent folders',
-        });
-      } finally {
-        store.dispatch(setRootLoading(false));
-      }
-    })();
+
+        try {
+          store.dispatch(setRootLoading(true));
+          const response = await axios({
+            method: 'POST',
+            url: `${BaseUrl}/logged-in-user/recentDirectories`,
+            headers: {
+              Accept: 'application/json',
+              'Content-type': 'application/json',
+            },
+            data: {
+              user_id,
+            },
+          });
+
+          if (response.status === 200) {
+            const data = response.data.data;
+            store.dispatch(setRootLoading(false));
+            setRecentFolders(data);
+          }
+        } catch (e: any) {
+          store.dispatch(setRootLoading(false));
+          if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+            return Toast.show({
+              type: 'error',
+              text1: e.response?.data?.message,
+            });
+          }
+          Toast.show({
+            type: 'error',
+            text1: 'something went wrong cannot get recent folders',
+          });
+        }
+      })();
+    }
   }, [user_id, isFocused]);
 
   const requestLocationPermission = async () => {
