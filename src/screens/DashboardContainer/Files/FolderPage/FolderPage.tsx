@@ -14,7 +14,7 @@ import {small_logo, threeVerticleDots} from '../../../../images/export';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
-import {AXIOS_ERROR, BaseUrl, store} from '../../../../shared';
+import {AXIOS_ERROR, BaseUrl, MAX_SIZE, store} from '../../../../shared';
 import Toast from 'react-native-toast-message';
 import Folder, {FolderProps} from './Folder';
 import File, {FileProps} from './File';
@@ -25,7 +25,7 @@ import {MultipleSelectList} from '../Files';
 import {Dialog} from 'react-native-elements';
 import ManageApps from '../../../../utils/manageApps';
 import {uploadFiles} from '../../../../shared/slices/Fragmentation/FragmentationService';
-import {Pie} from 'react-native-progress';
+import {Circle} from 'react-native-progress';
 
 const AddFiles = ({handleHide, reload, id}: any) => {
   const [files, setFiles] = useState([]);
@@ -268,11 +268,13 @@ interface ListProps {
 const groupByType = (folderData: any) => {
   return folderData.items.reduce(
     (acc: ListProps[], item: FolderProps | FileProps) => {
-      const exist = acc.find(e => e.label === item.type);
+      const label = transformType(item.type);
+      const exist = acc.find(e => e.label === label);
+
       if (exist) {
         exist.items.push(item);
       } else {
-        acc.push({label: transformType(item.type), items: [item]});
+        acc.push({label, items: [item]});
       }
 
       return acc;
@@ -300,9 +302,9 @@ const renderItems = (
   );
 
   return !list.label ? (
-    <>{items}</>
+    <React.Fragment key={Math.random() * 4000}>{items}</React.Fragment>
   ) : (
-    <View>
+    <View key={Math.random() * 4000}>
       <Text
         style={{
           color: 'black',
@@ -425,14 +427,15 @@ const FolderPage = ({navigation, route}: any) => {
         const body = new FormData();
         for (const file of pickedFiles) {
           const fileDesc = await ManageApps.getFileDescription(file);
-          if (fileDesc.size >= 25000000) {
+
+          if (fileDesc.size >= MAX_SIZE) {
             // 25mb
             setIsUploadButtonDisabled(false);
             store.dispatch(setRootLoading(false));
             return Toast.show({
               type: 'info',
               text1: 'cannot upload file(s)',
-              text2: `file (${fileDesc.name}) has exceeded the max size (25mb)`,
+              text2: `file (${fileDesc.name}) has exceeded the max size (16mb)`,
             });
           }
 
@@ -463,7 +466,21 @@ const FolderPage = ({navigation, route}: any) => {
           setUploadProgress(prev => ({...prev, progress: newProgress}));
         });
         if (response.status === 200) {
+          console.log({data: response.data.data});
           const files_ids = response.data.data.map(({id}: any) => id);
+          if (
+            !files_ids ||
+            !Array.isArray(files_ids) ||
+            files_ids.includes(null)
+          ) {
+            setIsUploadButtonDisabled(false);
+            store.dispatch(setRootLoading(false));
+            setUploadProgress({progress: 0, show: false});
+            return Toast.show({
+              type: 'error',
+              text1: 'something went wrong, failed to upload file',
+            });
+          }
           const addFileToFolderResponse = await axios({
             method: 'POST',
             url: `${BaseUrl}/logged-in-user/addFilesToDirectory/${folderData.id}`,
@@ -499,11 +516,11 @@ const FolderPage = ({navigation, route}: any) => {
           text1: e.response?.data?.message,
         });
       }
+
       Toast.show({
         type: 'error',
         text1: 'something went wrong cannot uplaod files',
       });
-      throw e;
     }
     setUploadProgress({progress: 0, show: false});
     setIsUploadButtonDisabled(false);
@@ -647,7 +664,22 @@ const FolderPage = ({navigation, route}: any) => {
               justifyContent: 'center',
               alignItems: 'center',
             }}>
-            <Pie progress={uploadProgress.progress} size={50} />
+            {uploadProgress.progress !== 1 ? (
+              <Circle progress={uploadProgress.progress} size={50} />
+            ) : (
+              <>
+                <Text
+                  style={{
+                    color: 'black',
+                    fontSize: 12,
+                    fontWeight: '500',
+                    marginBottom: 10,
+                  }}>
+                  fragmentation ...
+                </Text>
+                <Circle indeterminate={true} size={50} />
+              </>
+            )}
           </View>
         </Dialog>
       )}

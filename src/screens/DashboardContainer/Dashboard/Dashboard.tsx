@@ -29,7 +29,7 @@ import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
 import {useIsFocused} from '@react-navigation/native';
-import { userUsedStorage } from '../../../shared/slices/Fragmentation/FragmentationService';
+import {userUsedStorage} from '../../../shared/slices/Fragmentation/FragmentationService';
 
 const formatRecentFolderName = (name: string) => {
   return name.length <= 10 ? name : name.slice(0, 10) + '...';
@@ -255,27 +255,30 @@ const Dashboard = ({navigation}: {navigation: any}) => {
         await userUsedStorage({user_id: user?._id}).then(res => {
           console.log(res.data[0].total);
           setUsedStorage(res.data[0].total);
-          setAvailableStorage(Number(((1000000000-res.data[0].total) / 1000000).toFixed(1)));
-          setUsedStoragePerGiga(Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)))
+          setAvailableStorage(
+            Number(((1000000000 - res.data[0].total) / 1000000).toFixed(1)),
+          );
+          setUsedStoragePerGiga(
+            Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)),
+          );
           console.log(usedStoragePerGiga);
-          
         });
     } catch (error) {
       console.log(error);
     }
   };
 
-  const bytesToSize = ((bytes:number) => {
+  const bytesToSize = (bytes: number) => {
     var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     if (bytes == 0) return 'n/a';
     var i = Math.floor(Math.log(bytes) / Math.log(1024));
     if (i == 0) return bytes + ' ' + sizes[i];
     return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
-  });
+  };
 
-  useEffect(() =>{
-   getUserUsedStorage()
-  }, [])
+  useEffect(() => {
+    getUserUsedStorage();
+  }, []);
 
   // useEffect(() => {
   //   console.log(Device.brand);
@@ -374,7 +377,10 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                     justifyContent: 'space-between',
                   }}>
                   <Text style={styles.available}>AVAILABLE</Text>
-                  <Text style={styles.available}> {availabledStorage} {availabledStorage == 1 ?  'GB' : 'MB'}</Text>
+                  <Text style={styles.available}>
+                    {' '}
+                    {availabledStorage} {availabledStorage == 1 ? 'GB' : 'MB'}
+                  </Text>
                 </View>
                 <View
                   style={{
@@ -383,7 +389,10 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                     marginTop: 4,
                   }}>
                   <Text style={styles.usedSpace}>USED</Text>
-                  <Text style={styles.usedSpace}> {bytesToSize(usedStorage)}</Text>
+                  <Text style={styles.usedSpace}>
+                    {' '}
+                    {bytesToSize(usedStorage)}
+                  </Text>
                 </View>
                 <Progress.Bar
                   progress={usedStoragePerGiga}
@@ -434,7 +443,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                         padding: 25,
                         borderRadius: 25,
                         width: '38.55%',
-                        marginRight: '8.88%',
+                        marginRight: recentFolders[1]?.name
+                          ? '8.88%'
+                          : undefined,
                       }}
                       onPress={() =>
                         navigation.navigate('Folder', {
@@ -486,7 +497,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                         padding: 25,
                         borderRadius: 25,
                         width: '38.55%',
-                        marginRight: '8.88%',
+                        marginRight: recentFolders[3]?.name
+                          ? '8.88%'
+                          : undefined,
                       }}
                       onPress={() =>
                         navigation.navigate('Folder', {

@@ -51,19 +51,27 @@ const Videos = ({navigation}: any) => {
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    useGetUploadData('video').then(fetchedData => {
-      setData(fetchedData as any[]);
-      if (fetchedData.length === 0) {
-        return Toast.show({
-          type: 'info',
-          text1: 'no data found',
+    useGetUploadData('video')
+      .then(fetchedData => {
+        setData(fetchedData as any[]);
+        if (fetchedData.length === 0) {
+          return Toast.show({
+            type: 'info',
+            text1: 'no data found',
+          });
+        } else {
+          return Toast.show({
+            text1: 'data fetched successfully',
+          });
+        }
+      })
+      .catch(e => {
+        console.log({error: e});
+        Toast.show({
+          type: 'error',
+          text1: 'cannot fetch files',
         });
-      } else {
-        return Toast.show({
-          text1: 'data fetched successfully',
-        });
-      }
-    });
+      });
 
     return () => {
       if (removeFilesAfterFinish.length !== 0) {

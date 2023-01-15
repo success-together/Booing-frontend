@@ -38,10 +38,11 @@ const Stack = createBottomTabNavigator();
 
 const DashboardContainer = () => {
   const device = store.getState().devices;
+  const user_id = store.getState().authentication.userId;
+
+  console.log({user_id});
 
   useEffect(() => {
-    const user_id = store.getState().authentication.userId;
-
     const intervalDownloads = checkForDownloads({user_id} as unknown as {
       user_id: string;
     });
@@ -63,7 +64,7 @@ const DashboardContainer = () => {
         clearInterval(intervalUploads);
       }
     };
-  }, [device]);
+  }, [device, user_id]);
 
   return (
     <>
