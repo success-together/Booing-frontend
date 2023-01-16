@@ -253,11 +253,14 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       let user: any = store.getState().authentication.loggedInUser;
       if (user?._id)
         await userUsedStorage({user_id: user?._id}).then(res => {
-          console.log(res.data[0].total);
-          setUsedStorage(res.data[0].total);
-          setAvailableStorage(Number(((1000000000-res.data[0].total) / 1000000).toFixed(1)));
-          setUsedStoragePerGiga(Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)))
-          console.log(usedStoragePerGiga);
+          if(res?.data[0]?.total)
+          {
+            console.log(res?.data[0]?.total);
+            setUsedStorage(res?.data[0]?.total);
+            setAvailableStorage(Number(((1000000000-res.data[0].total) / 1000000).toFixed(1)));
+            setUsedStoragePerGiga(Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)))
+            console.log(usedStoragePerGiga);
+          }
           
         });
     } catch (error) {
@@ -267,7 +270,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
 
   const bytesToSize = ((bytes:number) => {
     var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    if (bytes == 0) return 'n/a';
+    if (bytes == 0) return '0 MB';
     var i = Math.floor(Math.log(bytes) / Math.log(1024));
     if (i == 0) return bytes + ' ' + sizes[i];
     return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
@@ -350,7 +353,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
           <View style={styles.thirdScreenContainer}>
             <View
               style={{
-                backgroundColor: '#24E72C',
+                backgroundColor: '#33a1f9',
                 height: '100%',
                 width: '6%',
                 borderTopLeftRadius: 20,
@@ -387,10 +390,10 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                 </View>
                 <Progress.Bar
                   progress={usedStoragePerGiga}
-                  width={170}
+                  width={220}
                   height={14}
                   color="orange"
-                  unfilledColor="#24E72C"
+                  unfilledColor="#33a1f9"
                   style={{marginTop: 4}}
                 />
               </View>
@@ -587,7 +590,7 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     letterSpacing: 0.25,
     fontWeight: 'bold',
-    color: '#24E72C',
+    color: '#33a1f9',
   },
   container: {
     backgroundColor: '#F6F7FB',
@@ -655,7 +658,7 @@ const styles = StyleSheet.create({
   thirdScreenContainer: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    width: '90%',
+    width: '99%',
     borderRadius: 20,
     marginTop: 10,
   },
