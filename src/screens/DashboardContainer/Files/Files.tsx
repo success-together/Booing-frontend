@@ -178,9 +178,12 @@ export const MultipleSelectList = ({
 const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
   const [name, setName] = useState('');
   const user_id = store.getState().authentication.userId;
+  const [createFolderDisabled, setCreateFolderDisabled] = useState(false);
 
   const submitHandler = useCallback(async () => {
+    setCreateFolderDisabled(true);
     if (name.trim() === '') {
+      setCreateFolderDisabled(false);
       return Toast.show({
         type: 'error',
         text1: 'invalid folder name',
@@ -188,6 +191,7 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
     }
 
     if (!user_id) {
+      setCreateFolderDisabled(false);
       return Toast.show({
         type: 'error',
         text1: 'cannot create folder, you are not logged in !',
@@ -210,6 +214,7 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
 
       if (response.status === 200) {
         closeModel(true);
+        setCreateFolderDisabled(false);
         return Toast.show({
           text1: response.data.message,
         });
@@ -225,6 +230,8 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         type: 'error',
         text1: 'something went wrong cannot get folder',
       });
+    } finally {
+      setCreateFolderDisabled(false);
     }
   }, [name, user_id]);
 
@@ -273,7 +280,8 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
               height: 40,
               paddingHorizontal: 20,
             }}
-            onPress={submitHandler}>
+            onPress={submitHandler}
+            disabled={createFolderDisabled}>
             <Text style={{color: 'white'}}>Create</Text>
           </Pressable>
         </LinearGradient>
@@ -347,7 +355,9 @@ const Files = ({navigation}: {navigation: any}) => {
   }, [user_id]);
 
   useEffect(() => {
-    fetchFolders();
+    if (isFocused) {
+      fetchFolders();
+    }
   }, [user_id, isFocused]);
 
   const showCreateFolder = useCallback(() => {

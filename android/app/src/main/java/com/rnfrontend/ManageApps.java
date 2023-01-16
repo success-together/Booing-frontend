@@ -102,7 +102,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
     static Promise promise;
     private FirebaseAuth firebaseAuth;
-    ExecutorService executorService = Executors.newFixedThreadPool(5);
+    ExecutorService executorService = Executors.newFixedThreadPool(1);
     Handler mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
 
     ManageApps(ReactApplicationContext context) {
@@ -1376,6 +1376,8 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
                             WritableArray thumbnails = new WritableNativeArray();
                             WritableArray emptyFolders = new WritableNativeArray();
+                            WritableArray notInstalledApps = new WritableNativeArray();
+
 
                            for(int i = 0; i < allFilesAndDirs.size(); i++) {
                                ReadableMap item = allFilesAndDirs.getMap(i);
@@ -1394,12 +1396,17 @@ public class ManageApps extends ReactContextBaseJavaModule {
                                    emptyFolders.pushMap(item);
                                    continue;
                                }
+
+                               if(name.endsWith(".apk")) {
+                                   notInstalledApps.pushMap(item);
+                               }
                            }
 
                            WritableMap output = new WritableNativeMap();
 
                            output.putArray("thumbnails", thumbnails);
                            output.putArray("emptyFolders", emptyFolders);
+                           output.putArray("notInstalledApps", notInstalledApps);
 
                         mainThreadHandler.post(new Runnable() {
                             @Override

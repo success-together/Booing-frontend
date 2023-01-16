@@ -86,7 +86,14 @@ const SelectableItems = ({
 
   const checkAll = useCallback(() => {
     setSelectedIds((prev: string[]) => {
-      return [...new Set([...prev, ...data.map(e => e.id)])];
+      return [
+        ...new Set([
+          ...prev,
+          ...data
+            .filter(e => e.progress === 1 && e.hasTriedToUpload)
+            .map(e => e.id),
+        ]),
+      ];
     });
   }, [data, selectedIds]);
 
