@@ -17,6 +17,8 @@ export interface FolderProps {
   name: string;
   createdAt: Date;
   items: number;
+  type: string | null;
+  isDirectory: boolean;
 }
 
 const formatDate = (date: Date): string => {

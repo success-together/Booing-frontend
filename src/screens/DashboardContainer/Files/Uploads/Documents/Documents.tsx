@@ -23,19 +23,29 @@ const Documents = ({navigation}: any) => {
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    useGetUploadData('doc').then(fetchedData => {
-      setData(fetchedData as any[]);
-      if (fetchedData.length === 0) {
-        return Toast.show({
-          type: 'info',
-          text1: 'no data found',
+    if (isFocused) {
+      useGetUploadData('document')
+        .then(fetchedData => {
+          setData(fetchedData as any[]);
+          if (fetchedData.length === 0) {
+            return Toast.show({
+              type: 'info',
+              text1: 'no data found',
+            });
+          } else {
+            return Toast.show({
+              text1: 'data fetched successfully',
+            });
+          }
+        })
+        .catch(e => {
+          console.log({error: e});
+          Toast.show({
+            type: 'error',
+            text1: 'cannot fetch files',
+          });
         });
-      } else {
-        return Toast.show({
-          text1: 'data fetched successfully',
-        });
-      }
-    });
+    }
   }, [isFocused]);
 
   const showFile = useCallback(

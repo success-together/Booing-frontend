@@ -8,13 +8,67 @@ import {
   View,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {BaseUrl, store} from '../../../../../shared';
+import {AXIOS_ERROR, BaseUrl, MAX_SIZE, store} from '../../../../../shared';
 import {uploadFiles} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 import ManageApps from '../../../../../utils/manageApps';
 import SelectableItems from './SelectableItems';
 import Toast from 'react-native-toast-message';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import NoDataFound from '../../../../../Components/NoDataFound/NoDataFound';
+
+const isToday = (date: Date) => {
+  const today = new Date();
+  return (
+    today.setUTCHours(0, 0, 0, 0) <= date.getTime() &&
+    date.getTime() <= today.setUTCHours(23, 59, 59, 999)
+  );
+};
+
+const isYesterday = (date: Date) => {
+  const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
+  return (
+    yesterday.setUTCHours(0, 0, 0, 0) <= date.getTime() &&
+    date.getTime() <= yesterday.setUTCHours(23, 59, 59, 999)
+  );
+};
+
+const groupByDateUploaded = (data: {createdAt: string}[]) => {
+  return data.reduce(
+    (acc: {label: string; items: typeof data}[], elem: typeof data['0']) => {
+      if (!elem.createdAt) {
+        return acc;
+      }
+
+      const itemUploadDate = new Date(elem.createdAt);
+      if (isToday(itemUploadDate)) {
+        const exist = acc.find(e => e.label === 'Today');
+        if (exist) {
+          exist.items.push(elem);
+        } else {
+          acc.push({label: 'Today', items: [elem]});
+        }
+      } else if (isYesterday(itemUploadDate)) {
+        const exist = acc.find(e => e.label === 'Today');
+        if (exist) {
+          exist.items.push(elem);
+        } else {
+          acc.push({label: 'Yesterday', items: [elem]});
+        }
+      } else {
+        const dateString = itemUploadDate.toDateString();
+        const exist = acc.find(e => e.label === dateString);
+        if (exist) {
+          exist.items.push(elem);
+        } else {
+          acc.push({label: dateString, items: [elem]});
+        }
+      }
+
+      return acc;
+    },
+    [],
+  );
+};
 
 export interface SelectableUploadWrapperProps {
   data: any[];
@@ -106,9 +160,9 @@ const SelectableUploadWrapper = ({
           if (
             data.find(
               item =>
-                item.name === fileDesc.name ||
-                (item.name.includes('_' + fileDesc.name) &&
-                  item.progress === 1),
+                (item.name === fileDesc.name ||
+                  item.name.includes('_' + fileDesc.name)) &&
+                item.progress === 1,
             )
           ) {
             setIsUploadButtonDisabled(false);
@@ -118,13 +172,13 @@ const SelectableUploadWrapper = ({
             });
           }
 
-          if (fileDesc.size >= 25000000) {
+          if (fileDesc.size >= MAX_SIZE) {
             // 25mb
             setIsUploadButtonDisabled(false);
             return Toast.show({
               type: 'info',
               text1: 'cannot upload file(s)',
-              text2: `file (${fileDesc.name}) has exceeded the max size (25mb)`,
+              text2: `file (${fileDesc.name}) has exceeded the max size (16mb)`,
             });
           }
 
@@ -177,14 +231,22 @@ const SelectableUploadWrapper = ({
         }
       }
     } catch (e: any) {
-      mergeData({hasTriedToUpload: true});
+      mergeData({hasTriedToUpload: true, progress: 0});
+
+      if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+        return Toast.show({
+          type: 'error',
+          text1: e.response?.data?.message,
+        });
+      }
+
       Toast.show({
         type: 'error',
-        text1: 'cannot upload file(s)',
-        text2: e.response?.data?.msg || e.message,
+        text1: 'something went wrong cannot uplaod files',
       });
+    } finally {
+      setIsUploadButtonDisabled(false);
     }
-    setIsUploadButtonDisabled(false);
   }, [pickItemsFn, data, user_id, uploadFiles]);
 
   const handleDelete = useCallback(async () => {
@@ -249,15 +311,18 @@ const SelectableUploadWrapper = ({
       {data.length === 0 ? (
         <NoDataFound />
       ) : (
-        <SelectableItems
-          data={data}
-          handleSelect={handleSelect}
-          selectedIds={selectedIds}
-          setSelectedIds={setSelectedIds}
-          text={'Today'}
-          showFile={showFile}
-          setPressHandler={setPressHandler}
-        />
+        groupByDateUploaded(data).map((group, index) => (
+          <SelectableItems
+            key={index}
+            data={group.items}
+            handleSelect={handleSelect}
+            selectedIds={selectedIds}
+            setSelectedIds={setSelectedIds}
+            text={group.label}
+            showFile={showFile}
+            setPressHandler={setPressHandler}
+          />
+        ))
       )}
       <View style={styles.uploadContainer}>
         {selectedIds.length > 0 && (

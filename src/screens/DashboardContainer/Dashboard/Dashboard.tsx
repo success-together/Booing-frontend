@@ -29,7 +29,7 @@ import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
 import {useIsFocused} from '@react-navigation/native';
-import { userUsedStorage } from '../../../shared/slices/Fragmentation/FragmentationService';
+import {userUsedStorage} from '../../../shared/slices/Fragmentation/FragmentationService';
 
 const formatRecentFolderName = (name: string) => {
   return name.length <= 10 ? name : name.slice(0, 10) + '...';
@@ -65,47 +65,50 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   const user_id = store.getState().authentication.userId;
 
   useEffect(() => {
-    (async () => {
-      if (!user_id) {
-        return Toast.show({
-          type: 'error',
-          text1: 'cannot get recent folders, you are not logged in !',
-        });
-      }
-
-      try {
-        store.dispatch(setRootLoading(true));
-        const response = await axios({
-          method: 'POST',
-          url: `${BaseUrl}/logged-in-user/recentDirectories`,
-          headers: {
-            Accept: 'application/json',
-            'Content-type': 'application/json',
-          },
-          data: {
-            user_id,
-          },
-        });
-
-        if (response.status === 200) {
-          const data = response.data.data;
-          setRecentFolders(data);
-        }
-      } catch (e: any) {
-        if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+    if (isFocused) {
+      (async () => {
+        if (!user_id) {
+          store.dispatch(setRootLoading(false));
           return Toast.show({
             type: 'error',
-            text1: e.response?.data?.message,
+            text1: 'cannot get recent folders, you are not logged in !',
           });
         }
-        Toast.show({
-          type: 'error',
-          text1: 'something went wrong cannot get recent folders',
-        });
-      } finally {
-        store.dispatch(setRootLoading(false));
-      }
-    })();
+
+        try {
+          store.dispatch(setRootLoading(true));
+          const response = await axios({
+            method: 'POST',
+            url: `${BaseUrl}/logged-in-user/recentDirectories`,
+            headers: {
+              Accept: 'application/json',
+              'Content-type': 'application/json',
+            },
+            data: {
+              user_id,
+            },
+          });
+
+          if (response.status === 200) {
+            const data = response.data.data;
+            store.dispatch(setRootLoading(false));
+            setRecentFolders(data);
+          }
+        } catch (e: any) {
+          store.dispatch(setRootLoading(false));
+          if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+            return Toast.show({
+              type: 'error',
+              text1: e.response?.data?.message,
+            });
+          }
+          Toast.show({
+            type: 'error',
+            text1: 'something went wrong cannot get recent folders',
+          });
+        }
+      })();
+    }
   }, [user_id, isFocused]);
 
   const requestLocationPermission = async () => {
@@ -255,27 +258,30 @@ const Dashboard = ({navigation}: {navigation: any}) => {
         await userUsedStorage({user_id: user?._id}).then(res => {
           console.log(res.data[0].total);
           setUsedStorage(res.data[0].total);
-          setAvailableStorage(Number(((1000000000-res.data[0].total) / 1000000).toFixed(1)));
-          setUsedStoragePerGiga(Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)))
+          setAvailableStorage(
+            Number(((1000000000 - res.data[0].total) / 1000000).toFixed(1)),
+          );
+          setUsedStoragePerGiga(
+            Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)),
+          );
           console.log(usedStoragePerGiga);
-          
         });
     } catch (error) {
       console.log(error);
     }
   };
 
-  const bytesToSize = ((bytes:number) => {
+  const bytesToSize = (bytes: number) => {
     var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     if (bytes == 0) return 'n/a';
     var i = Math.floor(Math.log(bytes) / Math.log(1024));
     if (i == 0) return bytes + ' ' + sizes[i];
     return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
-  });
+  };
 
-  useEffect(() =>{
-   getUserUsedStorage()
-  }, [])
+  useEffect(() => {
+    getUserUsedStorage();
+  }, []);
 
   // useEffect(() => {
   //   console.log(Device.brand);
@@ -374,7 +380,10 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                     justifyContent: 'space-between',
                   }}>
                   <Text style={styles.available}>AVAILABLE</Text>
-                  <Text style={styles.available}> {availabledStorage} {availabledStorage == 1 ?  'GB' : 'MB'}</Text>
+                  <Text style={styles.available}>
+                    {' '}
+                    {availabledStorage} {availabledStorage == 1 ? 'GB' : 'MB'}
+                  </Text>
                 </View>
                 <View
                   style={{
@@ -383,7 +392,10 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                     marginTop: 4,
                   }}>
                   <Text style={styles.usedSpace}>USED</Text>
-                  <Text style={styles.usedSpace}> {bytesToSize(usedStorage)}</Text>
+                  <Text style={styles.usedSpace}>
+                    {' '}
+                    {bytesToSize(usedStorage)}
+                  </Text>
                 </View>
                 <Progress.Bar
                   progress={usedStoragePerGiga}
@@ -434,7 +446,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                         padding: 25,
                         borderRadius: 25,
                         width: '38.55%',
-                        marginRight: '8.88%',
+                        marginRight: recentFolders[1]?.name
+                          ? '8.88%'
+                          : undefined,
                       }}
                       onPress={() =>
                         navigation.navigate('Folder', {
@@ -486,7 +500,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                         padding: 25,
                         borderRadius: 25,
                         width: '38.55%',
-                        marginRight: '8.88%',
+                        marginRight: recentFolders[3]?.name
+                          ? '8.88%'
+                          : undefined,
                       }}
                       onPress={() =>
                         navigation.navigate('Folder', {
