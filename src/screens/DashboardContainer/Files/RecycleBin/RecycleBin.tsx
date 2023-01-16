@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React, {useCallback, useEffect, useState} from 'react';
-import {Image, Text, View} from 'react-native';
-import {BaseUrl, store} from '../../../../shared';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {AXIOS_ERROR, BaseUrl, store} from '../../../../shared';
 import LayoutWrapper from '../Uploads/LayoutWrapper/LayoutWrapper';
 import Toast from 'react-native-toast-message';
 import SelectableItems from '../Uploads/LayoutWrapper/SelectableItems';
@@ -9,6 +9,39 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import ShowFileWrapper from '../Uploads/LayoutWrapper/ShowFileWrapper';
 import {useIsFocused} from '@react-navigation/native';
+import Video from 'react-native-video';
+import {formatUri} from '../Uploads/Videos/Videos';
+import RNFS from 'react-native-fs';
+
+const getDisplayComponent = (type = 'other', uri?: string) => {
+  console.log(type);
+  switch (true) {
+    case type === 'image':
+      return (
+        <Image
+          source={{uri}}
+          style={{
+            flex: 1,
+          }}
+          resizeMode="contain"
+        />
+      );
+
+    case type === 'video' || type === 'audio':
+      return (
+        <Video
+          source={{uri}}
+          style={{
+            flex: 1,
+          }}
+          resizeMode="contain"
+          controls
+        />
+      );
+    default:
+      return;
+  }
+};
 
 function transformType(type?: string) {
   if (!type) {
@@ -20,6 +53,9 @@ function transformType(type?: string) {
 
     case type?.startsWith('image'):
       return 'image';
+
+    case type?.startsWith('audio'):
+      return 'audio';
 
     case type === 'application/pdf' || type === 'pdf':
       return 'pdf';
@@ -44,21 +80,33 @@ function groupByCategory(data: any[]) {
   }, []);
 }
 
-const RecycleBin = () => {
+const RecycleBin = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [pressHandler, setPressHandler] = useState<any>();
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
+    type?: string;
     uri?: string;
     title?: string;
   }>({
     show: false,
     uri: undefined,
     title: undefined,
+    type: undefined,
   });
+  const [
+    HandleRemovePermanentlyBtnDisabled,
+    setHandleRemovePermanentlyBtnDisabled,
+  ] = useState(false);
+  const [HandleRestoreBtnDisabled, setHandleRestoreBtnDisabled] =
+    useState(false);
+
   const isFocused: boolean = useIsFocused();
   const user_id = store.getState().authentication.userId;
+  const [removeFilesAfterFinish, setRemoveFilesAfterFinish] = useState<
+    string[]
+  >([]);
 
   const handleSelect = useCallback(
     (id: string) => {
@@ -71,117 +119,314 @@ const RecycleBin = () => {
 
   const uncheckAll = useCallback(() => setSelectedIds([]), [data, selectedIds]);
 
+  const fetchDeletedFiles = useCallback(async () => {
+    try {
+      store.dispatch(setRootLoading(true));
+      const response = await axios({
+        method: 'GET',
+        url: `${BaseUrl}/logged-in-user/getDeletedFiles/${user_id}`,
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        store.dispatch(setRootLoading(false));
+        return setData(
+          response.data.data.map((e: any) => ({
+            ...e,
+            type: transformType(
+              e.uri?.slice(e.uri?.indexOf(':') + 1, e.uri?.indexOf(';')),
+            ),
+            progress: 1,
+            hasTriedToUpload: true,
+            isImage: e.uri?.startsWith('data:image/'),
+          })),
+        );
+      }
+    } catch (e: any) {
+      store.dispatch(setRootLoading(false));
+      return Toast.show({
+        type: 'error',
+        text1: 'there was an error with fetching deleted files',
+        text2: e?.message,
+      });
+    }
+    store.dispatch(setRootLoading(false));
+  }, []);
+
   useEffect(() => {
     if (isFocused) {
-      (async () => {
-        try {
-          store.dispatch(setRootLoading(true));
-          const response = await axios({
-            method: 'GET',
-            url: `${BaseUrl}/logged-in-user/getDeletedFiles/${user_id}`,
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (response.status === 200) {
-            setData(
-              response.data.data.map((e: any) => ({
-                ...e,
-                type: transformType(
-                  e.uri?.slice(e.uri?.indexOf(':') + 1, e.uri?.indexOf(';')),
-                ),
-                progress: 1,
-                hasTriedToUpload: true,
-                isImage: e.uri?.startsWith('data:image/'),
-              })),
-            );
-          }
-        } catch (e: any) {
-          return Toast.show({
-            type: 'error',
-            text1: 'there was an error with fetching delete files',
-            text2: e?.message,
-          });
-        } finally {
-          store.dispatch(setRootLoading(false));
-        }
-      })();
+      fetchDeletedFiles();
     }
   }, [isFocused]);
 
-  const showImage = useCallback(
-    (id: string) => {
+  const addRemoveFileBeforeSave = useCallback((path: string) => {
+    setRemoveFilesAfterFinish(prev => [...new Set(...prev, path)]);
+  }, []);
+
+  const showFile = useCallback(
+    async (id: string) => {
       const file = data.find(e => e.id === id);
       if (file) {
-        setIsShowingFile({show: true, uri: file.uri, title: file.name});
+        let uri = file.uri;
+        if (file.type === 'video' || file.type === 'audio') {
+          const formated = await formatUri(
+            file.type,
+            file.uri,
+            Math.floor(Math.random() * 412515125).toString(),
+          );
+          if (formated) {
+            const {changed, path} = formated;
+            uri = path;
+            if (changed) {
+              addRemoveFileBeforeSave(path);
+            }
+          }
+        }
+        setIsShowingFile({show: true, uri, title: file.name, type: file.type});
       }
     },
     [data],
   );
 
+  useEffect(() => {
+    if (!isFocused) {
+      if (removeFilesAfterFinish.length !== 0) {
+        for (const file of removeFilesAfterFinish) {
+          RNFS.unlink(file)
+            .then(() => {
+              console.log(`${file} is deleted`);
+            })
+            .catch(e => {});
+        }
+      }
+    }
+  }, [isFocused]);
+
+  const handleRemovePermanently = useCallback(async () => {
+    setHandleRemovePermanentlyBtnDisabled(true);
+    store.dispatch(setRootLoading(true));
+    try {
+      if (!user_id) {
+        setHandleRemovePermanentlyBtnDisabled(false);
+        store.dispatch(setRootLoading(false));
+        return Toast.show({
+          type: 'error',
+          text1: 'cannot create folder, you are not logged in !',
+        });
+      }
+      const response = await axios({
+        method: 'POST',
+        url: `${BaseUrl}/logged-in-user/deleteFilesPermanently`,
+        data: {
+          files_ids: selectedIds,
+          user_id,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        setHandleRemovePermanentlyBtnDisabled(false);
+        store.dispatch(setRootLoading(false));
+        setSelectedIds([]);
+        fetchDeletedFiles();
+        return Toast.show({
+          type: 'success',
+          text1: 'files deleted successfully',
+        });
+      }
+    } catch (e: any) {
+      if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+        setHandleRemovePermanentlyBtnDisabled(false);
+        store.dispatch(setRootLoading(false));
+        return Toast.show({
+          type: 'error',
+          text1: e.response?.data?.message,
+        });
+      }
+      Toast.show({
+        type: 'error',
+        text1: 'something went wrong cannot delete files',
+      });
+    }
+    setHandleRemovePermanentlyBtnDisabled(false);
+    store.dispatch(setRootLoading(false));
+  }, [selectedIds, user_id]);
+
+  const handleRestore = useCallback(async () => {
+    setHandleRestoreBtnDisabled(true);
+    store.dispatch(setRootLoading(true));
+    try {
+      if (!user_id) {
+        setHandleRestoreBtnDisabled(false);
+        store.dispatch(setRootLoading(false));
+        return Toast.show({
+          type: 'error',
+          text1: 'cannot restore files, you are not logged in !',
+        });
+      }
+      const response = await axios({
+        method: 'POST',
+        url: `${BaseUrl}/logged-in-user/restoreFiles`,
+        data: {
+          files_ids: selectedIds,
+          user_id,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        setHandleRestoreBtnDisabled(false);
+        store.dispatch(setRootLoading(false));
+        setSelectedIds([]);
+        fetchDeletedFiles();
+        return Toast.show({
+          type: 'success',
+          text1: 'files restored successfully',
+        });
+      }
+    } catch (e: any) {
+      if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+        setHandleRestoreBtnDisabled(false);
+        store.dispatch(setRootLoading(false));
+        console.log(e.response?.data);
+        return Toast.show({
+          type: 'error',
+          text1: e.response?.data?.message,
+        });
+      }
+      Toast.show({
+        type: 'error',
+        text1: 'something went wrong cannot restore files',
+      });
+    }
+    setHandleRestoreBtnDisabled(false);
+    store.dispatch(setRootLoading(false));
+  }, [user_id, selectedIds]);
+
   return (
-    <LayoutWrapper setPressHandlerRoot={setPressHandler}>
+    <LayoutWrapper
+      setPressHandlerRoot={setPressHandler}
+      onBackPress={() => navigation.navigate('Uploads')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}
-          displayComponent={
-            <Image
-              source={{uri: isShowingFile.uri}}
-              style={{
-                flex: 1,
-              }}
-              resizeMode="contain"
-            />
-          }
+          displayComponent={getDisplayComponent(
+            isShowingFile.type,
+            isShowingFile.uri,
+          )}
           setIsShowingFile={setIsShowingFile}
         />
       ) : (
-        <>
-          <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
-            <View
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginTop: 34,
-                marginBottom: 42,
-                minHeight: 24,
-              }}>
-              {selectedIds.length > 0 && (
-                <>
-                  <AntDesign
-                    name="close"
-                    size={20}
-                    color="#49ACFA"
-                    onPress={uncheckAll}
-                  />
-                  <Text style={{marginLeft: 17, color: 'black', fontSize: 16}}>
-                    {selectedIds.length} Selected
-                  </Text>
-                </>
-              )}
-            </View>
-            {groupByCategory(data).map(
-              ({data: categoryData, name}: {data: any[]; name: string}) => (
-                <SelectableItems
-                  data={categoryData}
-                  handleSelect={handleSelect}
-                  selectedIds={selectedIds}
-                  text={name + 's'}
-                  setSelectedIds={setSelectedIds}
-                  key={name}
-                  setPressHandler={pressHandler}
-                  showFile={name === 'image' ? showImage : undefined}
+        <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
+          <View
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: 34,
+              marginBottom: 42,
+              minHeight: 24,
+            }}>
+            {selectedIds.length > 0 && (
+              <>
+                <AntDesign
+                  name="close"
+                  size={20}
+                  color="#49ACFA"
+                  onPress={uncheckAll}
                 />
-              ),
+                <Text style={{marginLeft: 17, color: 'black', fontSize: 16}}>
+                  {selectedIds.length} Selected
+                </Text>
+              </>
             )}
           </View>
-        </>
+          {groupByCategory(data).map(
+            ({data: categoryData, name}: {data: any[]; name: string}) => (
+              <SelectableItems
+                data={categoryData}
+                handleSelect={handleSelect}
+                selectedIds={selectedIds}
+                text={name + 's'}
+                setSelectedIds={setSelectedIds}
+                key={name}
+                setPressHandler={pressHandler}
+                showFile={showFile}
+              />
+            ),
+          )}
+
+          <View style={styles.uploadContainer}>
+            {selectedIds.length > 0 && (
+              <>
+                <TouchableOpacity
+                  style={{
+                    height: 49,
+                    paddingHorizontal: 20,
+                    marginRight: 10,
+                    backgroundColor: 'white',
+                    borderRadius: 15,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                  disabled={HandleRemovePermanentlyBtnDisabled}
+                  onPress={handleRemovePermanently}>
+                  <Text style={{color: '#49ACFA', fontWeight: '500'}}>
+                    Delete permanently
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    width: 82,
+                    height: 49,
+                    marginRight: 10,
+                    backgroundColor: 'white',
+                    borderRadius: 15,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                  disabled={HandleRestoreBtnDisabled}
+                  onPress={handleRestore}>
+                  <Text style={{color: '#49ACFA', fontWeight: '500'}}>
+                    Restore
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
       )}
     </LayoutWrapper>
   );
 };
+
+const styles = StyleSheet.create({
+  uploadContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#F6F7FB',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingBottom: 11,
+    paddingLeft: 20,
+    paddingRight: 20,
+    paddingTop: 18,
+  },
+});
 
 export default RecycleBin;

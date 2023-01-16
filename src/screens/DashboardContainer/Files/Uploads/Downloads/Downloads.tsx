@@ -7,8 +7,9 @@ import {useCallback, useEffect, useState} from 'react';
 import useGetUploadData from '../LayoutWrapper/getUploadedDataHook';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Toast from 'react-native-toast-message';
+import {useIsFocused} from '@react-navigation/native';
 
-const Downloads = () => {
+const Downloads = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
@@ -19,22 +20,33 @@ const Downloads = () => {
     uri: undefined,
     title: undefined,
   });
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    useGetUploadData('download').then(fetchedData => {
-      setData(fetchedData as any[]);
-      if (fetchedData.length === 0) {
-        return Toast.show({
-          type: 'info',
-          text1: 'no data found',
+    if (isFocused) {
+      useGetUploadData('download')
+        .then(fetchedData => {
+          setData(fetchedData as any[]);
+          if (fetchedData.length === 0) {
+            return Toast.show({
+              type: 'info',
+              text1: 'no data found',
+            });
+          } else {
+            return Toast.show({
+              text1: 'data fetched successfully',
+            });
+          }
+        })
+        .catch(e => {
+          console.log({error: e});
+          Toast.show({
+            type: 'error',
+            text1: 'cannot fetch files',
+          });
         });
-      } else {
-        return Toast.show({
-          text1: 'data fetched successfully',
-        });
-      }
-    });
-  }, []);
+    }
+  }, [isFocused]);
 
   const showFile = useCallback(
     (id: string) => {
@@ -47,7 +59,7 @@ const Downloads = () => {
   );
 
   return (
-    <LayoutWrapper>
+    <LayoutWrapper onBackPress={() => navigation.navigate('Uplaods')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

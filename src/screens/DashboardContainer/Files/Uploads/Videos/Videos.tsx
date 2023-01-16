@@ -34,7 +34,7 @@ export const formatUri = async (
   return {changed: false, path: file};
 };
 
-const Videos = () => {
+const Videos = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
@@ -51,27 +51,37 @@ const Videos = () => {
   const isFocused = useIsFocused();
 
   useEffect(() => {
-    useGetUploadData('video').then(fetchedData => {
-      setData(fetchedData as any[]);
-      if (fetchedData.length === 0) {
-        return Toast.show({
-          type: 'info',
-          text1: 'no data found',
+    if (isFocused) {
+      useGetUploadData('video')
+        .then(fetchedData => {
+          setData(fetchedData as any[]);
+          if (fetchedData.length === 0) {
+            return Toast.show({
+              type: 'info',
+              text1: 'no data found',
+            });
+          } else {
+            return Toast.show({
+              text1: 'data fetched successfully',
+            });
+          }
+        })
+        .catch(e => {
+          console.log({error: e});
+          Toast.show({
+            type: 'error',
+            text1: 'cannot fetch files',
+          });
         });
-      } else {
-        return Toast.show({
-          text1: 'data fetched successfully',
-        });
-      }
-    });
-
-    return async () => {
-      if (removeFilesAfterFinish.length !== 0) {
+    }
+    return () => {
+      if (removeFilesAfterFinish.length !== 0 && !isFocused) {
         for (const file of removeFilesAfterFinish) {
-          try {
-            await RNFS.unlink(file);
-            console.log(`${file} is deleted`);
-          } catch (e) {}
+          RNFS.unlink(file)
+            .then(() => {
+              console.log(`${file} is deleted`);
+            })
+            .catch(e => {});
         }
       }
     };
@@ -86,7 +96,6 @@ const Videos = () => {
           return Toast.show({
             type: 'error',
             text1: `cannot play video ${file.name}`,
-            text2: e.message,
           });
         }
 
@@ -105,7 +114,7 @@ const Videos = () => {
   );
 
   return (
-    <LayoutWrapper>
+    <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

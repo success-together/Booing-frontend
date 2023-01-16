@@ -6,6 +6,7 @@ import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
 import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
 import ManageApps from '../../../../../utils/manageApps';
 import Toast from 'react-native-toast-message';
+import {useIsFocused} from '@react-navigation/native';
 
 const Images = ({navigation}: {navigation: any}) => {
   const [data, setData] = useState<any[]>([]);
@@ -18,22 +19,33 @@ const Images = ({navigation}: {navigation: any}) => {
     uri: undefined,
     title: undefined,
   });
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    useGetUploadData('image').then(fetchedData => {
-      setData(fetchedData as any[]);
-      if (fetchedData.length === 0) {
-        return Toast.show({
-          type: 'info',
-          text1: 'no data found',
+    if (isFocused) {
+      useGetUploadData('image')
+        .then(fetchedData => {
+          setData(fetchedData as any[]);
+          if (fetchedData.length === 0) {
+            return Toast.show({
+              type: 'info',
+              text1: 'no data found',
+            });
+          } else {
+            return Toast.show({
+              text1: 'data fetched successfully',
+            });
+          }
+        })
+        .catch(e => {
+          console.log({error: e});
+          Toast.show({
+            type: 'error',
+            text1: 'cannot fetch files',
+          });
         });
-      } else {
-        return Toast.show({
-          text1: 'data fetched successfully',
-        });
-      }
-    });
-  }, []);
+    }
+  }, [isFocused]);
 
   const showFile = useCallback(
     (id: string) => {
@@ -46,7 +58,7 @@ const Images = ({navigation}: {navigation: any}) => {
   );
 
   return (
-    <LayoutWrapper>
+    <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

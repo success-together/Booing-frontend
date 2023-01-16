@@ -59,7 +59,7 @@ const Uploads = ({navigation}: {navigation: any}) => {
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
-        <FilesHeader />
+        <FilesHeader onBackPress={() => navigation.navigate('Files')} />
       </View>
       <ScrollView style={styles.scrollView}>
         <View style={styles.TopBody}>

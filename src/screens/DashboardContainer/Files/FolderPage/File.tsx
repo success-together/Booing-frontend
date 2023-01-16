@@ -6,6 +6,8 @@ export interface FileProps {
   id: string;
   name: string;
   createdAt: Date;
+  type: string | null;
+  isDirectory: boolean;
 }
 
 const formatDate = (date: Date): string => {

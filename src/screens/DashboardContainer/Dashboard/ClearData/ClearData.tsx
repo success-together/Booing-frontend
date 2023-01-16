@@ -9,6 +9,9 @@ import {nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {ScrollView} from 'react-native';
 import {Bar} from 'react-native-progress';
+import {useIsFocused} from '@react-navigation/native';
+import {store} from '../../../../shared';
+import {setRootLoading} from '../../../../shared/slices/rootSlice';
 
 export const Progress = ({progress, text}: any) => {
   return (
@@ -55,8 +58,10 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
     progress: 0,
   });
 
+  const isFocused = useIsFocused();
+
   const addId = (arr: []) => {
-    arr.forEach(e => Object.assign(e, {id: nanoid(10)}));
+    arr.forEach(e => ((e as any).id = nanoid(20)));
     return arr;
   };
 
@@ -77,6 +82,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
 
   const scanUserStorage = useCallback(async () => {
     try {
+      store.dispatch(setRootLoading(false));
       setShowModal({show: true, loading: true});
       setProgressProps(prev => ({...prev, text: 'fetching images ...'}));
       setImages(addId(await ManageApps.getImages()));
@@ -86,7 +92,9 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       setMusic(addId(await ManageApps.getAudios()));
       setApps(addId(await ManageApps.getAllInstalledApps()));
       setProgressProps({text: 'fetching junk files ...', progress: 0.75});
-      const {thumbnails, emptyFolders} = await ManageApps.getJunkData();
+      const {thumbnails, emptyFolders, notInstalledApps} =
+        await ManageApps.getJunkData();
+
       setThumbnails(addId(thumbnails));
       setEmptyFolders(addId(emptyFolders));
       setProgressProps({text: 'done !', progress: 1});
@@ -153,6 +161,13 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         break;
     }
   };
+
+  useEffect(() => {
+    if (isFocused) {
+      setProgressProps({text: '', progress: 0});
+      scanUserStorage();
+    }
+  }, [isFocused]);
 
   return (
     <View style={styles.container}>

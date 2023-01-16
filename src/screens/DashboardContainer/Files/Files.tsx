@@ -24,6 +24,7 @@ import axios from 'axios';
 import CheckBox from '../../../Components/CheckBox/CheckBox';
 import Folder, {FolderProps} from './FolderPage/Folder';
 import {setRootLoading} from '../../../shared/slices/rootSlice';
+import {useIsFocused} from '@react-navigation/native';
 
 export const FolderIcon = (props: SvgProps) => {
   return (
@@ -60,20 +61,19 @@ export const FileIcon = (props: SvgProps) => {
 interface MultipleSelectListProps {
   data: {id: string; label: string; isDirectory: boolean}[];
   label: string;
-  onSelect?: (newSelectedFiles: MultipleSelectListProps['data']) => void;
+  onSelect?: (newSelectedFiles: string[]) => void;
 }
 
 const SelectItem = ({
   id,
   label,
   isDirectory,
-}: MultipleSelectListProps['data']['0']) => {
-  const [isChecked, setIsChecked] = useState(false);
-
-  const handleCheck = useCallback(() => {
-    setIsChecked(prev => !prev);
-  }, [setIsChecked]);
-
+  handleSelect,
+  checked,
+}: MultipleSelectListProps['data']['0'] & {
+  handleSelect: () => void;
+  checked: boolean;
+}) => {
   return (
     <TouchableOpacity
       key={id}
@@ -85,8 +85,8 @@ const SelectItem = ({
         flexDirection: 'row',
         alignItems: 'center',
       }}
-      onPress={handleCheck}>
-      <CheckBox checked={isChecked} handleCheck={handleCheck} />
+      onPress={handleSelect}>
+      <CheckBox checked={checked} handleCheck={handleSelect} />
       <View style={{marginLeft: 10}} />
       {isDirectory ? <FolderIcon /> : <FileIcon />}
       <Text style={{marginLeft: 10}}>{label}</Text>
@@ -100,6 +100,7 @@ export const MultipleSelectList = ({
   onSelect,
 }: MultipleSelectListProps) => {
   const [items, setItems] = useState(data);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
@@ -108,17 +109,16 @@ export const MultipleSelectList = ({
 
   useEffect(() => {
     if (onSelect) {
-      onSelect(items);
+      onSelect(selectedItems);
     }
-  }, [items]);
+  }, [selectedItems]);
 
   const filterItems = useCallback(
     (val: string) => {
       setSearchText(val);
 
       if (val === '') {
-        setItems(data);
-        return;
+        return setItems(data);
       }
 
       setItems(prev =>
@@ -128,6 +128,14 @@ export const MultipleSelectList = ({
       );
     },
     [setSearchText],
+  );
+
+  const handleSelect = useCallback(
+    (id: string) => () =>
+      setSelectedItems(prev =>
+        prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id],
+      ),
+    [],
   );
 
   return (
@@ -155,7 +163,12 @@ export const MultipleSelectList = ({
         }}
         showsVerticalScrollIndicator={false}>
         {items.map(item => (
-          <SelectItem {...item} key={item.id} />
+          <SelectItem
+            handleSelect={handleSelect(item.id)}
+            checked={selectedItems.includes(item.id)}
+            {...item}
+            key={item.id}
+          />
         ))}
       </ScrollView>
     </View>
@@ -163,66 +176,14 @@ export const MultipleSelectList = ({
 };
 
 const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
-  const [selectedFiles, setSelectedFiles] = useState<
-    {id: string; label: string; isDirectory: boolean}[]
-  >([]);
-  const [files, setFiles] = useState([]);
   const [name, setName] = useState('');
   const user_id = store.getState().authentication.userId;
-
-  useEffect(() => {
-    (async () => {
-      try {
-        if (!user_id) {
-          return Toast.show({
-            type: 'error',
-            text1: 'cannot create folder, you are not logged in !',
-          });
-        }
-
-        store.dispatch(setRootLoading(true));
-
-        const response = await axios({
-          method: 'POST',
-          url: `${BaseUrl}/logged-in-user/getMyFiles`,
-          headers: {
-            Accept: 'application/json',
-            'Content-type': 'application/json',
-          },
-          data: {
-            user_id,
-          },
-        });
-
-        if (response.status === 200) {
-          const data = response.data.data;
-          setFiles(
-            data.map(({id, name, isDirectory}: any) => ({
-              id,
-              label: name,
-              isDirectory,
-            })),
-          );
-        }
-      } catch (e: any) {
-        if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
-          return Toast.show({
-            type: 'error',
-            text1: e.response?.data?.message,
-          });
-        }
-        Toast.show({
-          type: 'error',
-          text1: 'something went wrong cannot get folder',
-        });
-      } finally {
-        store.dispatch(setRootLoading(false));
-      }
-    })();
-  }, [user_id]);
+  const [createFolderDisabled, setCreateFolderDisabled] = useState(false);
 
   const submitHandler = useCallback(async () => {
+    setCreateFolderDisabled(true);
     if (name.trim() === '') {
+      setCreateFolderDisabled(false);
       return Toast.show({
         type: 'error',
         text1: 'invalid folder name',
@@ -230,6 +191,7 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
     }
 
     if (!user_id) {
+      setCreateFolderDisabled(false);
       return Toast.show({
         type: 'error',
         text1: 'cannot create folder, you are not logged in !',
@@ -247,12 +209,12 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         data: {
           user_id,
           name,
-          filesIds: selectedFiles.map(({id}) => id),
         },
       });
 
       if (response.status === 200) {
         closeModel(true);
+        setCreateFolderDisabled(false);
         return Toast.show({
           text1: response.data.message,
         });
@@ -268,8 +230,10 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         type: 'error',
         text1: 'something went wrong cannot get folder',
       });
+    } finally {
+      setCreateFolderDisabled(false);
     }
-  }, [name, user_id, axios, Toast]);
+  }, [name, user_id]);
 
   const cancelHandler = useCallback(() => {
     closeModel();
@@ -298,14 +262,6 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         }}
         placeholderTextColor="#716D6D"
       />
-      <Text style={{marginBottom: 10, color: 'black', fontWeight: '500'}}>
-        select files or folders you want to put inside :
-      </Text>
-      <MultipleSelectList
-        data={files}
-        label="search file/folder name"
-        onSelect={newSelectedFiles => setSelectedFiles(newSelectedFiles)}
-      />
       <View
         style={{
           flexDirection: 'row',
@@ -324,7 +280,8 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
               height: 40,
               paddingHorizontal: 20,
             }}
-            onPress={submitHandler}>
+            onPress={submitHandler}
+            disabled={createFolderDisabled}>
             <Text style={{color: 'white'}}>Create</Text>
           </Pressable>
         </LinearGradient>
@@ -353,10 +310,14 @@ const Files = ({navigation}: {navigation: any}) => {
   const [folders, setFolders] = useState([]);
   const [isCreatedFolderShown, setIsCreateFolderShown] = useState(false);
   const user_id = store.getState().authentication.userId;
+  const isFocused = useIsFocused();
 
   const fetchFolders = useCallback(async () => {
     if (!user_id) {
-      return;
+      return Toast.show({
+        type: 'error',
+        text1: 'cannot get folders, you are not logged in !',
+      });
     }
 
     try {
@@ -375,7 +336,6 @@ const Files = ({navigation}: {navigation: any}) => {
 
       if (response.status === 200) {
         const data = response.data.data;
-        console.log({data});
         setFolders(data);
       }
     } catch (e: any) {
@@ -395,8 +355,10 @@ const Files = ({navigation}: {navigation: any}) => {
   }, [user_id]);
 
   useEffect(() => {
-    fetchFolders();
-  }, [user_id]);
+    if (isFocused) {
+      fetchFolders();
+    }
+  }, [user_id, isFocused]);
 
   const showCreateFolder = useCallback(() => {
     setIsCreateFolderShown(true);
@@ -411,7 +373,13 @@ const Files = ({navigation}: {navigation: any}) => {
 
   const navigateToFolder = useCallback(
     (id: string) => () => {
-      navigation.navigate('Folder', {id});
+      navigation.navigate({
+        name: 'Folder',
+        params: {
+          id,
+          historyStack: [id],
+        },
+      });
     },
     [],
   );
@@ -419,7 +387,7 @@ const Files = ({navigation}: {navigation: any}) => {
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
-        <FilesHeader />
+        <FilesHeader onBackPress={() => navigation.navigate('Dashboard')} />
       </View>
       <View style={styles.body}>
         <View style={styles.recentFilesContainer}>
@@ -479,6 +447,7 @@ const Files = ({navigation}: {navigation: any}) => {
                 {...folderProps}
                 showFolder={navigateToFolder(folderProps.id)}
                 key={folderProps.id}
+                reload={() => fetchFolders()}
               />
             ))
           )}
