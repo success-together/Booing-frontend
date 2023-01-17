@@ -15,6 +15,7 @@ import SelectableItems from './SelectableItems';
 import Toast from 'react-native-toast-message';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import NoDataFound from '../../../../../Components/NoDataFound/NoDataFound';
+import {setRootLoading} from '../../../../../shared/slices/rootSlice';
 
 const isToday = (date: Date) => {
   const today = new Date();
@@ -155,6 +156,7 @@ const SelectableUploadWrapper = ({
             hasTriedToUpload: false,
             isImage: isImageWrapper,
             id: Math.floor(Math.random() * 9999).toString(), // change this later
+            createdAt: new Date(),
           };
 
           if (
@@ -173,7 +175,7 @@ const SelectableUploadWrapper = ({
           }
 
           if (fileDesc.size >= MAX_SIZE) {
-            // 25mb
+            // 16mb
             setIsUploadButtonDisabled(false);
             return Toast.show({
               type: 'info',
@@ -250,6 +252,7 @@ const SelectableUploadWrapper = ({
   }, [pickItemsFn, data, user_id, uploadFiles]);
 
   const handleDelete = useCallback(async () => {
+    store.dispatch(setRootLoading(true));
     try {
       const response = await axios({
         method: 'POST',
@@ -269,11 +272,13 @@ const SelectableUploadWrapper = ({
           setSelectedIds([]);
           return newData;
         });
+        store.dispatch(setRootLoading(false));
         Toast.show({
           text1: 'files deleted successfully !',
         });
       }
     } catch (e: any) {
+      store.dispatch(setRootLoading(false));
       console.log('error');
       Toast.show({
         type: 'error',
@@ -281,6 +286,7 @@ const SelectableUploadWrapper = ({
         text2: e.message,
       });
     }
+    store.dispatch(setRootLoading(false));
   }, [data, selectedIds]);
 
   return (
@@ -311,18 +317,20 @@ const SelectableUploadWrapper = ({
       {data.length === 0 ? (
         <NoDataFound />
       ) : (
-        groupByDateUploaded(data).map((group, index) => (
-          <SelectableItems
-            key={index}
-            data={group.items}
-            handleSelect={handleSelect}
-            selectedIds={selectedIds}
-            setSelectedIds={setSelectedIds}
-            text={group.label}
-            showFile={showFile}
-            setPressHandler={setPressHandler}
-          />
-        ))
+        groupByDateUploaded(data).map((group, index) => {
+          return (
+            <SelectableItems
+              key={index}
+              data={group.items}
+              handleSelect={handleSelect}
+              selectedIds={selectedIds}
+              setSelectedIds={setSelectedIds}
+              text={group.label}
+              showFile={showFile}
+              setPressHandler={setPressHandler}
+            />
+          );
+        })
       )}
       <View style={styles.uploadContainer}>
         {selectedIds.length > 0 && (

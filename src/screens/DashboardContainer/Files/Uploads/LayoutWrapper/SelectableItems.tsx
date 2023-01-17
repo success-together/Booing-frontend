@@ -34,6 +34,10 @@ const SelectableItems = ({
   const listWrapperRef = useRef() as MutableRefObject<TouchableWithoutFeedback>;
   useOutsideAlerter(listWrapperRef, setPressHandler, setIsSelecting);
 
+  useEffect(() => {
+    console.log(data.length);
+  }, [data]);
+
   const handlePress = useCallback(
     (id: string) => () => {
       if (isSelecting) {

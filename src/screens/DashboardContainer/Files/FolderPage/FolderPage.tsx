@@ -331,10 +331,8 @@ const FolderPage = ({navigation, route}: any) => {
   const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
   const [isAddingFolders, setIsAddingFolders] = useState(false);
   const [isUploadButtonDisabled, setIsUploadButtonDisabled] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({
-    progress: 0,
-    show: false,
-  });
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
   const user_id = store.getState().authentication.userId;
 
   useEffect(() => {
@@ -463,12 +461,8 @@ const FolderPage = ({navigation, route}: any) => {
           });
         }
 
-        setUploadProgress(prev => ({...prev, show: true}));
-        const response = await uploadFiles(body, user_id, newProgress => {
-          setUploadProgress(prev => ({...prev, progress: newProgress}));
-        });
+        const response = await uploadFiles(body, user_id, newProgress => {});
         if (response.status === 200) {
-          console.log({data: response.data.data});
           const files_ids = response.data.data.map(({id}: any) => id);
           if (
             !files_ids ||
@@ -477,7 +471,6 @@ const FolderPage = ({navigation, route}: any) => {
           ) {
             setIsUploadButtonDisabled(false);
             store.dispatch(setRootLoading(false));
-            setUploadProgress({progress: 0, show: false});
             return Toast.show({
               type: 'error',
               text1: 'something went wrong, failed to upload file',
@@ -499,7 +492,6 @@ const FolderPage = ({navigation, route}: any) => {
           if (addFileToFolderResponse.status === 200) {
             setIsUploadButtonDisabled(false);
             store.dispatch(setRootLoading(false));
-            setUploadProgress({progress: 0, show: false});
             Toast.show({
               type: 'success',
               text1: 'files uploaded successfully',
@@ -512,7 +504,6 @@ const FolderPage = ({navigation, route}: any) => {
       if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
         setIsUploadButtonDisabled(false);
         store.dispatch(setRootLoading(false));
-        setUploadProgress({progress: 0, show: false});
         return Toast.show({
           type: 'error',
           text1: e.response?.data?.message,
@@ -524,10 +515,45 @@ const FolderPage = ({navigation, route}: any) => {
         text1: 'something went wrong cannot uplaod files',
       });
     }
-    setUploadProgress({progress: 0, show: false});
+
     setIsUploadButtonDisabled(false);
     store.dispatch(setRootLoading(false));
   }, [user_id, folderData, showFolder]);
+
+  const handleDelete = useCallback(async () => {
+    store.dispatch(setRootLoading(true));
+    try {
+      const response = await axios({
+        method: 'POST',
+        url: `${BaseUrl}/logged-in-user/deleteFiles`,
+        data: {
+          files_id: selectedIds,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        showFolder(folderData.id);
+        setSelectedIds([]);
+        store.dispatch(setRootLoading(false));
+        Toast.show({
+          text1: 'files deleted successfully !',
+        });
+      }
+    } catch (e: any) {
+      store.dispatch(setRootLoading(false));
+      console.log('error');
+      Toast.show({
+        type: 'error',
+        text1: 'there was an error in delete files',
+        text2: e.message,
+      });
+    }
+    store.dispatch(setRootLoading(false));
+  }, [folderData, selectedIds]);
 
   return (
     <View style={{flexDirection: 'column', flex: 1}}>
@@ -658,34 +684,23 @@ const FolderPage = ({navigation, route}: any) => {
           />
         </Dialog>
       )}
-      {uploadProgress.show && (
-        <Dialog isVisible={true}>
-          <View
+      <View style={styles.uploadContainer}>
+        {selectedIds.length > 0 && (
+          <TouchableOpacity
             style={{
-              width: '100%',
+              width: 82,
+              height: 49,
+              marginRight: 10,
+              backgroundColor: 'white',
+              borderRadius: 15,
+              display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-            }}>
-            {uploadProgress.progress !== 1 ? (
-              <Circle progress={uploadProgress.progress} size={50} />
-            ) : (
-              <>
-                <Text
-                  style={{
-                    color: 'black',
-                    fontSize: 12,
-                    fontWeight: '500',
-                    marginBottom: 10,
-                  }}>
-                  fragmentation ...
-                </Text>
-                <Circle indeterminate={true} size={50} />
-              </>
-            )}
-          </View>
-        </Dialog>
-      )}
-      <View style={styles.uploadContainer}>
+            }}
+            onPress={handleDelete}>
+            <Text style={{color: '#49ACFA', fontWeight: '500'}}>Delete</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={{
             width: 82,
