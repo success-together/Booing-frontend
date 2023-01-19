@@ -5,9 +5,9 @@ import {FileIcon} from '../Files';
 export interface FileProps {
   id: string;
   name: string;
-  createdAt: Date;
   type: string | null;
-  isDirectory: boolean;
+  isDirectory: false;
+  createdAt: Date;
 }
 
 const formatDate = (date: Date): string => {

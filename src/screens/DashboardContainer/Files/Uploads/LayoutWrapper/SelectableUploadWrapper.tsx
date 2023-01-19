@@ -47,13 +47,15 @@ const groupByDateUploaded = (data: {createdAt: string}[]) => {
           exist.items.push(elem);
         } else {
           acc.push({label: 'Today', items: [elem]});
+          return acc;
         }
       } else if (isYesterday(itemUploadDate)) {
-        const exist = acc.find(e => e.label === 'Today');
+        const exist = acc.find(e => e.label === 'Yesterday');
         if (exist) {
           exist.items.push(elem);
         } else {
           acc.push({label: 'Yesterday', items: [elem]});
+          return acc;
         }
       } else {
         const dateString = itemUploadDate.toDateString();
@@ -62,6 +64,7 @@ const groupByDateUploaded = (data: {createdAt: string}[]) => {
           exist.items.push(elem);
         } else {
           acc.push({label: dateString, items: [elem]});
+          return acc;
         }
       }
 
@@ -289,6 +292,12 @@ const SelectableUploadWrapper = ({
     store.dispatch(setRootLoading(false));
   }, [data, selectedIds]);
 
+  console.log({
+    groups: groupByDateUploaded(data).forEach(group =>
+      console.log({label: group.label, items: group.items.length}),
+    ),
+  });
+
   return (
     <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
       <View
@@ -314,24 +323,26 @@ const SelectableUploadWrapper = ({
           </>
         )}
       </View>
-      {data.length === 0 ? (
-        <NoDataFound />
-      ) : (
-        groupByDateUploaded(data).map((group, index) => {
-          return (
-            <SelectableItems
-              key={index}
-              data={group.items}
-              handleSelect={handleSelect}
-              selectedIds={selectedIds}
-              setSelectedIds={setSelectedIds}
-              text={group.label}
-              showFile={showFile}
-              setPressHandler={setPressHandler}
-            />
-          );
-        })
-      )}
+      <ScrollView showsVerticalScrollIndicator={false} style={{flex: 1}}>
+        {data.length === 0 ? (
+          <NoDataFound />
+        ) : (
+          groupByDateUploaded(data).map((group, index) => {
+            return (
+              <SelectableItems
+                key={index}
+                data={group.items}
+                handleSelect={handleSelect}
+                selectedIds={selectedIds}
+                setSelectedIds={setSelectedIds}
+                text={group.label}
+                showFile={showFile}
+                setPressHandler={setPressHandler}
+              />
+            );
+          })
+        )}
+      </ScrollView>
       <View style={styles.uploadContainer}>
         {selectedIds.length > 0 && (
           <TouchableOpacity
@@ -370,10 +381,6 @@ const SelectableUploadWrapper = ({
 
 const styles = StyleSheet.create({
   uploadContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: '#F6F7FB',
     display: 'flex',
     justifyContent: 'flex-end',

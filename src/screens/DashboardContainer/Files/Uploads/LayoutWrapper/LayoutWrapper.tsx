@@ -17,6 +17,7 @@ import {
   Text,
   TextInput,
   TouchableHighlight,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import {Logo} from '../../../../../images/export';
@@ -26,11 +27,14 @@ import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 interface LayoutWrapperProps {
+  onBackPress: () => void;
   children?: ReactNode;
   setPressHandlerRoot?: (
     fn: Dispatch<SetStateAction<(() => void) | undefined>>,
   ) => void;
-  onBackPress: () => void;
+  title?: string;
+  onHeaderDotsPress?: () => void;
+  headerMenuContent?: ReactNode;
 }
 
 interface RefWithPressHandler extends MutableRefObject<TouchableHighlight> {
@@ -41,9 +45,13 @@ export default function LayoutWrapper({
   children,
   setPressHandlerRoot,
   onBackPress,
+  onHeaderDotsPress,
+  headerMenuContent,
+  title = 'MY FILES',
 }: LayoutWrapperProps) {
   const rootRef = useRef() as RefWithPressHandler;
   const [pressHandler, setPressHandler] = useState<() => void>();
+  const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 
   let clonedChildren = children;
   if (clonedChildren) {
@@ -90,7 +98,7 @@ export default function LayoutWrapper({
               style={{width: 52, height: 35, position: 'absolute', left: 0}}
             />
             <Text style={{color: 'white', fontSize: 20, fontWeight: 'bold'}}>
-              MY FILES
+              {title}
             </Text>
           </View>
           <View
@@ -129,11 +137,42 @@ export default function LayoutWrapper({
                 placeholderTextColor={'#9190A8'}
               />
             </View>
-            <Image
-              source={threeVerticleDots}
-              resizeMode={'contain'}
-              style={{width: 10, height: 20, tintColor: 'white'}}
-            />
+            <View style={{position: 'relative'}}>
+              <TouchableOpacity
+                onPress={() => setIsHeaderMenuOpen(prev => !prev)}>
+                <Image
+                  source={threeVerticleDots}
+                  resizeMode={'contain'}
+                  style={{
+                    width: 10,
+                    height: 20,
+                    tintColor: 'white',
+                    marginLeft: 26,
+                  }}
+                />
+              </TouchableOpacity>
+              {isHeaderMenuOpen && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    minWidth: 100,
+                    right: 0,
+                    top: '60%',
+                    zIndex: 9999,
+                    backgroundColor: 'white',
+                    borderRadius: 10,
+                    elevation: 2,
+                    padding: 10,
+                  }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      onHeaderDotsPress && onHeaderDotsPress();
+                    }}>
+                    {headerMenuContent}
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           </View>
         </LinearGradient>
         <View style={{flex: 1, backgroundColor: '#F6F7FB'}}>

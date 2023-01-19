@@ -129,6 +129,11 @@ export const extractExtension = (str: string) => {
   return index !== -1 ? str.slice(index + 1) : null;
 };
 
+let refHandlers: {
+  ref: MutableRefObject<any>;
+  handleClickOutside: (e: GestureResponderEvent) => void;
+}[] = [];
+
 export function useOutsideAlerter(
   ref: MutableRefObject<any>,
   setPressHandler?: (arg?: (e: GestureResponderEvent) => void) => void,
@@ -144,8 +149,15 @@ export function useOutsideAlerter(
         setIsSelecting(false);
       }
     }
+
+    if (!refHandlers.find(e => e.ref === ref)) {
+      refHandlers.push({ref, handleClickOutside});
+    }
     if (setPressHandler) {
-      setPressHandler(() => handleClickOutside);
+      const globalHandler = (event: GestureResponderEvent) => {
+        refHandlers.forEach(e => e.handleClickOutside(event));
+      };
+      setPressHandler(() => globalHandler);
     }
 
     return () => {
