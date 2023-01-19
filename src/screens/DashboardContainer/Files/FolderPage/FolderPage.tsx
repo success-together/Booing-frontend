@@ -1,6 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,71 +9,260 @@ import {
   View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {small_logo, threeVerticleDots} from '../../../../images/export';
-import Feather from 'react-native-vector-icons/Feather';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import {AXIOS_ERROR, BaseUrl, MAX_SIZE, store} from '../../../../shared';
 import Toast from 'react-native-toast-message';
 import Folder, {FolderProps} from './Folder';
-import File, {FileProps} from './File';
+import {FileProps} from './File';
 import NoDataFound from '../../../../Components/NoDataFound/NoDataFound';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {useIsFocused} from '@react-navigation/native';
-import {MultipleSelectList} from '../Files';
 import {Dialog} from 'react-native-elements';
 import ManageApps from '../../../../utils/manageApps';
 import {uploadFiles} from '../../../../shared/slices/Fragmentation/FragmentationService';
-import {Circle} from 'react-native-progress';
+import SelectableItems from '../Uploads/LayoutWrapper/SelectableItems';
+import LayoutWrapper from '../Uploads/LayoutWrapper/LayoutWrapper';
+import {formatUri} from '../Uploads/Videos/Videos';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import ShowFileWrapper from '../Uploads/LayoutWrapper/ShowFileWrapper';
+import {getDisplayComponent} from '../RecycleBin/RecycleBin';
+import RNFS from 'react-native-fs';
 
-const AddFiles = ({handleHide, reload, id}: any) => {
-  const [files, setFiles] = useState([]);
-  const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
-  const [submitDisabled, setSubmitDisabled] = useState(false);
+// const AddFiles = ({handleHide, reload, id}: any) => {
+//   const [files, setFiles] = useState([]);
+//   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
+//   const [submitDisabled, setSubmitDisabled] = useState(false);
+//   const user_id = store.getState().authentication.userId;
+//   const isFocused = useIsFocused();
+
+//   const addFilesHandler = useCallback(async () => {
+//     setSubmitDisabled(true);
+//     store.dispatch(setRootLoading(true));
+//     try {
+//       if (!user_id) {
+//         setSubmitDisabled(false);
+//         store.dispatch(setRootLoading(false));
+//         handleHide();
+//         return Toast.show({
+//           type: 'error',
+//           text1: 'cannot add files, you are not logged in !',
+//         });
+//       }
+//       const response = await axios({
+//         method: 'POST',
+//         url: `${BaseUrl}/logged-in-user/addFilesToDirectory/${id}`,
+//         data: {
+//           files_ids: selectedFilesIds,
+//           user_id,
+//         },
+//         headers: {
+//           'Content-Type': 'application/json',
+//           Accept: 'application/json',
+//         },
+//       });
+
+//       if (response.status === 200) {
+//         setSubmitDisabled(false);
+//         store.dispatch(setRootLoading(false));
+//         handleHide();
+//         Toast.show({
+//           type: 'success',
+//           text1: 'files added successfully',
+//         });
+//         return reload();
+//       }
+//     } catch (e: any) {
+//       if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+//         setSubmitDisabled(false);
+//         store.dispatch(setRootLoading(false));
+//         handleHide();
+//         return Toast.show({
+//           type: 'error',
+//           text1: e.response?.data?.message,
+//         });
+//       }
+//       Toast.show({
+//         type: 'error',
+//         text1: 'something went wrong cannot add files',
+//       });
+//     }
+//     handleHide();
+//     setSubmitDisabled(false);
+//     store.dispatch(setRootLoading(false));
+//   }, [user_id, selectedFilesIds, handleHide, reload, id]);
+
+//   useEffect(() => {
+//     if (isFocused) {
+//       (async () => {
+//         try {
+//           if (!user_id) {
+//             return Toast.show({
+//               type: 'error',
+//               text1: 'cannot get files to add, you are not logged in !',
+//             });
+//           }
+
+//           store.dispatch(setRootLoading(true));
+
+//           const response = await axios({
+//             method: 'POST',
+//             url: `${BaseUrl}/logged-in-user/getMyFiles`,
+//             headers: {
+//               Accept: 'application/json',
+//               'Content-type': 'application/json',
+//             },
+//             data: {
+//               user_id,
+//             },
+//           });
+
+//           if (response.status === 200) {
+//             const data = response.data.data;
+//             setFiles(
+//               data
+//                 .filter((item: any) => item.id !== id)
+//                 .map(({id, name, isDirectory}: any) => ({
+//                   id,
+//                   label: name,
+//                   isDirectory,
+//                 })),
+//             );
+//           }
+//         } catch (e: any) {
+//           if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+//             return Toast.show({
+//               type: 'error',
+//               text1: e.response?.data?.message,
+//             });
+//           }
+//           Toast.show({
+//             type: 'error',
+//             text1: 'something went wrong cannot get files to add',
+//           });
+//         } finally {
+//           store.dispatch(setRootLoading(false));
+//         }
+//       })();
+//     }
+//   }, [user_id, isFocused]);
+
+//   return (
+//     <View>
+//       <Text style={{marginBottom: 10, color: 'black', fontWeight: '500'}}>
+//         Select files or folders you want to put inside :
+//       </Text>
+//       <MultipleSelectList
+//         data={files}
+//         label="search file/folder name"
+//         onSelect={newSelectedFilesIds =>
+//           setSelectedFilesIds(newSelectedFilesIds)
+//         }
+//       />
+//       <View
+//         style={{
+//           flexDirection: 'row',
+//           justifyContent: 'center',
+//           height: 40,
+//           marginTop: 10,
+//         }}>
+//         <LinearGradient
+//           colors={['#33A1F9', '#6DBDFE']}
+//           style={{borderRadius: 8}}>
+//           <Pressable
+//             style={{
+//               display: 'flex',
+//               justifyContent: 'center',
+//               flexDirection: 'row',
+//               alignItems: 'center',
+//               padding: 10,
+//             }}
+//             onPress={addFilesHandler}
+//             disabled={submitDisabled}>
+//             <Text style={{color: 'white'}}>Add</Text>
+//           </Pressable>
+//         </LinearGradient>
+//         <LinearGradient
+//           colors={['#33A1F9', '#6DBDFE']}
+//           style={{
+//             borderRadius: 8,
+//             marginLeft: 10,
+//           }}>
+//           <Pressable
+//             style={{
+//               display: 'flex',
+//               justifyContent: 'center',
+//               flexDirection: 'row',
+//               alignItems: 'center',
+//               padding: 10,
+//             }}
+//             onPress={handleHide}>
+//             <Text style={{color: 'white'}}>Cancel</Text>
+//           </Pressable>
+//         </LinearGradient>
+//       </View>
+//     </View>
+//   );
+// };
+
+const CreateFolder = ({
+  id,
+  reload,
+  handleHide,
+}: {
+  handleHide: () => void;
+  id: string;
+  reload: () => void;
+}) => {
+  const [name, setName] = useState('');
   const user_id = store.getState().authentication.userId;
-  const isFocused = useIsFocused();
+  const [createFolderDisabled, setCreateFolderDisabled] = useState(false);
 
-  const addFilesHandler = useCallback(async () => {
-    setSubmitDisabled(true);
-    store.dispatch(setRootLoading(true));
+  const submitHandler = useCallback(async () => {
+    setCreateFolderDisabled(true);
+    if (name.trim() === '') {
+      setCreateFolderDisabled(false);
+      return Toast.show({
+        type: 'error',
+        text1: 'invalid folder name',
+      });
+    }
+
+    if (!user_id) {
+      setCreateFolderDisabled(false);
+      return Toast.show({
+        type: 'error',
+        text1: 'cannot create folder, you are not logged in !',
+      });
+    }
+
     try {
-      if (!user_id) {
-        setSubmitDisabled(false);
-        store.dispatch(setRootLoading(false));
-        handleHide();
-        return Toast.show({
-          type: 'error',
-          text1: 'cannot add files, you are not logged in !',
-        });
-      }
       const response = await axios({
         method: 'POST',
-        url: `${BaseUrl}/logged-in-user/addFilesToDirectory/${id}`,
-        data: {
-          files_ids: selectedFilesIds,
-          user_id,
-        },
+        url: `${BaseUrl}/logged-in-user/directory`,
         headers: {
-          'Content-Type': 'application/json',
           Accept: 'application/json',
+          'Content-type': 'application/json',
+        },
+        data: {
+          user_id,
+          name,
+          dir: id,
         },
       });
 
       if (response.status === 200) {
-        setSubmitDisabled(false);
-        store.dispatch(setRootLoading(false));
         handleHide();
+        setCreateFolderDisabled(false);
         Toast.show({
-          type: 'success',
-          text1: 'files added successfully',
+          text1: response.data.message,
         });
+
         return reload();
       }
     } catch (e: any) {
+      handleHide();
+      setCreateFolderDisabled(false);
       if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
-        setSubmitDisabled(false);
-        store.dispatch(setRootLoading(false));
-        handleHide();
         return Toast.show({
           type: 'error',
           text1: e.response?.data?.message,
@@ -82,88 +270,64 @@ const AddFiles = ({handleHide, reload, id}: any) => {
       }
       Toast.show({
         type: 'error',
-        text1: 'something went wrong cannot add files',
+        text1: 'something went wrong cannot get folder',
       });
+    } finally {
+      handleHide();
+      setCreateFolderDisabled(false);
     }
+  }, [name, user_id]);
+
+  const cancelHandler = useCallback(() => {
     handleHide();
-    setSubmitDisabled(false);
-    store.dispatch(setRootLoading(false));
-  }, [user_id, selectedFilesIds, handleHide, reload, id]);
-
-  useEffect(() => {
-    if (isFocused) {
-      (async () => {
-        try {
-          if (!user_id) {
-            return Toast.show({
-              type: 'error',
-              text1: 'cannot get files to add, you are not logged in !',
-            });
-          }
-
-          store.dispatch(setRootLoading(true));
-
-          const response = await axios({
-            method: 'POST',
-            url: `${BaseUrl}/logged-in-user/getMyFiles`,
-            headers: {
-              Accept: 'application/json',
-              'Content-type': 'application/json',
-            },
-            data: {
-              user_id,
-            },
-          });
-
-          if (response.status === 200) {
-            const data = response.data.data;
-            setFiles(
-              data
-                .filter((item: any) => item.id !== id)
-                .map(({id, name, isDirectory}: any) => ({
-                  id,
-                  label: name,
-                  isDirectory,
-                })),
-            );
-          }
-        } catch (e: any) {
-          if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
-            return Toast.show({
-              type: 'error',
-              text1: e.response?.data?.message,
-            });
-          }
-          Toast.show({
-            type: 'error',
-            text1: 'something went wrong cannot get files to add',
-          });
-        } finally {
-          store.dispatch(setRootLoading(false));
-        }
-      })();
-    }
-  }, [user_id, isFocused]);
+  }, []);
 
   return (
     <View>
-      <Text style={{marginBottom: 10, color: 'black', fontWeight: '500'}}>
-        Select files or folders you want to put inside :
+      <Text
+        style={{
+          color: 'black',
+          fontWeight: '600',
+          fontSize: 18,
+          marginBottom: 20,
+        }}>
+        Create Folder
       </Text>
-      <MultipleSelectList
-        data={files}
-        label="search file/folder name"
-        onSelect={newSelectedFilesIds =>
-          setSelectedFilesIds(newSelectedFilesIds)
-        }
+      <TextInput
+        placeholder="name"
+        onChangeText={newName => setName(newName)}
+        value={name}
+        style={{
+          backgroundColor: '#F8F8F8',
+          borderRadius: 8,
+          marginBottom: '5.18%',
+          marginTop: 4,
+        }}
+        placeholderTextColor="#716D6D"
       />
       <View
         style={{
           flexDirection: 'row',
-          justifyContent: 'center',
-          height: 40,
           marginTop: 10,
+          justifyContent: 'flex-end',
         }}>
+        <LinearGradient
+          colors={['#33A1F9', '#6DBDFE']}
+          style={{borderRadius: 8, marginRight: 10}}>
+          <Pressable
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              flexDirection: 'row',
+              alignItems: 'center',
+              height: 40,
+              paddingHorizontal: 20,
+            }}
+            onPress={submitHandler}
+            disabled={createFolderDisabled}>
+            <Text style={{color: 'white'}}>Create</Text>
+          </Pressable>
+        </LinearGradient>
         <LinearGradient
           colors={['#33A1F9', '#6DBDFE']}
           style={{borderRadius: 8}}>
@@ -173,28 +337,10 @@ const AddFiles = ({handleHide, reload, id}: any) => {
               justifyContent: 'center',
               flexDirection: 'row',
               alignItems: 'center',
-              padding: 10,
+              height: 40,
+              paddingHorizontal: 20,
             }}
-            onPress={addFilesHandler}
-            disabled={submitDisabled}>
-            <Text style={{color: 'white'}}>Add</Text>
-          </Pressable>
-        </LinearGradient>
-        <LinearGradient
-          colors={['#33A1F9', '#6DBDFE']}
-          style={{
-            borderRadius: 8,
-            marginLeft: 10,
-          }}>
-          <Pressable
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              flexDirection: 'row',
-              alignItems: 'center',
-              padding: 10,
-            }}
-            onPress={handleHide}>
+            onPress={cancelHandler}>
             <Text style={{color: 'white'}}>Cancel</Text>
           </Pressable>
         </LinearGradient>
@@ -269,55 +415,27 @@ interface ListProps {
 
 const groupByType = (folderData: any) => {
   return folderData.items.reduce(
-    (acc: ListProps[], item: FolderProps | FileProps) => {
+    (
+      acc: {dirs: FolderProps[]; files: ListProps[]},
+      item: FolderProps | FileProps,
+    ) => {
+      if (item.isDirectory) {
+        acc.dirs.push(item);
+        return acc;
+      }
+
       const label = transformType(item.type);
-      const exist = acc.find(e => e.label === label);
+      const exist = acc.files.find(e => e.label === label);
 
       if (exist) {
         exist.items.push(item);
       } else {
-        acc.push({label, items: [item]});
+        acc.files.push({label, items: [item]});
       }
 
       return acc;
     },
-    [],
-  );
-};
-
-const renderItems = (
-  showFolder: (id: string) => () => void,
-  id: string,
-  list: ListProps,
-) => {
-  const items = list.items.map((item: FolderProps | FileProps) =>
-    item.isDirectory ? (
-      <Folder
-        {...(item as FolderProps)}
-        key={item.id}
-        showFolder={showFolder(item.id)}
-        reload={showFolder(id)}
-      />
-    ) : (
-      <File {...(item as FileProps)} key={item.id} />
-    ),
-  );
-
-  return !list.label ? (
-    <React.Fragment key={Math.random() * 4000}>{items}</React.Fragment>
-  ) : (
-    <View key={Math.random() * 4000}>
-      <Text
-        style={{
-          color: 'black',
-          fontSize: 16,
-          fontWeight: '500',
-          marginBottom: 10,
-        }}>
-        {list.label + '(s)'}
-      </Text>
-      {items}
-    </View>
+    {dirs: [], files: []},
   );
 };
 
@@ -328,14 +446,37 @@ const FolderPage = ({navigation, route}: any) => {
     type: '',
     items: [],
   });
-  const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
   const [isAddingFolders, setIsAddingFolders] = useState(false);
   const [isUploadButtonDisabled, setIsUploadButtonDisabled] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({
-    progress: 0,
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [removeFilesAfterFinish, setRemoveFilesAfterFinish] = useState<
+    string[]
+  >([]);
+  const [pressHandler, setPressHandler] = useState<any>();
+  const [isShowingFile, setIsShowingFile] = useState<{
+    show: boolean;
+    type?: string;
+    uri?: string;
+    title?: string;
+  }>({
     show: false,
+    uri: undefined,
+    title: undefined,
+    type: undefined,
   });
   const user_id = store.getState().authentication.userId;
+  const isFocused = useIsFocused();
+
+  const handleSelect = useCallback(
+    (id: string) => {
+      setSelectedIds(prev =>
+        prev.includes(id) ? prev.filter((e: any) => e !== id) : [...prev, id],
+      );
+    },
+    [selectedIds],
+  );
+
+  const uncheckAll = useCallback(() => setSelectedIds([]), [selectedIds]);
 
   useEffect(() => {
     const {id} = route?.params;
@@ -364,6 +505,14 @@ const FolderPage = ({navigation, route}: any) => {
 
         if (response.status === 200) {
           const data = response.data.data;
+          if (data.items) {
+            data.items = data.items.map((item: any) => ({
+              ...item,
+              progress: 1,
+              hasTriedToUpload: true,
+              isImage: item.uri?.startsWith('data:image/'),
+            }));
+          }
           setFolderData(data);
         }
       } catch (e: any) {
@@ -386,6 +535,7 @@ const FolderPage = ({navigation, route}: any) => {
 
   const showFolder = useCallback(
     (id: string) => () => {
+      setSelectedIds([]);
       const historyStack = route.params?.historyStack || [folderData.id];
       historyStack[historyStack.length - 1] !== id && historyStack.push(id);
 
@@ -395,6 +545,7 @@ const FolderPage = ({navigation, route}: any) => {
   );
 
   const goBack = useCallback(() => {
+    setSelectedIds([]);
     const historyStack = route.params?.historyStack;
     if (historyStack) {
       historyStack.pop();
@@ -463,12 +614,8 @@ const FolderPage = ({navigation, route}: any) => {
           });
         }
 
-        setUploadProgress(prev => ({...prev, show: true}));
-        const response = await uploadFiles(body, user_id, newProgress => {
-          setUploadProgress(prev => ({...prev, progress: newProgress}));
-        });
+        const response = await uploadFiles(body, user_id, newProgress => {});
         if (response.status === 200) {
-          console.log({data: response.data.data});
           const files_ids = response.data.data.map(({id}: any) => id);
           if (
             !files_ids ||
@@ -477,7 +624,6 @@ const FolderPage = ({navigation, route}: any) => {
           ) {
             setIsUploadButtonDisabled(false);
             store.dispatch(setRootLoading(false));
-            setUploadProgress({progress: 0, show: false});
             return Toast.show({
               type: 'error',
               text1: 'something went wrong, failed to upload file',
@@ -499,7 +645,6 @@ const FolderPage = ({navigation, route}: any) => {
           if (addFileToFolderResponse.status === 200) {
             setIsUploadButtonDisabled(false);
             store.dispatch(setRootLoading(false));
-            setUploadProgress({progress: 0, show: false});
             Toast.show({
               type: 'success',
               text1: 'files uploaded successfully',
@@ -512,7 +657,6 @@ const FolderPage = ({navigation, route}: any) => {
       if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
         setIsUploadButtonDisabled(false);
         store.dispatch(setRootLoading(false));
-        setUploadProgress({progress: 0, show: false});
         return Toast.show({
           type: 'error',
           text1: e.response?.data?.message,
@@ -524,184 +668,230 @@ const FolderPage = ({navigation, route}: any) => {
         text1: 'something went wrong cannot uplaod files',
       });
     }
-    setUploadProgress({progress: 0, show: false});
+
     setIsUploadButtonDisabled(false);
     store.dispatch(setRootLoading(false));
   }, [user_id, folderData, showFolder]);
 
+  const handleDelete = useCallback(async () => {
+    store.dispatch(setRootLoading(true));
+    try {
+      const response = await axios({
+        method: 'POST',
+        url: `${BaseUrl}/logged-in-user/deleteFiles`,
+        data: {
+          files_id: selectedIds,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        showFolder(folderData.id);
+        setSelectedIds([]);
+        store.dispatch(setRootLoading(false));
+        Toast.show({
+          text1: 'files deleted successfully !',
+        });
+      }
+    } catch (e: any) {
+      store.dispatch(setRootLoading(false));
+      console.log('error');
+      Toast.show({
+        type: 'error',
+        text1: 'there was an error in delete files',
+        text2: e.message,
+      });
+    }
+    store.dispatch(setRootLoading(false));
+  }, [folderData, selectedIds]);
+
+  const {dirs, files} = groupByType(folderData);
+
+  const addRemoveFileBeforeSave = useCallback((path: string) => {
+    setRemoveFilesAfterFinish(prev => [...new Set([...prev, path])]);
+  }, []);
+
+  const showFile = useCallback(
+    async (id: string) => {
+      const file = folderData.items.find((e: any) => e.id === id) as any;
+
+      if (file) {
+        let uri = file.uri;
+        const type = transformType(file.type);
+        if (type === 'video' || type === 'audio') {
+          const formated = await formatUri(
+            type,
+            file.uri,
+            Math.floor(Math.random() * 412515125).toString(),
+          );
+
+          if (formated) {
+            const {changed, path} = formated;
+            uri = path;
+            if (changed) {
+              addRemoveFileBeforeSave(path);
+            }
+          }
+        }
+        setIsShowingFile({
+          show: true,
+          uri,
+          title: file.name,
+          type: type as any,
+        });
+      }
+    },
+    [folderData],
+  );
+
+  useEffect(() => {
+    if (!isFocused) {
+      if (removeFilesAfterFinish.length !== 0) {
+        for (const file of removeFilesAfterFinish) {
+          RNFS.unlink(file)
+            .then(() => {
+              console.log(`${file} is deleted`);
+            })
+            .catch(e => {});
+        }
+      }
+    }
+  }, [isFocused]);
+
   return (
-    <View style={{flexDirection: 'column', flex: 1}}>
-      <View>
-        <LinearGradient
-          start={{x: 0, y: 0}}
-          end={{x: 0, y: 1}}
-          colors={['#33A1F9', '#6DBDFE']}
-          style={styles.header}>
-          <View
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              position: 'relative',
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 36,
-            }}>
-            <Image
-              source={small_logo}
-              style={{width: 50, height: 30, position: 'absolute', left: 0}}
-            />
-            <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
-              {folderData.name}
-            </Text>
-          </View>
-          <View
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}>
-            <MaterialIcons
-              name="arrow-back-ios"
-              size={20}
-              color="white"
-              onPress={goBack}
-              style={{marginRight: 10}}
-            />
+    <LayoutWrapper
+      title={folderData.name}
+      onBackPress={goBack}
+      headerMenuContent={
+        <Text
+          style={{color: 'black'}}
+          onPress={e => {
+            setIsAddingFolders(true);
+          }}>
+          Add folder
+        </Text>
+      }
+      setPressHandlerRoot={setPressHandler}>
+      {isShowingFile.show ? (
+        <ShowFileWrapper
+          title={isShowingFile.title}
+          displayComponent={getDisplayComponent(
+            isShowingFile.type,
+            isShowingFile.uri,
+          )}
+          setIsShowingFile={setIsShowingFile}
+        />
+      ) : (
+        <View style={{flex: 1}}>
+          <ScrollView style={{flex: 1}}>
             <View
               style={{
-                display: 'flex',
-                flexDirection: 'row',
-                position: 'relative',
                 flex: 1,
+                paddingHorizontal: '4.67%',
+                paddingVertical: '2.45%',
+                backgroundColor: '#F6F7FB',
               }}>
-              <Feather
-                name="search"
-                size={24}
-                style={{position: 'absolute', zIndex: 999, top: 10, left: 13}}
-              />
-              <TextInput
+              <View
                 style={{
-                  height: 44,
-                  backgroundColor: 'white',
-                  borderRadius: 8,
-                  paddingLeft: 44,
-                  color: 'black',
-                  flex: 1,
-                }}
-                placeholder="Search"
-                placeholderTextColor={'#9190A8'}
-              />
-            </View>
-            <View style={{position: 'relative'}}>
-              <TouchableOpacity
-                onPress={() => setIsHeaderMenuOpen(prev => !prev)}>
-                <Image
-                  source={threeVerticleDots}
-                  resizeMode={'contain'}
-                  style={{
-                    width: 10,
-                    height: 20,
-                    tintColor: 'white',
-                    marginLeft: 26,
-                  }}
-                />
-              </TouchableOpacity>
-              {isHeaderMenuOpen && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    minWidth: 100,
-                    right: 0,
-                    top: '60%',
-                    zIndex: 9999,
-                    backgroundColor: 'white',
-                    borderRadius: 10,
-                    elevation: 2,
-                    padding: 10,
-                  }}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setIsHeaderMenuOpen(false);
-                      setIsAddingFolders(true);
-                    }}>
-                    <Text style={{color: 'black'}}>Add folder</Text>
-                  </TouchableOpacity>
-                </View>
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginTop: 34,
+                  marginBottom: 42,
+                  minHeight: 24,
+                }}>
+                {selectedIds.length > 0 && (
+                  <>
+                    <AntDesign
+                      name="close"
+                      size={20}
+                      color="#49ACFA"
+                      onPress={uncheckAll}
+                    />
+                    <Text
+                      style={{marginLeft: 17, color: 'black', fontSize: 16}}>
+                      {selectedIds.length} Selected
+                    </Text>
+                  </>
+                )}
+              </View>
+              {folderData.items.length !== 0 ? (
+                [
+                  dirs.map((dir: FolderProps) => (
+                    <Folder
+                      {...dir}
+                      key={dir.id}
+                      showFolder={showFolder(dir.id)}
+                      reload={showFolder(folderData.id)}
+                    />
+                  )),
+                  ...files.map((group: {label: string; items: FileProps[]}) => (
+                    <SelectableItems
+                      data={group.items}
+                      handleSelect={handleSelect}
+                      selectedIds={selectedIds}
+                      text={group.label + 's'}
+                      setSelectedIds={setSelectedIds}
+                      key={group.label}
+                      setPressHandler={pressHandler}
+                      showFile={showFile}
+                    />
+                  )),
+                ]
+              ) : (
+                <NoDataFound />
               )}
             </View>
-          </View>
-        </LinearGradient>
-      </View>
-      <ScrollView
-        style={{
-          flex: 1,
-          paddingHorizontal: '4.67%',
-          paddingVertical: '2.45%',
-          backgroundColor: '#F6F7FB',
-        }}>
-        {folderData.items.length !== 0 ? (
-          groupByType(folderData).map((list: ListProps) =>
-            renderItems(showFolder, folderData.id, list),
-          )
-        ) : (
-          <NoDataFound />
-        )}
-      </ScrollView>
-      {isAddingFolders && (
-        <Dialog isVisible={true}>
-          <AddFiles
-            id={folderData.id}
-            reload={showFolder(folderData.id)}
-            handleHide={() => setIsAddingFolders(false)}
-          />
-        </Dialog>
-      )}
-      {uploadProgress.show && (
-        <Dialog isVisible={true}>
-          <View
-            style={{
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            {uploadProgress.progress !== 1 ? (
-              <Circle progress={uploadProgress.progress} size={50} />
-            ) : (
-              <>
-                <Text
-                  style={{
-                    color: 'black',
-                    fontSize: 12,
-                    fontWeight: '500',
-                    marginBottom: 10,
-                  }}>
-                  fragmentation ...
-                </Text>
-                <Circle indeterminate={true} size={50} />
-              </>
+            {isAddingFolders && (
+              <Dialog isVisible={true}>
+                <CreateFolder
+                  id={folderData.id}
+                  reload={showFolder(folderData.id)}
+                  handleHide={() => setIsAddingFolders(false)}
+                />
+              </Dialog>
             )}
+          </ScrollView>
+          <View style={styles.uploadContainer}>
+            {selectedIds.length > 0 && (
+              <TouchableOpacity
+                style={{
+                  width: 82,
+                  height: 49,
+                  marginRight: 10,
+                  backgroundColor: 'white',
+                  borderRadius: 15,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                onPress={handleDelete}>
+                <Text style={{color: '#49ACFA', fontWeight: '500'}}>
+                  Delete
+                </Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={{
+                width: 82,
+                height: 49,
+                backgroundColor: 'white',
+                borderRadius: 15,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              disabled={isUploadButtonDisabled}
+              onPress={handleUpload}>
+              <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
+            </TouchableOpacity>
           </View>
-        </Dialog>
+        </View>
       )}
-      <View style={styles.uploadContainer}>
-        <TouchableOpacity
-          style={{
-            width: 82,
-            height: 49,
-            backgroundColor: 'white',
-            borderRadius: 15,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-          disabled={isUploadButtonDisabled}
-          onPress={handleUpload}>
-          <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </LayoutWrapper>
   );
 };
 
