@@ -186,7 +186,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
             }
         };
 
-        executorService.execute(
+        new Thread(
                 () -> {
                     try {
                         Uri uri;
@@ -238,7 +238,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
                         });
                     }
                 }
-        );
+        ).start();
 
     }
 
@@ -250,7 +250,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 promise.resolve(result);
             }
         };
-        executorService.execute(
+        new Thread(
                 () -> {
                     try {
                         Uri uri;
@@ -302,7 +302,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
                         });
                     }
                 }
-        );
+        ).start();
     }
 
     @ReactMethod
