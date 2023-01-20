@@ -151,6 +151,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         break;
       case 'Thumbnails':
         const {thumbnails} = await ManageApps.getJunkData();
+        console.log({thumbnails});
         setThumbnails(addId(thumbnails));
         break;
       case 'Empty folders':

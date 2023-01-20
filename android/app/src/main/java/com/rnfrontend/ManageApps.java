@@ -1072,16 +1072,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
         mPackageInstaller.uninstall(packageName, sender.getIntentSender());
     }
 
-    boolean deleteDirectory(File directoryToBeDeleted) {
-        File[] allContents = directoryToBeDeleted.listFiles();
-        if (allContents != null) {
-            for (File file : allContents) {
-                deleteDirectory(file);
-            }
-        }
-        return directoryToBeDeleted.delete();
-    }
-
     @ReactMethod
     public void pickImages(Promise promise) {
         MainActivity.setPromise(promise);
@@ -1522,14 +1512,40 @@ public class ManageApps extends ReactContextBaseJavaModule {
         return isDirectory(dir) && dir.listFiles().length == 0;
     }
 
+
+    boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                if(file != null) {
+                    if(file.isDirectory()) {
+                        if(!deleteDirectory(file)) {
+                            return false;
+                        }
+                    }else {
+                         if(!file.delete()) {
+                             return false;
+                         };
+                    }
+
+                }
+
+            }
+        }
+        return directoryToBeDeleted != null && directoryToBeDeleted.delete();
+    }
+
+
     @ReactMethod
     public void deleteDirs(ReadableArray paths,Promise p) {
         for(int i = 0; i < paths.size(); i++) {
             File dir = new File(paths.getString(i));
-            if(dir.exists()) {
-                deleteDirectory(dir);
+            if(!dir.exists() || !deleteDirectory(dir)) {
+                p.resolve(false);
+                return;
             }
         }
+
         p.resolve(true);
     }
 
