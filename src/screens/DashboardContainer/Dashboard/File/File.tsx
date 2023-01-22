@@ -6,7 +6,7 @@ import FastImage from 'react-native-fast-image';
 
 interface FileProps {
   selected: boolean;
-  onPress: (id: string) => void;
+  onPress?: (id: string) => void;
   id: string;
   name: string;
   thumbnail?: string;
@@ -53,7 +53,10 @@ const File = ({
     }
   }, []);
   return (
-    <TouchableOpacity onPress={() => onPress(id)} style={styles.container}>
+    <TouchableOpacity
+      onPress={() => onPress && onPress(id)}
+      style={styles.container}
+      disabled={!onPress}>
       {selected && <Selected />}
       {thumbnail ? (
         <FastImage

@@ -52,6 +52,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [music, setMusic] = useState([]);
   const [thumbnails, setThumbnails] = useState([]);
   const [emptyFolders, setEmptyFolders] = useState([]);
+  const [notInstalledApks, setNotInstalledApks] = useState([]);
 
   const [progressProps, setProgressProps] = useState({
     text: '',
@@ -92,9 +93,10 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       setMusic(addId(await ManageApps.getAudios()));
       setApps(addId(await ManageApps.getAllInstalledApps()));
       setProgressProps({text: 'fetching junk files ...', progress: 0.75});
-      const {thumbnails, emptyFolders, notInstalledApps} =
+      const {notInstalledApps, thumbnails, emptyFolders} =
         await ManageApps.getJunkData();
 
+      setNotInstalledApks(addId(notInstalledApps));
       setThumbnails(addId(thumbnails));
       setEmptyFolders(addId(emptyFolders));
       setProgressProps({text: 'done !', progress: 1});
@@ -130,6 +132,9 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       case 'Empty folders':
         removeItems(setEmptyFolders);
         break;
+      case 'Not installed apks':
+        removeItems(setNotInstalledApks);
+        break;
       default:
         break;
     }
@@ -148,15 +153,6 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         break;
       case 'Cache':
         setApps(addId(await ManageApps.getAllInstalledApps()));
-        break;
-      case 'Thumbnails':
-        const {thumbnails} = await ManageApps.getJunkData();
-        console.log({thumbnails});
-        setThumbnails(addId(thumbnails));
-        break;
-      case 'Empty folders':
-        const {emptyFolders} = await ManageApps.getJunkData();
-        setEmptyFolders(addId(emptyFolders));
         break;
       default:
         break;
@@ -336,6 +332,13 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                 label="Empty folders"
                 removeDeletedItems={removeDeletedItems}
                 size={calcSpace(emptyFolders)}
+                refetchByLabel={refechByLabel}
+              />
+              <FilesList
+                data={notInstalledApks as []}
+                label="Not installed apks"
+                removeDeletedItems={removeDeletedItems}
+                size={calcSpace(notInstalledApks)}
                 refetchByLabel={refechByLabel}
               />
               <View style={{marginTop: 10}}></View>

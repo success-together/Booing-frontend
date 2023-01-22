@@ -56,6 +56,9 @@ const icons = {
   'Empty folders': (size: number, color = '#8F8F8F') => (
     <MaterialCommunityIcons name="folder-outline" size={size} color={color} />
   ),
+  'Not installed apks': (size: number, color = '#8F8F8F') => (
+    <AntDesign name="android1" size={size} color={color} />
+  ),
 };
 
 interface RenderFileData {
@@ -64,6 +67,7 @@ interface RenderFileData {
     name: string;
     visibleCacheSize?: number;
     thumbnail?: string;
+    path: string | null;
   };
 }
 
@@ -112,6 +116,7 @@ export default function FilesList({
   label,
   size,
   refetchByLabel,
+  removeDeletedItems,
 }: FilesListProps) {
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
   const [deleteBtnProps, setDeleteBtnProps] = useState({
@@ -164,6 +169,8 @@ export default function FilesList({
       return acc;
     }, []);
 
+    console.log({paths});
+
     let isDeleted;
 
     if (label === 'Pictures') {
@@ -177,20 +184,37 @@ export default function FilesList({
     }
     if (label === 'Empty folders' || label === 'Thumbnails') {
       isDeleted = await ManageApps.deleteDirs(paths);
+      if (isDeleted) {
+        removeDeletedItems(selectedFilesIds, label);
+      }
+    }
+
+    if (label === 'Not installed apks') {
+      isDeleted = await ManageApps.deleteApks(paths);
+      if (isDeleted) {
+        removeDeletedItems(selectedFilesIds, label);
+      }
     }
 
     setDeleteBtnProps({disabled: true, show: true});
-    await refetchByLabel(label);
 
+    if (
+      label !== 'Empty folders' &&
+      label !== 'Thumbnails' &&
+      label !== 'Not installed apks'
+    ) {
+      await refetchByLabel(label);
+    }
+
+    setSelectedFilesIds([]);
     setDeleteBtnProps({disabled: false, show: false});
     if (isDeleted) {
-      setSelectedFilesIds([]);
       return Toast.show({
         type: 'success',
         text1: 'items deleted successfully',
       });
     }
-  }, [selectedFilesIds, data]);
+  }, [selectedFilesIds, data, refetchByLabel]);
 
   const onDeleteAppsPress = async () => {
     const apps = selectedFilesIds.reduce<any[]>((acc, id) => {
@@ -218,13 +242,13 @@ export default function FilesList({
   };
 
   const renderFile = useCallback(
-    ({item: {name, id, thumbnail, visibleCacheSize}}: RenderFileData) => {
+    ({item: {name, path, id, thumbnail, visibleCacheSize}}: RenderFileData) => {
       return (
         <File
           name={name}
           id={id}
           thumbnail={thumbnail}
-          onPress={onPress}
+          onPress={path !== null ? onPress : undefined}
           visibleCacheSize={visibleCacheSize}
           selected={selectedFilesIds.includes(id)}
           Icon={icons[label]}
