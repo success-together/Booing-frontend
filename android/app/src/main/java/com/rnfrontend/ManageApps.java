@@ -181,265 +181,188 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void getImages(Promise promise)  {
-        ScanStorage scanner = new ScanStorage() {
-            @Override
-            public void onComplete(WritableArray result) {
-                promise.resolve(result);
-            }
-        };
+                Uri uri;
+                Cursor cursor;
+                int i = 0, total = 0, column_index_data, column_index_title, column_index_size, column_index_id;
+                WritableArray listOfAllImages = new WritableNativeArray();
+                uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
-        new Thread(
-                () -> {
-                    try {
-                        Uri uri;
-                        Cursor cursor;
-                        int i = 0, total = 0, column_index_data, column_index_title, column_index_size, column_index_id;
-                        WritableArray listOfAllImages = new WritableNativeArray();
-                        uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                String[] projection = {
+                        MediaStore.MediaColumns.DATA,
+                        MediaStore.Images.Media.TITLE,
+                        MediaStore.Images.Media.SIZE,
+                        MediaStore.Images.Media._ID
+                };
 
-                        String[] projection = {
-                                MediaStore.MediaColumns.DATA,
-                                MediaStore.Images.Media.TITLE,
-                                MediaStore.Images.Media.SIZE,
-                                MediaStore.Images.Media._ID
-                        };
+                cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
+                        null, null);
 
-                        cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
-                                null, null);
-
-                        if(cursor != null) {
-                            total = cursor.getCount();
-                        }
-
-
-                        if(total == 0) {
-                            promise.resolve(listOfAllImages);
-                            return;
-                        }
-
-
-                        column_index_data = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
-                        column_index_title = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
-                        column_index_size = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE);
-                        column_index_id = cursor.getColumnIndex(MediaStore.MediaColumns._ID);
-
-                        while (cursor.moveToNext()) {
-                            i++;
-                            if(i == MAX_ITEMS) {
-                                break;
-                            }
-                            WritableMap map = new WritableNativeMap();
-                            map.putString("path", cursor.getString(column_index_data));
-                            map.putString("name", cursor.getString(column_index_title));
-                            map.putInt("size", cursor.getInt(column_index_size));
-                            Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                                    cursor.getInt(column_index_id));
-                            String base64Thumbnail = getThumbnailBase64(imageUri, MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE);
-                            map.putString("thumbnail", base64Thumbnail);
-
-                            listOfAllImages.pushMap(map);
-                        }
-
-                        if(total > MAX_ITEMS) {
-                            WritableMap map = new WritableNativeMap();
-                            map.putString("path", null);
-                            map.putString("name", "+ " + String.valueOf(total - MAX_ITEMS) + " others");
-                            map.putInt("size", 0);
-
-                            listOfAllImages.pushMap(map);
-                        }
-                        cursor.close();
-
-                        mainThreadHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                scanner.onComplete(listOfAllImages);
-                            }
-                        });
-                    }catch (Exception e) {
-                        mainThreadHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                scanner.onComplete(new WritableNativeArray());
-                            }
-                        });
-                    }
+                if(cursor != null) {
+                    total = cursor.getCount();
                 }
-        ).start();
+
+
+                if(total == 0) {
+                    promise.resolve(listOfAllImages);
+                    return;
+                }
+
+
+                column_index_data = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
+                column_index_title = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
+                column_index_size = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE);
+                column_index_id = cursor.getColumnIndex(MediaStore.MediaColumns._ID);
+
+                while (cursor.moveToNext()) {
+                    i++;
+                    if(i == MAX_ITEMS) {
+                        break;
+                    }
+                    WritableMap map = new WritableNativeMap();
+                    map.putString("path", cursor.getString(column_index_data));
+                    map.putString("name", cursor.getString(column_index_title));
+                    map.putInt("size", cursor.getInt(column_index_size));
+                    Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            cursor.getInt(column_index_id));
+                    String base64Thumbnail = getThumbnailBase64(imageUri, MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE);
+                    map.putString("thumbnail", base64Thumbnail);
+
+                    listOfAllImages.pushMap(map);
+                }
+
+                if(total > MAX_ITEMS) {
+                    WritableMap map = new WritableNativeMap();
+                    map.putString("path", null);
+                    map.putString("name", "+ " + String.valueOf(total - MAX_ITEMS) + " others");
+                    map.putInt("size", 0);
+
+                    listOfAllImages.pushMap(map);
+                }
+                cursor.close();
+
+                promise.resolve(listOfAllImages);
 
     }
 
     @ReactMethod
     public void getVideos(Promise promise) {
-        ScanStorage scanner = new ScanStorage() {
-            @Override
-            public void onComplete(WritableArray result) {
-                promise.resolve(result);
-            }
-        };
-        new Thread(
-                () -> {
-                    try {
-                        Uri uri;
-                        Cursor cursor;
-                        int i = 0, total = 0, column_index_data, column_index_title, column_index_size, column_index_id;
-                        WritableArray listOfAllVideos = new WritableNativeArray();
-                        uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                Uri uri;
+                Cursor cursor;
+                int i = 0, total = 0, column_index_data, column_index_title, column_index_size, column_index_id;
+                WritableArray listOfAllVideos = new WritableNativeArray();
+                uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
 
-                        String[] projection = { MediaStore.Video.Media.DATA
-                                ,MediaStore.Video.Media.TITLE
-                                ,MediaStore.Video.Media.SIZE
-                                ,MediaStore.Video.Media._ID
-                        };
+                String[] projection = { MediaStore.Video.Media.DATA
+                        ,MediaStore.Video.Media.TITLE
+                        ,MediaStore.Video.Media.SIZE
+                        ,MediaStore.Video.Media._ID
+                };
 
-                        cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
-                                null, null);
+                cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
+                        null, null);
 
-                        if(cursor != null) {
-                            total = cursor.getCount();
-                        }
-
-
-                        if(total == 0) {
-                            promise.resolve(listOfAllVideos);
-                            return;
-                        }
-
-                        column_index_data = cursor.getColumnIndex(MediaStore.Video.Media.DATA);
-                        column_index_title = cursor.getColumnIndex(MediaStore.Video.Media.TITLE);
-                        column_index_size = cursor.getColumnIndex(MediaStore.Video.Media.SIZE);
-                        column_index_id = cursor.getColumnIndex(MediaStore.Video.Media._ID);
-
-                        while (cursor.moveToNext()) {
-                            i++;
-                            if(i == MAX_ITEMS) {
-                                break;
-                            }
-                            WritableMap map = new WritableNativeMap();
-                            map.putString("path", cursor.getString(column_index_data));
-                            map.putString("name", cursor.getString(column_index_title));
-                            map.putInt("size", cursor.getInt(column_index_size));
-                            Uri videoUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                                    cursor.getInt(column_index_id));
-                            map.putString("uri", videoUri.toString());
-                            String base64Thumbnail = getThumbnailBase64(videoUri, MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO);
-                            map.putString("thumbnail", base64Thumbnail);
-
-                            listOfAllVideos.pushMap(map);
-                        }
-
-                        if(total > MAX_ITEMS) {
-                            WritableMap map = new WritableNativeMap();
-                            map.putString("path", null);
-                            map.putString("name", "+ " + String.valueOf(total - MAX_ITEMS) + " others");
-                            map.putInt("size", 0);
-
-                            listOfAllVideos.pushMap(map);
-                        }
-
-                        cursor.close();
-
-                        mainThreadHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                scanner.onComplete(listOfAllVideos);
-                            }
-                        });
-                    }catch (Exception e) {
-                        mainThreadHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                scanner.onComplete(new WritableNativeArray());
-                            }
-                        });
-                    }
+                if(cursor != null) {
+                    total = cursor.getCount();
                 }
-        ).start();
+
+
+                if(total == 0) {
+                    promise.resolve(listOfAllVideos);
+                    return;
+                }
+
+                column_index_data = cursor.getColumnIndex(MediaStore.Video.Media.DATA);
+                column_index_title = cursor.getColumnIndex(MediaStore.Video.Media.TITLE);
+                column_index_size = cursor.getColumnIndex(MediaStore.Video.Media.SIZE);
+                column_index_id = cursor.getColumnIndex(MediaStore.Video.Media._ID);
+
+                while (cursor.moveToNext()) {
+                    i++;
+                    if(i == MAX_ITEMS) {
+                        break;
+                    }
+                    WritableMap map = new WritableNativeMap();
+                    map.putString("path", cursor.getString(column_index_data));
+                    map.putString("name", cursor.getString(column_index_title));
+                    map.putInt("size", cursor.getInt(column_index_size));
+                    Uri videoUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                            cursor.getInt(column_index_id));
+                    map.putString("uri", videoUri.toString());
+                    String base64Thumbnail = getThumbnailBase64(videoUri, MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO);
+                    map.putString("thumbnail", base64Thumbnail);
+
+                    listOfAllVideos.pushMap(map);
+                }
+
+                if(total > MAX_ITEMS) {
+                    WritableMap map = new WritableNativeMap();
+                    map.putString("path", null);
+                    map.putString("name", "+ " + String.valueOf(total - MAX_ITEMS) + " others");
+                    map.putInt("size", 0);
+
+                    listOfAllVideos.pushMap(map);
+                }
+
+                cursor.close();
+                promise.resolve(listOfAllVideos);
     }
 
     @ReactMethod
     public void getAudios(Promise promise) {
-        ScanStorage scanner = new ScanStorage() {
-            @Override
-            public void onComplete(WritableArray result) {
-                promise.resolve(result);
-            }
-        };
+                Uri uri;
+                Cursor cursor;
+                int i = 0, total = 0,column_index_data, column_index_title, column_index_size, column_index_albumId;
+                WritableArray listOfAudios = new WritableNativeArray();
+                uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
 
-        executorService.execute(
-                () -> {
-                    try {
-                        Uri uri;
-                        Cursor cursor;
-                        int i = 0, total = 0,column_index_data, column_index_title, column_index_size, column_index_albumId;
-                        WritableArray listOfAudios = new WritableNativeArray();
-                        uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                String[] projection = { MediaStore.Audio.Media.DATA
+                        ,MediaStore.Audio.Media.TITLE
+                        ,MediaStore.Audio.Media.SIZE
+                        ,MediaStore.Audio.Media.ALBUM_ID
+                };
 
-                        String[] projection = { MediaStore.Audio.Media.DATA
-                                ,MediaStore.Audio.Media.TITLE
-                                ,MediaStore.Audio.Media.SIZE
-                                ,MediaStore.Audio.Media.ALBUM_ID
-                        };
+                cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
+                        null, null);
 
-                        cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
-                                null, null);
-
-                        if(cursor != null) {
-                            total = cursor.getCount();
-                        }
-
-
-                        if(total == 0) {
-                            promise.resolve(listOfAudios);
-                            return;
-                        }
-
-                        column_index_data = cursor.getColumnIndex(MediaStore.Audio.Media.DATA);
-                        column_index_title = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
-                        column_index_size = cursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
-
-                        while (cursor.moveToNext()) {
-                            i++;
-                            if(i == MAX_ITEMS) {
-                                break;
-                            }
-                            WritableMap map = new WritableNativeMap();
-                            String path = cursor.getString(column_index_data);
-                            map.putString("path", path);
-                            map.putString("name", cursor.getString(column_index_title));
-                            map.putInt("size", cursor.getInt(column_index_size));
-                            map.putString("thumbnail",  getAudioThumbnailBase64(path));
-                            listOfAudios.pushMap(map);
-                        }
-
-                        if(total > MAX_ITEMS) {
-                            WritableMap map = new WritableNativeMap();
-                            map.putString("path", null);
-                            map.putString("name", "+ " + String.valueOf(total - MAX_ITEMS) + " others");
-                            map.putInt("size", 0);
-
-                            listOfAudios.pushMap(map);
-                        }
-
-                        cursor.close();
-
-
-                        mainThreadHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                scanner.onComplete(listOfAudios);
-                            }
-                        });
-                    }catch (Exception e) {
-                        mainThreadHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                scanner.onComplete(new WritableNativeArray());
-                            }
-                        });
-                    }
+                if(cursor != null) {
+                    total = cursor.getCount();
                 }
-        );
+
+
+                if(total == 0) {
+                    promise.resolve(listOfAudios);
+                    return;
+                }
+
+                column_index_data = cursor.getColumnIndex(MediaStore.Audio.Media.DATA);
+                column_index_title = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+                column_index_size = cursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
+
+                while (cursor.moveToNext()) {
+                    i++;
+                    if(i == MAX_ITEMS) {
+                        break;
+                    }
+                    WritableMap map = new WritableNativeMap();
+                    String path = cursor.getString(column_index_data);
+                    map.putString("path", path);
+                    map.putString("name", cursor.getString(column_index_title));
+                    map.putInt("size", cursor.getInt(column_index_size));
+                    map.putString("thumbnail",  getAudioThumbnailBase64(path));
+                    listOfAudios.pushMap(map);
+                }
+
+                if(total > MAX_ITEMS) {
+                    WritableMap map = new WritableNativeMap();
+                    map.putString("path", null);
+                    map.putString("name", "+ " + String.valueOf(total - MAX_ITEMS) + " others");
+                    map.putInt("size", 0);
+
+                    listOfAudios.pushMap(map);
+                }
+
+                cursor.close();
+                promise.resolve(listOfAudios);
     }
 
     @ReactMethod
