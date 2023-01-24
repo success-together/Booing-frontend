@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     color: '#33a1f9',
   },
   available: {
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 21,
     letterSpacing: 0.25,
     fontWeight: 'bold',
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   usedSpace: {
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 21,
     letterSpacing: 0.25,
     fontWeight: 'bold',
