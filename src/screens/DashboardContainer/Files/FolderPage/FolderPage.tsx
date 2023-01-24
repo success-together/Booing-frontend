@@ -537,6 +537,12 @@ const FolderPage = ({navigation, route}: any) => {
   const showFolder = useCallback(
     (id: string) => () => {
       setSelectedIds([]);
+      setIsShowingFile({
+        show: false,
+        uri: undefined,
+        title: undefined,
+        type: undefined,
+      });
       const historyStack = route.params?.historyStack || [folderData.id];
       historyStack[historyStack.length - 1] !== id && historyStack.push(id);
 
@@ -547,6 +553,12 @@ const FolderPage = ({navigation, route}: any) => {
 
   const goBack = useCallback(() => {
     setSelectedIds([]);
+    setIsShowingFile({
+      show: false,
+      uri: undefined,
+      title: undefined,
+      type: undefined,
+    });
     const historyStack = route.params?.historyStack;
     if (historyStack) {
       historyStack.pop();
