@@ -452,6 +452,7 @@ const FolderPage = ({navigation, route}: any) => {
   const [removeFilesAfterFinish, setRemoveFilesAfterFinish] = useState<
     string[]
   >([]);
+  const [isDeleteButtonDisabled, setIsDeleteButtonDisabled] = useState(false);
   const [pressHandler, setPressHandler] = useState<any>();
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
@@ -536,6 +537,12 @@ const FolderPage = ({navigation, route}: any) => {
   const showFolder = useCallback(
     (id: string) => () => {
       setSelectedIds([]);
+      setIsShowingFile({
+        show: false,
+        uri: undefined,
+        title: undefined,
+        type: undefined,
+      });
       const historyStack = route.params?.historyStack || [folderData.id];
       historyStack[historyStack.length - 1] !== id && historyStack.push(id);
 
@@ -546,6 +553,12 @@ const FolderPage = ({navigation, route}: any) => {
 
   const goBack = useCallback(() => {
     setSelectedIds([]);
+    setIsShowingFile({
+      show: false,
+      uri: undefined,
+      title: undefined,
+      type: undefined,
+    });
     const historyStack = route.params?.historyStack;
     if (historyStack) {
       historyStack.pop();
@@ -675,6 +688,7 @@ const FolderPage = ({navigation, route}: any) => {
 
   const handleDelete = useCallback(async () => {
     store.dispatch(setRootLoading(true));
+    setIsDeleteButtonDisabled(true);
     try {
       const response = await axios({
         method: 'POST',
@@ -689,15 +703,18 @@ const FolderPage = ({navigation, route}: any) => {
       });
 
       if (response.status === 200) {
-        showFolder(folderData.id);
         setSelectedIds([]);
         store.dispatch(setRootLoading(false));
+        setIsDeleteButtonDisabled(false);
         Toast.show({
           text1: 'files deleted successfully !',
         });
+
+        return showFolder(folderData.id)();
       }
     } catch (e: any) {
       store.dispatch(setRootLoading(false));
+      setIsDeleteButtonDisabled(false);
       console.log('error');
       Toast.show({
         type: 'error',
@@ -706,7 +723,8 @@ const FolderPage = ({navigation, route}: any) => {
       });
     }
     store.dispatch(setRootLoading(false));
-  }, [folderData, selectedIds]);
+    setIsDeleteButtonDisabled(false);
+  }, [folderData, selectedIds, showFolder]);
 
   const {dirs, files} = groupByType(folderData);
 
@@ -868,7 +886,8 @@ const FolderPage = ({navigation, route}: any) => {
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}
-                onPress={handleDelete}>
+                onPress={handleDelete}
+                disabled={isDeleteButtonDisabled}>
                 <Text style={{color: '#49ACFA', fontWeight: '500'}}>
                   Delete
                 </Text>
