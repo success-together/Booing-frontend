@@ -1,144 +1,257 @@
-import React from 'react';
-import {Text, View, StyleSheet, ScrollView} from 'react-native';
+import React, {useRef, useState} from 'react';
+import {
+  Text,
+  View,
+  StyleSheet,
+  ScrollView,
+  Button,
+  DrawerLayoutAndroid,
+  Pressable,
+} from 'react-native';
 import TransactionsHeader from './TransactionHeader/TransactionHeader';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 
 const Transactions = ({navigation}: any) => {
+  const [isClicked, SetIsClicked] = useState<boolean>(false);
+  const drawer = useRef<DrawerLayoutAndroid>(null);
+  const [drawerPosition, setDrawerPosition] = useState<'left' | 'right'>(
+    'left',
+  );
+
+  const changeDrawerPosition = () => {
+    if (drawerPosition === 'left') {
+      setDrawerPosition('right');
+    } else {
+      setDrawerPosition('left');
+    }
+  };
+
+  const navigationView = () => (
+    <View style={[styles.Drawercontainer]}>
+      <Text style={styles.text}>Sert Try Date</Text>
+      <Pressable
+        style={styles.day}
+        onPress={() => {
+          drawer.current?.closeDrawer();
+          SetIsClicked(false);
+        }}>
+        <View style={{flexDirection: 'row'}}>
+          <AntDesign name="calendar" size={24} color="grey" />
+          <Text style={styles.text}> Today </Text>
+        </View>
+        <AntDesign name="check" size={24} color="#07FA93" />
+      </Pressable>
+      <Pressable
+        style={styles.day}
+        onPress={() => {
+          drawer.current?.closeDrawer();
+          SetIsClicked(false);
+        }}>
+        <View style={{flexDirection: 'row'}}>
+          <AntDesign name="calendar" size={24} color="grey" />
+          <Text style={styles.text}> Yesterday </Text>
+        </View>
+        <AntDesign name="check" size={24} color="#07FA93" />
+      </Pressable>
+      <Pressable
+        style={styles.day}
+        onPress={() => {
+          drawer.current?.closeDrawer();
+          SetIsClicked(false);
+        }}>
+        <View style={{flexDirection: 'row'}}>
+          <AntDesign name="calendar" size={24} color="grey" />
+          <Text style={styles.text}> Last week </Text>
+        </View>
+        <AntDesign name="check" size={24} color="#07FA93" />
+      </Pressable>
+      <Pressable
+        style={styles.day}
+        onPress={() => {
+          drawer.current?.closeDrawer();
+          SetIsClicked(false);
+        }}>
+        <View style={{flexDirection: 'row'}}>
+          <AntDesign name="calendar" size={24} color="grey" />
+          <Text style={styles.text}> Last Month </Text>
+        </View>
+        <AntDesign name="check" size={24} color="#07FA93" />
+      </Pressable>
+      <Pressable
+        style={styles.day}
+        onPress={() => {
+          drawer.current?.closeDrawer();
+          SetIsClicked(false);
+        }}>
+        <View style={{flexDirection: 'row'}}>
+          <AntDesign name="calendar" size={24} color="grey" />
+          <Text style={styles.text}> Custom Range </Text>
+        </View>
+        <AntDesign name="check" size={24} color="#07FA93" />
+      </Pressable>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
-        <TransactionsHeader navigation={navigation} />
+        <TransactionsHeader
+          SetIsClicked={SetIsClicked}
+          navigation={navigation}
+        />
       </View>
-      <ScrollView style={styles.scrollView}>
-        <View style={{padding: 4, marginTop: 20}}>
-          <View style={{marginLeft: 10, marginTop: 4}}>
-            <Text style={styles.title}>Today</Text>
-          </View>
-          <View style={styles.list}>
-            <View style={styles.card}>
-              <Ionicons
-                name="arrow-down-circle-sharp"
-                size={50}
-                color="#07FA93"
-              />
-              <View style={styles.Storage1}>
+      <DrawerLayoutAndroid
+        ref={drawer}
+        drawerWidth={300}
+        drawerPosition={drawerPosition}
+        renderNavigationView={navigationView}
+        onDrawerClose={() => {
+          SetIsClicked(false);
+        }}>
+        {isClicked && drawer.current?.openDrawer()}
+        <ScrollView style={styles.scrollView}>
+          <View style={{padding: 4, marginTop: 20}}>
+            {/* <DrawerLayoutAndroid
+            ref={drawer}
+            drawerWidth={300}
+            drawerPosition={drawerPosition}
+            renderNavigationView={navigationView}>
+            
+              
+          </DrawerLayoutAndroid> */}
+            {/* <Button
+              title="Open drawer"
+              onPress={() => drawer.current?.openDrawer()}
+            /> */}
+            <View style={{marginLeft: 10, marginTop: 4}}>
+              <Text style={styles.title}>Today</Text>
+            </View>
+            <View style={styles.list}>
+              <View style={styles.card}>
+                <Ionicons
+                  name="arrow-down-circle-sharp"
+                  size={50}
+                  color="#07FA93"
+                />
+                <View style={styles.Storage1}>
+                  <View>
+                    <Text style={styles.Storage2}>Received</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.Storage3}>March 05.2022</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.Storage11}>
                 <View>
-                  <Text style={styles.Storage2}>Received</Text>
+                  <Text style={styles.Storage22}>01.000Boo</Text>
                 </View>
                 <View>
-                  <Text style={styles.Storage3}>March 05.2022</Text>
+                  <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
                 </View>
               </View>
             </View>
-            <View style={styles.Storage11}>
-              <View>
-                <Text style={styles.Storage22}>01.000Boo</Text>
-              </View>
-              <View>
-                <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.list}>
-            <View style={styles.card}>
-              <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
-              <View style={styles.Storage1}>
-                <View>
-                  <Text style={styles.Storage2}>Sent</Text>
-                </View>
-                <View>
-                  <Text style={styles.Storage3}>March 05.2022</Text>
+            <View style={styles.list}>
+              <View style={styles.card}>
+                <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
+                <View style={styles.Storage1}>
+                  <View>
+                    <Text style={styles.Storage2}>Sent</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.Storage3}>March 05.2022</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-            <View style={styles.Storage11}>
-              <View>
-                <Text style={styles.Storage222}>01.000Boo</Text>
+              <View style={styles.Storage11}>
+                <View>
+                  <Text style={styles.Storage222}>01.000Boo</Text>
+                </View>
+                <View>
+                  <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
+                </View>
               </View>
-              <View>
-                <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
-              </View>
             </View>
-          </View>
 
-          <View style={{marginLeft: 10, marginTop: 4}}>
-            <Text style={styles.title}>Yesterday</Text>
-          </View>
-          <View style={styles.list}>
-            <View style={styles.card}>
-              <Ionicons
-                name="arrow-down-circle-sharp"
-                size={50}
-                color="#07FA93"
-              />
-              <View style={styles.Storage1}>
-                <View>
-                  <Text style={styles.Storage2}>Received</Text>
-                </View>
-                <View>
-                  <Text style={styles.Storage3}>March 05.2022</Text>
-                </View>
-              </View>
+            <View style={{marginLeft: 10, marginTop: 4}}>
+              <Text style={styles.title}>Yesterday</Text>
             </View>
-            <View style={styles.Storage11}>
-              <View>
-                <Text style={styles.Storage22}>01.000Boo</Text>
+            <View style={styles.list}>
+              <View style={styles.card}>
+                <Ionicons
+                  name="arrow-down-circle-sharp"
+                  size={50}
+                  color="#07FA93"
+                />
+                <View style={styles.Storage1}>
+                  <View>
+                    <Text style={styles.Storage2}>Received</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.Storage3}>March 05.2022</Text>
+                  </View>
+                </View>
               </View>
-              <View>
-                <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
-              </View>
-            </View>
-          </View>
-          <View style={styles.list}>
-            <View style={styles.card}>
-              <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
-              <View style={styles.Storage1}>
+              <View style={styles.Storage11}>
                 <View>
-                  <Text style={styles.Storage2}>Sent</Text>
+                  <Text style={styles.Storage22}>01.000Boo</Text>
                 </View>
                 <View>
-                  <Text style={styles.Storage3}>March 05.2022</Text>
+                  <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
                 </View>
               </View>
             </View>
-            <View style={styles.Storage11}>
-              <View>
-                <Text style={styles.Storage222}>01.000Boo</Text>
+            <View style={styles.list}>
+              <View style={styles.card}>
+                <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
+                <View style={styles.Storage1}>
+                  <View>
+                    <Text style={styles.Storage2}>Sent</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.Storage3}>March 05.2022</Text>
+                  </View>
+                </View>
               </View>
-              <View>
-                <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
+              <View style={styles.Storage11}>
+                <View>
+                  <Text style={styles.Storage222}>01.000Boo</Text>
+                </View>
+                <View>
+                  <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
+                </View>
               </View>
             </View>
-          </View>
 
-          <View style={{marginLeft: 10, marginTop: 4}}>
-            <Text style={styles.title}>This Week</Text>
-          </View>
-          <View style={styles.list}>
-            <View style={styles.card}>
-              <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
-              <View style={styles.Storage1}>
+            <View style={{marginLeft: 10, marginTop: 4}}>
+              <Text style={styles.title}>This Week</Text>
+            </View>
+            <View style={styles.list}>
+              <View style={styles.card}>
+                <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
+                <View style={styles.Storage1}>
+                  <View>
+                    <Text style={styles.Storage2}>Sent</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.Storage3}>March 05.2022</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.Storage11}>
                 <View>
-                  <Text style={styles.Storage2}>Sent</Text>
+                  <Text style={styles.Storage222}>01.000Boo</Text>
                 </View>
                 <View>
-                  <Text style={styles.Storage3}>March 05.2022</Text>
+                  <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
                 </View>
               </View>
             </View>
-            <View style={styles.Storage11}>
-              <View>
-                <Text style={styles.Storage222}>01.000Boo</Text>
-              </View>
-              <View>
-                <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
-              </View>
-            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </DrawerLayoutAndroid>
     </View>
   );
 };
@@ -291,6 +404,29 @@ const styles = StyleSheet.create({
   Storage222: {
     fontWeight: 'bold',
     color: 'red',
+  },
+  Drawercontainer: {
+    flex: 1,
+    alignItems: 'center',
+    color: '#33a1f9',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+  },
+  paragraph: {
+    padding: 16,
+    fontSize: 15,
+    textAlign: 'center',
+    color: 'black',
+  },
+
+  day: {
+    flexDirection: 'row',
+    width: '100%',
+    alignItems: 'center',
+    color: '#33a1f9',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    padding: 20,
   },
 });
 export default Transactions;
