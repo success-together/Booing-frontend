@@ -1424,6 +1424,12 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void deleteDirs(ReadableArray paths,Promise p) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if(!Environment.isExternalStorageManager()) {
+              checkAllFilesAccessPermission(p);
+            }
+        }
+
         for(int i = 0; i < paths.size(); i++) {
             File dir = new File(paths.getString(i));
             if(!dir.exists() || !deleteDirectory(dir)) {
