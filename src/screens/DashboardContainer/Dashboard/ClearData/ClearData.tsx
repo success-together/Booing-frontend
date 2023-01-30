@@ -91,7 +91,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       setVideos(addId(await ManageApps.getVideos()));
       setProgressProps({text: 'fetching audio files ...', progress: 0.5});
       setMusic(addId(await ManageApps.getAudios()));
-      setApps(addId(await ManageApps.getAllInstalledApps()));
+      // setApps(addId(await ManageApps.getAllInstalledApps()));
       setProgressProps({text: 'fetching junk files ...', progress: 0.75});
       const {notInstalledApps, thumbnails, emptyFolders} =
         await ManageApps.getJunkData();
@@ -123,9 +123,9 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       case 'Music':
         removeItems(setMusic);
         break;
-      case 'Cache':
-        removeItems(setApps);
-        break;
+      // case 'Cache':
+      //   removeItems(setApps);
+      //   break;
       case 'Thumbnails':
         removeItems(setThumbnails);
         break;
@@ -151,9 +151,9 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       case 'Music':
         setMusic(addId(await ManageApps.getAudios()));
         break;
-      case 'Cache':
-        setApps(addId(await ManageApps.getAllInstalledApps()));
-        break;
+      // case 'Cache':
+      //   setApps(addId(await ManageApps.getAllInstalledApps()));
+      //   break;
       default:
         break;
     }
@@ -161,10 +161,16 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
 
   useEffect(() => {
     if (isFocused) {
-      setProgressProps({text: '', progress: 0});
-      scanUserStorage();
+      (async () => {
+        setProgressProps({text: '', progress: 0});
+        await scanUserStorage();
+      })();
     }
   }, [isFocused]);
+
+  // useEffect(() => {
+  //   console.log(images.map(image => image.id));
+  // }, [images]);
 
   return (
     <View style={styles.container}>
@@ -313,13 +319,13 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                 size={calcSpace(music)}
                 refetchByLabel={refechByLabel}
               />
-              <FilesList
+              {/* <FilesList
                 data={apps.filter((e: any) => e.visibleCacheSize > 0) as []}
                 label="Cache"
                 removeDeletedItems={removeDeletedItems}
                 size={calcSpace(apps, 'visibleCacheSize', 0)}
                 refetchByLabel={refechByLabel}
-              />
+              /> */}
               <FilesList
                 data={thumbnails as []}
                 label="Thumbnails"
