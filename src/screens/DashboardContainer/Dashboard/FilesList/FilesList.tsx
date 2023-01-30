@@ -350,12 +350,6 @@ export default function FilesList({
     nextSet(iterator);
   }, [data]);
 
-  useEffect(() => {
-    if (label === 'Pictures') {
-      console.log(items.map(image => image.name));
-    }
-  }, [items]);
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
