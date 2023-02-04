@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useCallback, useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Button} from 'react-native';
 import {ReadDirItem} from 'react-native-fs';
@@ -12,6 +13,7 @@ import {Bar} from 'react-native-progress';
 import {useIsFocused} from '@react-navigation/native';
 import {store} from '../../../../shared';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
+import {Transaction} from '../../../../shared/slices/wallet/walletService';
 
 export const Progress = ({progress, text}: any) => {
   return (
@@ -53,6 +55,9 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [thumbnails, setThumbnails] = useState([]);
   const [emptyFolders, setEmptyFolders] = useState([]);
   const [notInstalledApks, setNotInstalledApks] = useState([]);
+  const [cancelPopup, setCancelPopup] = useState<boolean>(false);
+
+  const user_id = store.getState().authentication.userId;
 
   const [progressProps, setProgressProps] = useState({
     text: '',
@@ -168,6 +173,17 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
     }
   }, [isFocused]);
 
+  const sellSpace = async (coins: number) => {
+    user_id &&
+      Transaction({coins: coins, isIncremenet: true, user_id: user_id}).then(
+        res => {
+          if (res.success) {
+            setCancelPopup(true);
+          }
+        },
+      );
+  };
+
   // useEffect(() => {
   //   console.log(images.map(image => image.id));
   // }, [images]);
@@ -266,38 +282,44 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         <View style={styles.main}>
           {showData && (
             <>
-              <View
-                style={{
-                  padding: 10,
-                  backgroundColor: '#FCFCFC',
-                  borderRadius: 10,
-                  shadowColor: '#000',
-                  shadowOffset: {
-                    width: 0,
-                    height: 2,
-                  },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 3.84,
-                  elevation: 5,
-                  marginBottom: 10,
-                }}>
-                <Text
-                  style={{marginBottom: 20, color: '#9F9EB3', fontSize: 16}}>
-                  sell {freeDiskStorage / 2} Gb free space for{' '}
-                  {(50000 * freeDiskStorage) / 2} Boo coin ?
-                </Text>
+              {!cancelPopup && (
                 <View
                   style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    width: '100%',
-                    justifyContent: 'center',
+                    padding: 10,
+                    backgroundColor: '#FCFCFC',
+                    borderRadius: 10,
+                    shadowColor: '#000',
+                    shadowOffset: {
+                      width: 0,
+                      height: 2,
+                    },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                    marginBottom: 10,
                   }}>
-                  <Button title="yes" />
-                  <View style={{marginLeft: 10}} />
-                  <Button title="no" />
+                  <Text
+                    style={{marginBottom: 20, color: '#9F9EB3', fontSize: 16}}>
+                    sell {freeDiskStorage / 2} Gb free space for
+                    {((50000 * freeDiskStorage) / 2).toFixed(2)} Boo coin ?
+                  </Text>
+                  <View
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      width: '100%',
+                      justifyContent: 'center',
+                    }}>
+                    <Button
+                      title="yes"
+                      onPress={() => sellSpace((50000 * freeDiskStorage) / 2)}
+                    />
+                    <View style={{marginLeft: 10}} />
+                    <Button title="no" onPress={() => setCancelPopup(true)} />
+                  </View>
                 </View>
-              </View>
+              )}
+
               <FilesList
                 data={images as []}
                 label="Pictures"
