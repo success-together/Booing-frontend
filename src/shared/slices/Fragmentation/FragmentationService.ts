@@ -144,13 +144,3 @@ export const userUsedStorage = async (data: {user_id: string}) => {
     withoutToast: true,
   });
 };
-
-export const getRecentDirectories = async (data: {user_id: string}) => {
-  return Executor({
-    method: 'post',
-    url: `${BaseUrl}/logged-in-user/recentDirectories`,
-    data: data,
-    isSilent: true,
-    withoutToast: true,
-  });
-};

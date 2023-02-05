@@ -23,14 +23,14 @@ import ScanIcon from '../../../Components/ScanIcon/ScanIcon';
 import FolderIcon from '../../../Components/FolderIcon/FolderIcon';
 import LinearGradient from 'react-native-linear-gradient';
 import {setRootLoading} from '../../../shared/slices/rootSlice';
-import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
 import {useIsFocused} from '@react-navigation/native';
+import {userUsedStorage} from '../../../shared/slices/Fragmentation/FragmentationService';
 import {
+  getDirectories,
   getRecentDirectories,
-  userUsedStorage,
-} from '../../../shared/slices/Fragmentation/FragmentationService';
+} from '../../../shared/slices/Directories/DirectoriesService';
 
 const formatRecentFolderName = (name: string) => {
   return name.length <= 10 ? name : name.slice(0, 10) + '...';
@@ -76,9 +76,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
           });
         }
 
+        await getDirectories({user_id});
         await getRecentDirectories({user_id: user_id})
           .then(response => {
-            console.log(response);
             if (response.success) {
               setRecentFolders(response.data);
             }
