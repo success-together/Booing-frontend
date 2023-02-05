@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {persistStore, persistReducer} from 'redux-persist';
 
 import {combineReducers, createStore} from 'redux';
-import storage from 'redux-persist/lib/storage';
 import {rootSlice} from './slices/rootSlice';
 import {authentificationSlice} from './slices/Auth/AuthSlice';
 import {DevicesSlice} from './slices/Devices/DevicesSlice';

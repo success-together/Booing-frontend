@@ -1,12 +1,12 @@
-import Interceptor from './Intersptor';
+// import Interceptor from './Intersptor';
 import axios, {AxiosResponse} from 'axios';
-import {BaseUrl, store} from './index';
+import {store} from './index';
 import {ExecutorInterface} from '../models/Executor';
 import {setRootLoading} from './slices/rootSlice';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import ManageApps from '../utils/manageApps';
-var RNFS = require('react-native-fs');
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import ManageApps from '../utils/manageApps';
+// var RNFS = require('react-native-fs');
 
 export function Executor(config: ExecutorInterface): Promise<any> {
   // get token from asycn storage

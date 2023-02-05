@@ -160,16 +160,15 @@ export default function FilesList({
   );
 
   const onDeleteFilesPress = useCallback(async () => {
+    setItems([]);
     const paths = selectedFilesIds.reduce<string[]>((acc, id) => {
-      const item = data.find((e: RenderFileData['item']) => e.id === id);
+      const item = items.find((e: RenderFileData['item']) => e.id === id);
       if (item) {
         acc.push((item as any).path);
         return acc;
       }
       return acc;
     }, []);
-
-    console.log({paths});
 
     let isDeleted;
 
@@ -214,7 +213,7 @@ export default function FilesList({
         text1: 'items deleted successfully',
       });
     }
-  }, [selectedFilesIds, data, refetchByLabel]);
+  }, [selectedFilesIds, items, refetchByLabel]);
 
   const onDeleteAppsPress = async () => {
     const apps = selectedFilesIds.reduce<any[]>((acc, id) => {
@@ -243,6 +242,9 @@ export default function FilesList({
 
   const renderFile = useCallback(
     ({item: {name, path, id, thumbnail, visibleCacheSize}}: RenderFileData) => {
+      if (name.includes('other')) {
+        console.log({name});
+      }
       return (
         <File
           name={name}
@@ -260,7 +262,7 @@ export default function FilesList({
         />
       );
     },
-    [selectedFilesIds, onPress, data],
+    [selectedFilesIds, onPress, data, items],
   );
 
   useEffect(() => {
@@ -294,6 +296,7 @@ export default function FilesList({
 
   const nextSet = useCallback(
     (initial?: Iterator<[]>) => {
+      console.log(items.length, data.length);
       if (items.length === data.length) {
         return;
       }
@@ -311,7 +314,7 @@ export default function FilesList({
         if (next && !next.done) {
           setTimeout(() => {
             setItems(next.value);
-          }, 500);
+          }, 100);
         } else {
           setItems([]);
         }
@@ -322,7 +325,7 @@ export default function FilesList({
       if (next && !next.done) {
         setTimeout(() => {
           setItems(next.value);
-        }, 500);
+        }, 100);
       } else {
         setItems([]);
       }
@@ -331,6 +334,7 @@ export default function FilesList({
   );
 
   useEffect(() => {
+    setItems([]);
     const iterator = (function* () {
       const dataCopy: typeof data = [];
       let prevPos = 0;

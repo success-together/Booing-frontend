@@ -1,17 +1,21 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, {useEffect, useRef, useState} from 'react';
 import {
   Text,
   View,
   StyleSheet,
   ScrollView,
-  Button,
   DrawerLayoutAndroid,
   Pressable,
 } from 'react-native';
 import TransactionsHeader from './TransactionHeader/TransactionHeader';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
+import {getWallet} from '../../../shared/slices/wallet/walletService';
+import {store} from '../../../shared';
+import {useIsFocused} from '@react-navigation/native';
+import {Wallet} from '../../../models/Wallet';
 
 const Transactions = ({navigation}: any) => {
   const [isClicked, SetIsClicked] = useState<boolean>(false);
@@ -25,6 +29,38 @@ const Transactions = ({navigation}: any) => {
   //   drawer.current?.closeDrawer()
   // }, []);
   // console.log(drawer);
+  const [transactions, setTransaction] = useState<[]>([]);
+  const [wallet, setWallet] = useState<Wallet>();
+
+  // const changeDrawerPosition = () => {
+  //   if (drawerPosition === 'left') {
+  //     setDrawerPosition('right');
+  //   } else {
+  //     setDrawerPosition('left');
+  //   }
+  // };
+
+  const user_id = store.getState().authentication.userId;
+  const isFocused = useIsFocused();
+
+  const getTransactions = async () => {
+    if (user_id) {
+      return await getWallet({user_id: user_id})
+        .then(res => {
+          console.log(res);
+          if (res.success) setWallet(res.data);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    }
+  };
+
+  useEffect(() => {
+    if (isFocused) {
+      getTransactions();
+    }
+  }, [isFocused]);
 
   const navigationView = () => (
     <View style={styles.Drawercontainer}>
@@ -125,57 +161,79 @@ const Transactions = ({navigation}: any) => {
               title="Open drawer"
               onPress={() => drawer.current?.openDrawer()}
             /> */}
-            <View style={{marginLeft: 10, marginTop: 4}}>
-              <Text style={styles.title}>Today</Text>
-            </View>
-            <View style={styles.list}>
-              <View style={styles.card}>
-                <Ionicons
-                  name="arrow-down-circle-sharp"
-                  size={50}
-                  color="#07FA93"
-                />
-                <View style={styles.Storage1}>
-                  <View>
-                    <Text style={styles.Storage2}>Received</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.Storage3}>March 05.2022</Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.Storage11}>
-                <View>
-                  <Text style={styles.Storage22}>01.000Boo</Text>
-                </View>
-                <View>
-                  <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
-                </View>
-              </View>
-            </View>
-            <View style={styles.list}>
-              <View style={styles.card}>
-                <Ionicons name="arrow-up-circle-sharp" size={50} color="red" />
-                <View style={styles.Storage1}>
-                  <View>
-                    <Text style={styles.Storage2}>Sent</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.Storage3}>March 05.2022</Text>
-                  </View>
-                </View>
-              </View>
-              <View style={styles.Storage11}>
-                <View>
-                  <Text style={styles.Storage222}>01.000Boo</Text>
-                </View>
-                <View>
-                  <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
-                </View>
-              </View>
-            </View>
 
-            <View style={{marginLeft: 10, marginTop: 4}}>
+            {/* <View style={{marginLeft: 10, marginTop: 4}}>
+              <Text style={styles.title}>Today</Text>
+            </View> */}
+            {wallet?.transactions.map(transaction => {
+              return (
+                <>
+                  {transaction.isIncremenet ? (
+                    <View style={styles.list}>
+                      <View style={styles.card}>
+                        <Ionicons
+                          name="arrow-down-circle-sharp"
+                          size={50}
+                          color="#07FA93"
+                        />
+                        <View style={styles.Storage1}>
+                          <View>
+                            <Text style={styles.Storage2}>Received</Text>
+                          </View>
+                          <View>
+                            <Text style={styles.Storage3}>
+                              {transaction.date}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      <View style={styles.Storage11}>
+                        <View>
+                          <Text style={styles.Storage22}>
+                            {transaction.amount}
+                          </Text>
+                        </View>
+                        {/* <View>
+                          <Text style={styles.Storage3}></Text>
+                        </View> */}
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.list}>
+                      <View style={styles.card}>
+                        <Ionicons
+                          name="arrow-up-circle-sharp"
+                          size={50}
+                          color="red"
+                        />
+                        <View style={styles.Storage1}>
+                          <View>
+                            <Text style={styles.Storage2}>Sent</Text>
+                          </View>
+                          <View>
+                            <Text style={styles.Storage3}>
+                              {transaction.date}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      <View style={styles.Storage11}>
+                        <View>
+                          <Text style={styles.Storage222}>
+                            {transaction.amount}
+                          </Text>
+                        </View>
+                        {/* <View>
+                          <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
+                        </View> */}
+                      </View>
+                    </View>
+                  )}
+                </>
+              );
+            })}
+
+            {/* <View style={{marginLeft: 10, marginTop: 4}}>
               <Text style={styles.title}>Yesterday</Text>
             </View>
             <View style={styles.list}>
@@ -248,7 +306,7 @@ const Transactions = ({navigation}: any) => {
                   <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
                 </View>
               </View>
-            </View>
+            </View> */}
           </View>
         </ScrollView>
       </DrawerLayoutAndroid>
