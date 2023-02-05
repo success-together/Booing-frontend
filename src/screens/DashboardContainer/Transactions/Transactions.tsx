@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Text,
   View,
@@ -15,21 +15,19 @@ import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 
 const Transactions = ({navigation}: any) => {
   const [isClicked, SetIsClicked] = useState<boolean>(false);
-  const drawer = useRef<DrawerLayoutAndroid>(null);
+  let drawer = useRef<DrawerLayoutAndroid>(null);
   const [drawerPosition, setDrawerPosition] = useState<'left' | 'right'>(
     'left',
   );
-
-  const changeDrawerPosition = () => {
-    if (drawerPosition === 'left') {
-      setDrawerPosition('right');
-    } else {
-      setDrawerPosition('left');
-    }
-  };
+  
+  // useEffect(() => {
+  //   SetIsClicked(false)
+  //   drawer.current?.closeDrawer()
+  // }, []);
+  // console.log(drawer);
 
   const navigationView = () => (
-    <View style={[styles.Drawercontainer]}>
+    <View style={styles.Drawercontainer}>
       <Text style={styles.text}>Sert Try Date</Text>
       <Pressable
         style={styles.day}
@@ -96,12 +94,8 @@ const Transactions = ({navigation}: any) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.containerImage}>
-        <TransactionsHeader
-          SetIsClicked={SetIsClicked}
-          navigation={navigation}
-        />
-      </View>
+      <>
+      {isClicked && drawer.current?.openDrawer()}
       <DrawerLayoutAndroid
         ref={drawer}
         drawerWidth={300}
@@ -110,7 +104,13 @@ const Transactions = ({navigation}: any) => {
         onDrawerClose={() => {
           SetIsClicked(false);
         }}>
-        {isClicked && drawer.current?.openDrawer()}
+        <View style={styles.containerImage}>
+          <TransactionsHeader
+            SetIsClicked={SetIsClicked}
+            navigation={navigation}
+          />
+        </View>
+        
         <ScrollView style={styles.scrollView}>
           <View style={{padding: 4, marginTop: 20}}>
             {/* <DrawerLayoutAndroid
@@ -252,6 +252,7 @@ const Transactions = ({navigation}: any) => {
           </View>
         </ScrollView>
       </DrawerLayoutAndroid>
+      </>
     </View>
   );
 };

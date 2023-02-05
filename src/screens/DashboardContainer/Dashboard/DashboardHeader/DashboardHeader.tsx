@@ -12,7 +12,7 @@ const DashboardHeader = ({navigation}: {navigation: any}) => {
       <View style={styles.topBar}>
         <Image style={styles.image} source={small_logo} />
         <Text style={styles.BooingTitle}>BOING BALANCE</Text>
-        <Ionicons name="search" size={24} color="white" />
+        <Ionicons name="search" size={24} color="white" onPress={()=>{ navigation.navigate('Files')}} />
       </View>
       <View style={styles.coins}>
         <Text style={styles.title}>12.003 Boo</Text>

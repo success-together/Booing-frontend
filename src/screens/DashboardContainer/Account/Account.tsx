@@ -119,7 +119,7 @@ const Account = ({ navigation }: { navigation: any }) => {
                   size={20}
                   color="#CED5D8"
                 />
-                <Text style={styles.text}>Registred devices</Text>
+                <Text style={styles.text}>Registered devices</Text>
               </View>
               {/* <Text
                 style={{
