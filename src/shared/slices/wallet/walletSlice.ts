@@ -1,11 +1,21 @@
-import {createSlice} from '@reduxjs/toolkit';
+import {PayloadAction, createSlice} from '@reduxjs/toolkit';
 
-export interface InitialState {}
+export interface InitialState {
+  data: any;
+}
 
-export const initialState: InitialState = {};
+export const initialState: InitialState = {
+  data: [],
+};
 
-export const fragmentationSlice = createSlice({
+export const walletSlice = createSlice({
   name: 'wallet',
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    setWallet: (state: {data: any}, action: PayloadAction<any>) => {
+      state.data = action.payload;
+    },
+  },
 });
+
+export const {setWallet} = walletSlice.actions;

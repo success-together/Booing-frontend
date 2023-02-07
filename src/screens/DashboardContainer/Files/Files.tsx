@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useCallback, useEffect, useState} from 'react';
 import {
   Text,
@@ -25,6 +26,7 @@ import CheckBox from '../../../Components/CheckBox/CheckBox';
 import Folder, {FolderProps} from './FolderPage/Folder';
 import {setRootLoading} from '../../../shared/slices/rootSlice';
 import {useIsFocused} from '@react-navigation/native';
+import {getDirectories} from '../../../shared/slices/Directories/DirectoriesService';
 
 export const FolderIcon = (props: SvgProps) => {
   return (
@@ -310,6 +312,8 @@ const Files = ({navigation}: {navigation: any}) => {
   const [folders, setFolders] = useState([]);
   const [isCreatedFolderShown, setIsCreateFolderShown] = useState(false);
   const user_id = store.getState().authentication.userId;
+  const directoires = store.getState().directories.data;
+
   const isFocused = useIsFocused();
 
   const fetchFolders = useCallback(async () => {
@@ -321,23 +325,30 @@ const Files = ({navigation}: {navigation: any}) => {
     }
 
     try {
-      store.dispatch(setRootLoading(true));
-      const response = await axios({
-        method: 'POST',
-        url: `${BaseUrl}/logged-in-user/directories`,
-        headers: {
-          Accept: 'application/json',
-          'Content-type': 'application/json',
-        },
-        data: {
-          user_id,
-        },
-      });
+      // console.log('directories from sotre : ' + JSON.stringify(directoires));
+      // store.dispatch(setRootLoading(true));
+      // const response = await axios({
+      //   method: 'POST',
+      //   url: `${BaseUrl}/logged-in-user/directories`,
+      //   headers: {
+      //     Accept: 'application/json',
+      //     'Content-type': 'application/json',
+      //   },
+      //   data: {
+      //     user_id,
+      //   },
+      // });
 
-      if (response.status === 200) {
-        const data = response.data.data;
-        setFolders(data);
-      }
+      // if (response.status === 200) {
+      //   const data = response.data.data;
+      //   setFolders(data);
+      // }
+      await getDirectories({user_id}).then(res => {
+        // console.log(res);
+        if (res.success) {
+          setFolders(res.data);
+        }
+      });
     } catch (e: any) {
       if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
         return Toast.show({
@@ -356,6 +367,8 @@ const Files = ({navigation}: {navigation: any}) => {
 
   useEffect(() => {
     if (isFocused) {
+      console.log(directoires);
+      if (directoires.length !== 0) setFolders(directoires);
       fetchFolders();
     }
   }, [user_id, isFocused]);
@@ -439,10 +452,10 @@ const Files = ({navigation}: {navigation: any}) => {
         <ScrollView
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}>
-          {folders.length === 0 ? (
+          {folders?.length === 0 ? (
             <NoDataFound />
           ) : (
-            folders.map((folderProps: FolderProps) => (
+            folders?.map((folderProps: FolderProps) => (
               <Folder
                 {...folderProps}
                 showFolder={navigateToFolder(folderProps.id)}

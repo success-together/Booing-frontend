@@ -1,5 +1,6 @@
-import {BaseUrl} from '../..';
+import {BaseUrl, store} from '../..';
 import {Executor} from '../../Executor';
+import {setWallet} from './walletSlice';
 
 export const getWallet = async (data: {user_id: string}) => {
   return Executor({
@@ -7,6 +8,9 @@ export const getWallet = async (data: {user_id: string}) => {
     url: BaseUrl + '/getWallet/' + data.user_id,
     isSilent: false,
     withoutToast: true,
+    successFun(res) {
+      store.dispatch(setWallet(res.data));
+    },
   });
 };
 

@@ -301,7 +301,8 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                   <Text
                     style={{marginBottom: 20, color: '#9F9EB3', fontSize: 16}}>
                     sell {freeDiskStorage / 2} Gb free space for
-                    {((50000 * freeDiskStorage) / 2).toFixed(2)} Boo coin ?
+                    {Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10} Boo
+                    coin ?
                   </Text>
                   <View
                     style={{
@@ -312,7 +313,11 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                     }}>
                     <Button
                       title="yes"
-                      onPress={() => sellSpace((50000 * freeDiskStorage) / 2)}
+                      onPress={() =>
+                        sellSpace(
+                          Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10,
+                        )
+                      }
                     />
                     <View style={{marginLeft: 10}} />
                     <Button title="no" onPress={() => setCancelPopup(true)} />
