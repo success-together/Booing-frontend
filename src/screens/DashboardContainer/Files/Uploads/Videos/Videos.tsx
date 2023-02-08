@@ -128,6 +128,7 @@ const Videos = ({navigation}: any) => {
               controls
             />
           }
+          uri={isShowingFile.uri}
           setIsShowingFile={setIsShowingFile}
         />
       ) : (
