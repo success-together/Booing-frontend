@@ -300,9 +300,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                   }}>
                   <Text
                     style={{marginBottom: 20, color: '#9F9EB3', fontSize: 16}}>
-                    sell {freeDiskStorage / 2} Gb free space for
-                    {Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10} Boo
-                    coin ?
+                    sell {freeDiskStorage / 2} Gb free space for {Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10} Boo coin ?
                   </Text>
                   <View
                     style={{

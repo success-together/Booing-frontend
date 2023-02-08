@@ -3,18 +3,34 @@ import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {threeVerticleDots} from '../../../../../images/export';
 import Feather from 'react-native-vector-icons/Feather';
+import Share from 'react-native-share';
 
 interface ShowFileWrapperProps {
   title?: string;
   displayComponent: ReactNode;
   setIsShowingFile: Dispatch<SetStateAction<any>>;
+  uri?: string;
 }
 
 const ShowFileWrapper = ({
   title,
   displayComponent,
   setIsShowingFile,
+  uri,
 }: ShowFileWrapperProps) => {
+
+  const sharing = async () => {
+    const shareOptions = {
+      message: ' ',
+      url: uri
+    };
+    try {
+      const shareResponse = await Share.open(shareOptions);
+    } catch (error) {
+      console.log('Error ==>', error);
+    }
+  };
+
   return (
     <View style={{flex: 1, display: 'flex'}}>
       <View
@@ -110,7 +126,8 @@ const ShowFileWrapper = ({
               justifyContent: 'center',
               alignItems: 'center',
               padding: 15,
-            }}>
+            }}
+            onPress={sharing}>
             <Text style={{color: '#49ACFA', fontWeight: '500'}}>Share</Text>
           </TouchableOpacity>
         </View>
