@@ -3,6 +3,7 @@ export interface Wallet {
   user_id: string;
   amount: number;
   transactions: Array<Transactions>;
+  isSelledSpace: boolean;
 }
 
 export interface Transactions {

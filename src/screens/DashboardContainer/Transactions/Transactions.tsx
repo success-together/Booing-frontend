@@ -16,6 +16,7 @@ import {getWallet} from '../../../shared/slices/wallet/walletService';
 import {store} from '../../../shared';
 import {useIsFocused} from '@react-navigation/native';
 import {Wallet} from '../../../models/Wallet';
+import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
 
 const Transactions = ({navigation}: any) => {
   const [isClicked, SetIsClicked] = useState<boolean>(false);
@@ -23,7 +24,6 @@ const Transactions = ({navigation}: any) => {
   const [drawerPosition, setDrawerPosition] = useState<'left' | 'right'>(
     'left',
   );
-  const [transactions, setTransaction] = useState<[]>([]);
   const [wallet, setWallet] = useState<Wallet>();
 
   // const changeDrawerPosition = () => {
@@ -157,73 +157,78 @@ const Transactions = ({navigation}: any) => {
             {/* <View style={{marginLeft: 10, marginTop: 4}}>
               <Text style={styles.title}>Today</Text>
             </View> */}
-            {wallet?.transactions.map(transaction => {
-              return (
-                <>
-                  {transaction.isIncremenet ? (
-                    <View style={styles.list}>
-                      <View style={styles.card}>
-                        <Ionicons
-                          name="arrow-down-circle-sharp"
-                          size={50}
-                          color="#07FA93"
-                        />
-                        <View style={styles.Storage1}>
-                          <View>
-                            <Text style={styles.Storage2}>Received</Text>
+
+            {wallet && wallet.transactions.length > 0 ? (
+              wallet?.transactions.map(transaction => {
+                return (
+                  <>
+                    {transaction.isIncremenet ? (
+                      <View style={styles.list}>
+                        <View style={styles.card}>
+                          <Ionicons
+                            name="arrow-down-circle-sharp"
+                            size={50}
+                            color="#07FA93"
+                          />
+                          <View style={styles.Storage1}>
+                            <View>
+                              <Text style={styles.Storage2}>Received</Text>
+                            </View>
+                            <View>
+                              <Text style={styles.Storage3}>
+                                {transaction?.date}
+                              </Text>
+                            </View>
                           </View>
+                        </View>
+                        <View style={styles.Storage11}>
                           <View>
-                            <Text style={styles.Storage3}>
-                              {transaction.date}
+                            <Text style={styles.Storage22}>
+                              {transaction.amount}
                             </Text>
                           </View>
-                        </View>
-                      </View>
-                      <View style={styles.Storage11}>
-                        <View>
-                          <Text style={styles.Storage22}>
-                            {transaction.amount}
-                          </Text>
-                        </View>
-                        {/* <View>
+                          {/* <View>
                           <Text style={styles.Storage3}></Text>
                         </View> */}
+                        </View>
                       </View>
-                    </View>
-                  ) : (
-                    <View style={styles.list}>
-                      <View style={styles.card}>
-                        <Ionicons
-                          name="arrow-up-circle-sharp"
-                          size={50}
-                          color="red"
-                        />
-                        <View style={styles.Storage1}>
-                          <View>
-                            <Text style={styles.Storage2}>Sent</Text>
+                    ) : (
+                      <View style={styles.list}>
+                        <View style={styles.card}>
+                          <Ionicons
+                            name="arrow-up-circle-sharp"
+                            size={50}
+                            color="red"
+                          />
+                          <View style={styles.Storage1}>
+                            <View>
+                              <Text style={styles.Storage2}>Sent</Text>
+                            </View>
+                            <View>
+                              <Text style={styles.Storage3}>
+                                {transaction.date}
+                              </Text>
+                            </View>
                           </View>
+                        </View>
+                        <View style={styles.Storage11}>
                           <View>
-                            <Text style={styles.Storage3}>
-                              {transaction.date}
+                            <Text style={styles.Storage222}>
+                              {transaction.amount}
                             </Text>
                           </View>
-                        </View>
-                      </View>
-                      <View style={styles.Storage11}>
-                        <View>
-                          <Text style={styles.Storage222}>
-                            {transaction.amount}
-                          </Text>
-                        </View>
-                        {/* <View>
+                          {/* <View>
                           <Text style={styles.Storage3}>TX_D: 40.000.000</Text>
                         </View> */}
+                        </View>
                       </View>
-                    </View>
-                  )}
-                </>
-              );
-            })}
+                    )}
+                  </>
+                );
+              })
+            ) : (
+              <NoDataFound />
+            )}
 
             {/* <View style={{marginLeft: 10, marginTop: 4}}>
               <Text style={styles.title}>Yesterday</Text>

@@ -31,6 +31,8 @@ import {
   getDirectories,
   getRecentDirectories,
 } from '../../../shared/slices/Directories/DirectoriesService';
+import {getWallet} from '../../../shared/slices/wallet/walletService';
+import {Wallet} from '../../../models/Wallet';
 
 const formatRecentFolderName = (name: string) => {
   return name.length <= 10 ? name : name.slice(0, 10) + '...';
@@ -62,6 +64,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       }
     | undefined
   >(undefined);
+  const [wallet, setWallet] = useState<Wallet>();
   const isFocused = useIsFocused();
   const user_id = store.getState().authentication.userId;
 
@@ -75,7 +78,10 @@ const Dashboard = ({navigation}: {navigation: any}) => {
             text1: 'cannot get recent folders, you are not logged in !',
           });
         }
-
+        await getWallet({user_id}).then(res => {
+          console.log(res);
+          if (res.success) setWallet(res.data);
+        });
         await getDirectories({user_id});
         await getRecentDirectories({user_id: user_id})
           .then(response => {

@@ -6,7 +6,7 @@ export const getWallet = async (data: {user_id: string}) => {
   return Executor({
     method: 'get',
     url: BaseUrl + '/getWallet/' + data.user_id,
-    isSilent: false,
+    isSilent: true,
     withoutToast: true,
     successFun(res) {
       store.dispatch(setWallet(res.data));
@@ -18,6 +18,7 @@ export const Transaction = async (data: {
   isIncremenet: boolean;
   coins: number;
   user_id: string;
+  isSpaceSelled?: boolean;
 }) => {
   return Executor({
     method: 'post',
