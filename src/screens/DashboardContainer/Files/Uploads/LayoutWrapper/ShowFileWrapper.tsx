@@ -73,7 +73,7 @@ const ShowFileWrapper = ({
           </Text>
         </View>
         <View style={{display: 'flex', flexDirection: 'row'}}>
-          <AntDesign name="staro" size={20} color={'black'} />
+          {/* <AntDesign name="staro" size={20} color={'black'} /> */}
           <Image
             source={threeVerticleDots}
             resizeMode={'contain'}
@@ -91,7 +91,7 @@ const ShowFileWrapper = ({
       </View>
       <View style={styles.uploadContainer}>
         <View>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={{
               backgroundColor: 'white',
               borderRadius: 15,
@@ -102,10 +102,10 @@ const ShowFileWrapper = ({
               marginRight: 16,
             }}>
             <Feather name="check-square" size={18} color="#C6D2E8" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
         <View style={{display: 'flex', flexDirection: 'row'}}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={{
               backgroundColor: 'white',
               borderRadius: 15,
@@ -116,7 +116,7 @@ const ShowFileWrapper = ({
               marginRight: 16,
             }}>
             <Feather name="message-square" size={18} color="#C6D2E8" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={{

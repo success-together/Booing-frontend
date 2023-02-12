@@ -132,7 +132,7 @@ const Account = ({ navigation }: { navigation: any }) => {
               
               </Text> */}
             </Pressable>
-            <Pressable style={styles.button}>
+            {/* <Pressable style={styles.button}>
               <View style={{ flexDirection: "row" }}>
                 <Entypo
                   style={styles.icon}
@@ -149,11 +149,11 @@ const Account = ({ navigation }: { navigation: any }) => {
                 size={20}
                 color="#CED5D8"
               />
-            </Pressable>
+            </Pressable> */}
           </View>
           <View style={styles.sectionView}>
             <Text style={styles.title}>Account information</Text>
-            <Pressable style={styles.button}>
+            <Pressable style={styles.button} onPress={() => navigation.navigate("Booingcoin")}>
               <View style={{ flexDirection: "row" }}>
                 <MaterialIcons
                   style={styles.icon}
