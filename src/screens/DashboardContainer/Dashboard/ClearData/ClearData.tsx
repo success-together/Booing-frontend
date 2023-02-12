@@ -47,16 +47,14 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [showData, setShowData] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [showModal, setShowModal] = useState({show: true, loading: false});
-
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
-  const [apps, setApps] = useState([]);
   const [music, setMusic] = useState([]);
   const [thumbnails, setThumbnails] = useState([]);
   const [emptyFolders, setEmptyFolders] = useState([]);
   const [notInstalledApks, setNotInstalledApks] = useState([]);
   const [cancelPopup, setCancelPopup] = useState<boolean>(false);
-
+  const [isSelledSpace, setIsSelledSpace] = useState<boolean>(false);
   const user_id = store.getState().authentication.userId;
 
   const [progressProps, setProgressProps] = useState({
@@ -167,6 +165,8 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   useEffect(() => {
     if (isFocused) {
       (async () => {
+        console.log(store.getState().wallet.data.isSpaceSelled);
+        setIsSelledSpace(store.getState().wallet.data.isSpaceSelled);
         setProgressProps({text: '', progress: 0});
         await scanUserStorage();
       })();
@@ -175,13 +175,16 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
 
   const sellSpace = async (coins: number) => {
     user_id &&
-      Transaction({coins: coins, isIncremenet: true, user_id: user_id}).then(
-        res => {
-          if (res.success) {
-            setCancelPopup(true);
-          }
-        },
-      );
+      Transaction({
+        coins: coins,
+        isIncremenet: true,
+        user_id: user_id,
+        isSpaceSelled: true,
+      }).then(res => {
+        if (res.success) {
+          setCancelPopup(true);
+        }
+      });
   };
 
   // useEffect(() => {
@@ -282,7 +285,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         <View style={styles.main}>
           {showData && (
             <>
-              {!cancelPopup && (
+              {!cancelPopup && !isSelledSpace && (
                 <View
                   style={{
                     padding: 10,
