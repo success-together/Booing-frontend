@@ -85,7 +85,7 @@ export const SegmentedAutoMovingInput = ({
               ? inputStyle(index)
               : undefined
           }
-          placeholder={'0'}
+          
           onChangeText={val => changeSegment(val, index)}
         />
       ))}
@@ -240,6 +240,7 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
                 autoComplete={'email'}
                 onChangeText={e => setEmail(e)}
                 style={{
+                  color: 'black',
                   backgroundColor: '#F8F8F8',
                   borderRadius: 8,
                   marginBottom: '3.24%',
@@ -310,6 +311,7 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
                     marginBottom: 16,
                   }}
                   inputStyle={index => ({
+                    color: 'black',
                     backgroundColor: '#F8F8F8',
                     borderRadius: 8,
                     flex: 1,

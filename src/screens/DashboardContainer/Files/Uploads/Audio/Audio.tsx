@@ -105,6 +105,7 @@ const Audio = ({navigation}: any) => {
               controls
             />
           }
+          uri={isShowingFile.uri}
           setIsShowingFile={setIsShowingFile}
         />
       ) : (

@@ -51,7 +51,7 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
         </View>
       </View>
       <View style={styles.containerBody}>
-        <Text style={styles.title}>Registred Devices</Text>
+        <Text style={styles.title}>Registered Devices</Text>
         <View style={styles.sectionView}>
           <View>
             {devices[0]?.name !== '' &&

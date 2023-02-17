@@ -2,11 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {persistStore, persistReducer} from 'redux-persist';
 
 import {combineReducers, createStore} from 'redux';
-import storage from 'redux-persist/lib/storage';
 import {rootSlice} from './slices/rootSlice';
 import {authentificationSlice} from './slices/Auth/AuthSlice';
 import {DevicesSlice} from './slices/Devices/DevicesSlice';
 import {fragmentationSlice} from './slices/Fragmentation/FragmentationSlice';
+import {directoriesSlice} from './slices/Directories/DirectoriesSlice';
+import {walletSlice} from './slices/wallet/walletSlice';
 
 const persistConfig = {
   key: 'root',
@@ -18,6 +19,8 @@ const rootReducer = combineReducers({
   authentication: authentificationSlice.reducer,
   devices: DevicesSlice.reducer,
   fragmentation: fragmentationSlice.reducer,
+  directories: directoriesSlice.reducer,
+  wallet: walletSlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

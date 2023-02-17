@@ -75,6 +75,7 @@ const Documents = ({navigation}: any) => {
               <Ionicons name="document-outline" size={200} />
             </View>
           }
+          uri={isShowingFile.uri}
           setIsShowingFile={setIsShowingFile}
         />
       ) : (
