@@ -75,6 +75,7 @@ const Downloads = ({navigation}: any) => {
               <MaterialIcons name="file-download" size={200} />
             </View>
           }
+          uri={isShowingFile.uri}
           setIsShowingFile={setIsShowingFile}
         />
       ) : (

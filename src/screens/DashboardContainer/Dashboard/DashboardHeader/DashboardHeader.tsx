@@ -1,22 +1,35 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {StyleSheet, Text, View, Image, Pressable} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {small_logo} from '../../../../images/export';
+import {useIsFocused} from '@react-navigation/native';
+import {store} from '../../../../shared';
+import {Wallet} from '../../../../models/Wallet';
 
 const DashboardHeader = ({navigation}: {navigation: any}) => {
+  const isFocused = useIsFocused();
+  const [wallet, setWallet] = useState<Wallet>();
+
+  useEffect(() => {
+    if (isFocused) {
+      (async () => {
+        setWallet(store.getState().wallet.data);
+      })();
+    }
+  }, [isFocused]);
+
   return (
     <View style={styles.DashboardHeader}>
       <View style={styles.topBar}>
         <Image style={styles.image} source={small_logo} />
         <Text style={styles.BooingTitle}>BOING BALANCE</Text>
-        <Ionicons name="search" size={24} color="white" />
+        <Ionicons name="search" size={24} color="white" onPress={()=>{ navigation.navigate('Files')}} />
       </View>
       <View style={styles.coins}>
-        <Text style={styles.title}>12.003 Boo</Text>
-        <Text style={styles.title}>12 | +E 56.03</Text>
+        <Text style={styles.title}>{wallet?.amount} Boo</Text>
+        {/* <Text style={styles.title}>12 | +E 56.03</Text> */}
       </View>
       <View style={styles.bottomBar}>
         <Pressable

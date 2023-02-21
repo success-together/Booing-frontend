@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {
-  Image,
   PermissionsAndroid,
   Pressable,
   ScrollView,
@@ -10,7 +9,6 @@ import {
   View,
 } from 'react-native';
 import {DashboardHeader} from '../../exports';
-import Entypo from 'react-native-vector-icons/Entypo';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import * as Progress from 'react-native-progress';
 import Geolocation from 'react-native-geolocation-service';
@@ -25,11 +23,16 @@ import ScanIcon from '../../../Components/ScanIcon/ScanIcon';
 import FolderIcon from '../../../Components/FolderIcon/FolderIcon';
 import LinearGradient from 'react-native-linear-gradient';
 import {setRootLoading} from '../../../shared/slices/rootSlice';
-import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
 import {useIsFocused} from '@react-navigation/native';
 import {userUsedStorage} from '../../../shared/slices/Fragmentation/FragmentationService';
+import {
+  getDirectories,
+  getRecentDirectories,
+} from '../../../shared/slices/Directories/DirectoriesService';
+import {getWallet} from '../../../shared/slices/wallet/walletService';
+import {Wallet} from '../../../models/Wallet';
 
 const formatRecentFolderName = (name: string) => {
   return name.length <= 10 ? name : name.slice(0, 10) + '...';
@@ -61,6 +64,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       }
     | undefined
   >(undefined);
+  const [wallet, setWallet] = useState<Wallet>();
   const isFocused = useIsFocused();
   const user_id = store.getState().authentication.userId;
 
@@ -74,39 +78,25 @@ const Dashboard = ({navigation}: {navigation: any}) => {
             text1: 'cannot get recent folders, you are not logged in !',
           });
         }
-
-        try {
-          store.dispatch(setRootLoading(true));
-          const response = await axios({
-            method: 'POST',
-            url: `${BaseUrl}/logged-in-user/recentDirectories`,
-            headers: {
-              Accept: 'application/json',
-              'Content-type': 'application/json',
-            },
-            data: {
-              user_id,
-            },
+        await getWallet({user_id}).then(res => {
+          console.log(res);
+          if (res.success) setWallet(res.data);
+        });
+        await getDirectories({user_id});
+        await getRecentDirectories({user_id: user_id})
+          .then(response => {
+            if (response.success) {
+              setRecentFolders(response.data);
+            }
+          })
+          .catch(e => {
+            if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
+              return Toast.show({
+                type: 'error',
+                text1: e.response?.data?.message,
+              });
+            }
           });
-
-          if (response.status === 200) {
-            const data = response.data.data;
-            store.dispatch(setRootLoading(false));
-            setRecentFolders(data);
-          }
-        } catch (e: any) {
-          store.dispatch(setRootLoading(false));
-          if (e.name === AXIOS_ERROR && !e.message.includes('code 500')) {
-            return Toast.show({
-              type: 'error',
-              text1: e.response?.data?.message,
-            });
-          }
-          Toast.show({
-            type: 'error',
-            text1: 'something went wrong cannot get recent folders',
-          });
-        }
       })();
     }
   }, [user_id, isFocused]);
@@ -183,7 +173,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
     }
 
     let totalStorage = 0;
-    let isEmulator = DeviceInfo.isEmulator();
+    // let isEmulator = DeviceInfo.isEmulator();
     // if (!isEmulator) {
     DeviceInfo.getTotalDiskCapacity().then(capacity => {
       totalStorage = capacity;
@@ -256,15 +246,17 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       let user: any = store.getState().authentication.loggedInUser;
       if (user?._id)
         await userUsedStorage({user_id: user?._id}).then(res => {
-          if(res?.data[0]?.total)
-          {
+          if (res?.data[0]?.total) {
             console.log(res?.data[0]?.total);
             setUsedStorage(res?.data[0]?.total);
-            setAvailableStorage(Number(((1000000000-res.data[0].total) / 1000000).toFixed(1)));
-            setUsedStoragePerGiga(Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)))
+            setAvailableStorage(
+              Number(((1000000000 - res.data[0].total) / 1000000).toFixed(1)),
+            );
+            setUsedStoragePerGiga(
+              Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)),
+            );
             console.log(usedStoragePerGiga);
           }
-          
         });
     } catch (error) {
       console.log(error);
@@ -599,7 +591,7 @@ const styles = StyleSheet.create({
     color: '#33a1f9',
   },
   available: {
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 21,
     letterSpacing: 0.25,
     fontWeight: 'bold',
@@ -683,7 +675,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   usedSpace: {
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 21,
     letterSpacing: 0.25,
     fontWeight: 'bold',

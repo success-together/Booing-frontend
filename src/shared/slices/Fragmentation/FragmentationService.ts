@@ -1,7 +1,7 @@
 import axios from 'axios';
 import ManageApps from '../../../utils/manageApps';
 import {Executor} from '../../Executor';
-import {store, BaseUrl} from '../../../shared';
+import {BaseUrl} from '../../../shared';
 
 export const checkForDownloads = (data: {user_id: string}) => {
   const url = BaseUrl + '/logged-in-user/checkForDownloads';
@@ -136,7 +136,7 @@ export const uploadFiles = (
   });
 };
 
-export const userUsedStorage = async (data: {user_id: string;}) => {
+export const userUsedStorage = async (data: {user_id: string}) => {
   return Executor({
     method: 'get',
     url: `${BaseUrl}/logged-in-user/getUsedSpace/${data.user_id}`,

@@ -46,12 +46,13 @@ const Login = ({navigation}: {navigation: any}) => {
           paddingBottom: '5.18%',
           flex: 1,
         }}>
-        <Text>Email :</Text>
+        <Text style={styles.title}>Email </Text>
         <TextInput
           placeholder="Enter Email Adress"
           autoComplete={'email'}
           onChangeText={e => setEmail(e)}
           style={{
+            color: 'black',
             backgroundColor: '#F8F8F8',
             borderRadius: 8,
             marginBottom: '5.18%',
@@ -65,7 +66,7 @@ const Login = ({navigation}: {navigation: any}) => {
             flexDirection: 'row',
             justifyContent: 'space-between',
           }}>
-          <Text>Password :</Text>
+          <Text style={styles.title}>Password </Text>
           <Text
             style={{color: '#33A1F9', fontSize: 14}}
             onPress={() =>
@@ -82,6 +83,7 @@ const Login = ({navigation}: {navigation: any}) => {
           secureTextEntry={true}
           onChangeText={e => setPassword(e)}
           style={{
+            color: 'black',
             backgroundColor: '#F8F8F8',
             borderRadius: 8,
             marginBottom: '5.18%',

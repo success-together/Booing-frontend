@@ -56,6 +56,9 @@ const icons = {
   'Empty folders': (size: number, color = '#8F8F8F') => (
     <MaterialCommunityIcons name="folder-outline" size={size} color={color} />
   ),
+  'Not installed apks': (size: number, color = '#8F8F8F') => (
+    <AntDesign name="android1" size={size} color={color} />
+  ),
 };
 
 interface RenderFileData {
@@ -64,6 +67,7 @@ interface RenderFileData {
     name: string;
     visibleCacheSize?: number;
     thumbnail?: string;
+    path: string | null;
   };
 }
 
@@ -112,37 +116,38 @@ export default function FilesList({
   label,
   size,
   refetchByLabel,
+  removeDeletedItems,
 }: FilesListProps) {
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
   const [deleteBtnProps, setDeleteBtnProps] = useState({
     disabled: false,
     show: false,
   });
-  const [items, setItems] = useState([]);
-  const [iterator, setIterator] = useState<Iterator<[]>>();
-  const [viewedItems, setViewedItems] = useState<
-    {id: string; isLoaded: boolean}[]
-  >([]);
-  const [loadedItemsIds, setLoadedItemsIds] = useState<string[]>([]);
+  // const [items, setItems] = useState([]);
+  // const [iterator, setIterator] = useState<Iterator<[]>>();
+  // const [viewedItems, setViewedItems] = useState<
+  //   {id: string; isLoaded: boolean}[]
+  // >([]);
+  // const [loadedItemsIds, setLoadedItemsIds] = useState<string[]>([]);
 
-  const onViewableItemsChanged = ({
-    viewableItems,
-  }: {
-    viewableItems: ViewToken[];
-  }) => {
-    setViewedItems(prev => {
-      const newViewedItems = [];
-      for (const viewToken of viewableItems) {
-        const isExist = prev.findIndex(e => e.id === viewToken.item.id) !== -1;
-        if (!isExist) {
-          newViewedItems.push({id: viewToken.item.id, isLoaded: false});
-        }
-      }
+  // const onViewableItemsChanged = ({
+  //   viewableItems,
+  // }: {
+  //   viewableItems: ViewToken[];
+  // }) => {
+  //   setViewedItems(prev => {
+  //     const newViewedItems = [];
+  //     for (const viewToken of viewableItems) {
+  //       const isExist = prev.findIndex(e => e.id === viewToken.item.id) !== -1;
+  //       if (!isExist) {
+  //         newViewedItems.push({id: viewToken.item.id, isLoaded: false});
+  //       }
+  //     }
 
-      return newViewedItems.length > 0 ? [...prev, ...newViewedItems] : prev;
-    });
-  };
-  const viewabilityConfigCallbackPairs = useRef([{onViewableItemsChanged}]);
+  //     return newViewedItems.length > 0 ? [...prev, ...newViewedItems] : prev;
+  //   });
+  // };
+  // const viewabilityConfigCallbackPairs = useRef([{onViewableItemsChanged}]);
 
   const onPress = useCallback(
     (id: string) => {
@@ -155,6 +160,7 @@ export default function FilesList({
   );
 
   const onDeleteFilesPress = useCallback(async () => {
+    // setItems([]);
     const paths = selectedFilesIds.reduce<string[]>((acc, id) => {
       const item = data.find((e: RenderFileData['item']) => e.id === id);
       if (item) {
@@ -177,20 +183,37 @@ export default function FilesList({
     }
     if (label === 'Empty folders' || label === 'Thumbnails') {
       isDeleted = await ManageApps.deleteDirs(paths);
+      if (isDeleted) {
+        removeDeletedItems(selectedFilesIds, label);
+      }
+    }
+
+    if (label === 'Not installed apks') {
+      isDeleted = await ManageApps.deleteApks(paths);
+      if (isDeleted) {
+        removeDeletedItems(selectedFilesIds, label);
+      }
     }
 
     setDeleteBtnProps({disabled: true, show: true});
-    await refetchByLabel(label);
 
+    if (
+      label !== 'Empty folders' &&
+      label !== 'Thumbnails' &&
+      label !== 'Not installed apks'
+    ) {
+      await refetchByLabel(label);
+    }
+
+    setSelectedFilesIds([]);
     setDeleteBtnProps({disabled: false, show: false});
     if (isDeleted) {
-      setSelectedFilesIds([]);
       return Toast.show({
         type: 'success',
         text1: 'items deleted successfully',
       });
     }
-  }, [selectedFilesIds, data]);
+  }, [selectedFilesIds, refetchByLabel]);
 
   const onDeleteAppsPress = async () => {
     const apps = selectedFilesIds.reduce<any[]>((acc, id) => {
@@ -218,40 +241,44 @@ export default function FilesList({
   };
 
   const renderFile = useCallback(
-    ({item: {name, id, thumbnail, visibleCacheSize}}: RenderFileData) => {
+    ({item: {name, path, id, thumbnail, visibleCacheSize}}: RenderFileData) => {
+      if (name.includes('other')) {
+        console.log({name});
+      }
       return (
         <File
           name={name}
           id={id}
           thumbnail={thumbnail}
-          onPress={onPress}
+          onPress={path !== null ? onPress : undefined}
           visibleCacheSize={visibleCacheSize}
           selected={selectedFilesIds.includes(id)}
           Icon={icons[label]}
-          loaded={() => {
-            setLoadedItemsIds(prev =>
-              prev.includes(id) ? prev : [...prev, id],
-            );
-          }}
+          loaded={() => void 0}
+          // loaded={() => {
+          //   setLoadedItemsIds(prev =>
+          //     prev.includes(id) ? prev : [...prev, id],
+          //   );
+          // }}
         />
       );
     },
     [selectedFilesIds, onPress, data],
   );
 
-  useEffect(() => {
-    setViewedItems(prev => {
-      let changed = false;
-      for (const item of prev) {
-        if (loadedItemsIds.includes(item.id) && !item.isLoaded) {
-          item.isLoaded = true;
-          changed = true;
-        }
-      }
+  // useEffect(() => {
+  //   setViewedItems(prev => {
+  //     let changed = false;
+  //     for (const item of prev) {
+  //       if (loadedItemsIds.includes(item.id) && !item.isLoaded) {
+  //         item.isLoaded = true;
+  //         changed = true;
+  //       }
+  //     }
 
-      return changed ? [...prev] : prev;
-    });
-  }, [viewedItems, loadedItemsIds]);
+  //     return changed ? [...prev] : prev;
+  //   });
+  // }, [viewedItems, loadedItemsIds]);
 
   useEffect(() => {
     if (selectedFilesIds.length !== 0 && !deleteBtnProps.show) {
@@ -268,59 +295,61 @@ export default function FilesList({
     };
   }, [selectedFilesIds]);
 
-  const nextSet = useCallback(
-    (initial?: Iterator<[]>) => {
-      if (items.length === data.length) {
-        return;
-      }
+  // const nextSet = useCallback(
+  //   (initial?: Iterator<[]>) => {
+  //     console.log(items.length, data.length);
+  //     if (items.length === data.length) {
+  //       return;
+  //     }
 
-      if (viewedItems.filter(item => !item.isLoaded).length !== 0) {
-        return Toast.show({
-          type: 'info',
-          text1: label,
-          text2: 'please wait until full content is loaded',
-        });
-      }
+  //     if (viewedItems.filter(item => !item.isLoaded).length !== 0) {
+  //       return Toast.show({
+  //         type: 'info',
+  //         text1: label,
+  //         text2: 'please wait until full content is loaded',
+  //       });
+  //     }
 
-      if (initial) {
-        const next = initial.next();
-        if (next && !next.done) {
-          setTimeout(() => {
-            setItems(next.value);
-          }, 500);
-        } else {
-          setItems([]);
-        }
-        return;
-      }
+  //     if (initial) {
+  //       const next = initial.next();
+  //       if (next && !next.done) {
+  //         setTimeout(() => {
+  //           setItems(next.value);
+  //         }, 100);
+  //       } else {
+  //         setItems([]);
+  //       }
+  //       return;
+  //     }
 
-      const next = iterator!.next();
-      if (next && !next.done) {
-        setTimeout(() => {
-          setItems(next.value);
-        }, 500);
-      } else {
-        setItems([]);
-      }
-    },
-    [items, data, iterator],
-  );
+  //     const next = iterator!.next();
+  //     if (next && !next.done) {
+  //       setTimeout(() => {
+  //         setItems(next.value);
+  //       }, 100);
+  //     } else {
+  //       setItems([]);
+  //     }
+  //   },
+  //   [items, data, iterator],
+  // );
 
-  useEffect(() => {
-    const iterator = (function* () {
-      const dataCopy: typeof data = [];
-      let prevPos = 0;
+  // useEffect(() => {
+  //   setItems([]);
+  //   const iterator = (function* () {
+  //     const dataCopy: typeof data = [];
+  //     let prevPos = 0;
 
-      while (dataCopy.length !== data.length) {
-        dataCopy.push(...data.slice(prevPos, prevPos + 5));
-        prevPos += 5;
-        yield dataCopy;
-      }
-    })();
+  //     while (dataCopy.length !== data.length) {
+  //       dataCopy.push(...data.slice(prevPos, prevPos + 5));
+  //       prevPos += 5;
+  //       yield dataCopy;
+  //     }
+  //   })();
 
-    setIterator(iterator);
-    nextSet(iterator);
-  }, [data]);
+  //   setIterator(iterator);
+  //   nextSet(iterator);
+  // }, [data]);
 
   return (
     <View style={styles.container}>
@@ -339,9 +368,9 @@ export default function FilesList({
             }}>
             {label}
           </Text>
-          {viewedItems.filter(item => !item.isLoaded).length !== 0 && (
+          {/* {viewedItems.filter(item => !item.isLoaded).length !== 0 && (
             <Circle size={16} indeterminate={true} />
-          )}
+          )} */}
         </View>
         <View
           style={{
@@ -367,7 +396,7 @@ export default function FilesList({
           <NoDataFound />
         ) : (
           <FlatList
-            data={items}
+            data={data}
             renderItem={renderFile}
             keyExtractor={item => item.id}
             horizontal
@@ -375,10 +404,9 @@ export default function FilesList({
             initialNumToRender={5}
             removeClippedSubviews={true}
             maxToRenderPerBatch={5}
-            onEndReached={() => nextSet()}
-            viewabilityConfigCallbackPairs={
-              viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
-            }
+            // viewabilityConfigCallbackPairs={
+            //   viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
+            // }
             viewabilityConfig={{
               minimumViewTime: 200,
             }}

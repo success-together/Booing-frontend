@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useCallback, useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Button} from 'react-native';
 import {ReadDirItem} from 'react-native-fs';
@@ -5,13 +6,15 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import ManageApps from '../../../../utils/manageApps';
 import FilesList from '../FilesList/FilesList';
-import {nanoid} from '@reduxjs/toolkit';
+import {isAllOf, nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {ScrollView} from 'react-native';
 import {Bar} from 'react-native-progress';
 import {useIsFocused} from '@react-navigation/native';
 import {store} from '../../../../shared';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
+import {Transaction} from '../../../../shared/slices/wallet/walletService';
+import Toast from 'react-native-toast-message';
 
 export const Progress = ({progress, text}: any) => {
   return (
@@ -44,14 +47,19 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const {freeDiskStorage} = route.params;
   const [showData, setShowData] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
-  const [showModal, setShowModal] = useState({show: true, loading: false});
-
+  const [showModal, setShowModal] = useState<{show: boolean; loading: boolean}>(
+    {show: true, loading: false},
+  );
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
-  const [apps, setApps] = useState([]);
   const [music, setMusic] = useState([]);
   const [thumbnails, setThumbnails] = useState([]);
   const [emptyFolders, setEmptyFolders] = useState([]);
+  const [notInstalledApks, setNotInstalledApks] = useState([]);
+  const [cancelPopup, setCancelPopup] = useState<boolean>(false);
+  const [isSelledSpace, setIsSelledSpace] = useState<boolean>(false);
+  const [rescanOnFocuse, setRescanOnFocus] = useState(true);
+  const user_id = store.getState().authentication.userId;
 
   const [progressProps, setProgressProps] = useState({
     text: '',
@@ -82,6 +90,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
 
   const scanUserStorage = useCallback(async () => {
     try {
+      setRescanOnFocus(false);
       store.dispatch(setRootLoading(false));
       setShowModal({show: true, loading: true});
       setProgressProps(prev => ({...prev, text: 'fetching images ...'}));
@@ -90,11 +99,12 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       setVideos(addId(await ManageApps.getVideos()));
       setProgressProps({text: 'fetching audio files ...', progress: 0.5});
       setMusic(addId(await ManageApps.getAudios()));
-      setApps(addId(await ManageApps.getAllInstalledApps()));
+      // setApps(addId(await ManageApps.getAllInstalledApps()));
       setProgressProps({text: 'fetching junk files ...', progress: 0.75});
-      const {thumbnails, emptyFolders, notInstalledApps} =
+      const {notInstalledApps, thumbnails, emptyFolders} =
         await ManageApps.getJunkData();
 
+      setNotInstalledApks(addId(notInstalledApps));
       setThumbnails(addId(thumbnails));
       setEmptyFolders(addId(emptyFolders));
       setProgressProps({text: 'done !', progress: 1});
@@ -102,10 +112,15 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       console.log(e.stack);
     } finally {
       setShowData(true);
-
-      setTimeout(() => setShowModal({show: false, loading: false}), 200);
+      setTimeout(() => {
+        setShowModal({show: false, loading: false});
+        Toast.show({
+          text1: 'Scan completed !',
+          onPress: () => navigation.navigate('ClearData', {freeDiskStorage}),
+        });
+      }, 200);
     }
-  }, []);
+  }, [isFocused]);
 
   const removeDeletedItems = (ids: string[], label: string) => {
     const removeItems = (setFn: Function) => {
@@ -121,14 +136,17 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       case 'Music':
         removeItems(setMusic);
         break;
-      case 'Cache':
-        removeItems(setApps);
-        break;
+      // case 'Cache':
+      //   removeItems(setApps);
+      //   break;
       case 'Thumbnails':
         removeItems(setThumbnails);
         break;
       case 'Empty folders':
         removeItems(setEmptyFolders);
+        break;
+      case 'Not installed apks':
+        removeItems(setNotInstalledApks);
         break;
       default:
         break;
@@ -146,29 +164,55 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       case 'Music':
         setMusic(addId(await ManageApps.getAudios()));
         break;
-      case 'Cache':
-        setApps(addId(await ManageApps.getAllInstalledApps()));
-        break;
-      case 'Thumbnails':
-        const {thumbnails} = await ManageApps.getJunkData();
-        setThumbnails(addId(thumbnails));
-        break;
-      case 'Empty folders':
-        const {emptyFolders} = await ManageApps.getJunkData();
-        setEmptyFolders(addId(emptyFolders));
-        break;
+      // case 'Cache':
+      //   setApps(addId(await ManageApps.getAllInstalledApps()));
+      //   break;
       default:
         break;
     }
   };
 
   useEffect(() => {
+    if (isFocused && showModal.loading === false && showModal.show === false) {
+      if (rescanOnFocuse) {
+        setShowData(false);
+        setPermissionGranted(false);
+        setShowModal({show: true, loading: false});
+        setProgressProps({text: '', progress: 0});
+        setRescanOnFocus(false);
+      }
+    }
+
+    if (
+      !isFocused &&
+      showData &&
+      showModal.loading === false &&
+      showModal.show === false
+    ) {
+      setRescanOnFocus(true);
+    }
+  }, [isFocused, rescanOnFocuse]);
+
+  useEffect(() => {
     if (isFocused) {
-      setProgressProps({text: '', progress: 0});
-      scanUserStorage();
+      console.log(store.getState()?.wallet?.data?.isSpaceSelled);
+      setIsSelledSpace(store.getState()?.wallet?.data?.isSpaceSelled);
     }
   }, [isFocused]);
 
+  const sellSpace = async (coins: number) => {
+    user_id &&
+      Transaction({
+        coins: coins,
+        isIncremenet: true,
+        user_id: user_id,
+        isSpaceSelled: true,
+      }).then(res => {
+        if (res.success) {
+          setCancelPopup(true);
+        }
+      });
+  };
   return (
     <View style={styles.container}>
       {showModal.show && (
@@ -263,38 +307,49 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         <View style={styles.main}>
           {showData && (
             <>
-              <View
-                style={{
-                  padding: 10,
-                  backgroundColor: '#FCFCFC',
-                  borderRadius: 10,
-                  shadowColor: '#000',
-                  shadowOffset: {
-                    width: 0,
-                    height: 2,
-                  },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 3.84,
-                  elevation: 5,
-                  marginBottom: 10,
-                }}>
-                <Text
-                  style={{marginBottom: 20, color: '#9F9EB3', fontSize: 16}}>
-                  sell {freeDiskStorage / 2} Gb free space for{' '}
-                  {(50000 * freeDiskStorage) / 2} Boo coin ?
-                </Text>
+              {!cancelPopup && !isSelledSpace && (
                 <View
                   style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    width: '100%',
-                    justifyContent: 'center',
+                    padding: 10,
+                    backgroundColor: '#FCFCFC',
+                    borderRadius: 10,
+                    shadowColor: '#000',
+                    shadowOffset: {
+                      width: 0,
+                      height: 2,
+                    },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                    marginBottom: 10,
                   }}>
-                  <Button title="yes" />
-                  <View style={{marginLeft: 10}} />
-                  <Button title="no" />
+                  <Text
+                    style={{marginBottom: 20, color: '#9F9EB3', fontSize: 16}}>
+                    sell {freeDiskStorage / 2} Gb free space for{' '}
+                    {Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10} Boo
+                    coin ?
+                  </Text>
+                  <View
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      width: '100%',
+                      justifyContent: 'center',
+                    }}>
+                    <Button
+                      title="yes"
+                      onPress={() =>
+                        sellSpace(
+                          Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10,
+                        )
+                      }
+                    />
+                    <View style={{marginLeft: 10}} />
+                    <Button title="no" onPress={() => setCancelPopup(true)} />
+                  </View>
                 </View>
-              </View>
+              )}
+
               <FilesList
                 data={images as []}
                 label="Pictures"
@@ -316,13 +371,13 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                 size={calcSpace(music)}
                 refetchByLabel={refechByLabel}
               />
-              <FilesList
+              {/* <FilesList
                 data={apps.filter((e: any) => e.visibleCacheSize > 0) as []}
                 label="Cache"
                 removeDeletedItems={removeDeletedItems}
                 size={calcSpace(apps, 'visibleCacheSize', 0)}
                 refetchByLabel={refechByLabel}
-              />
+              /> */}
               <FilesList
                 data={thumbnails as []}
                 label="Thumbnails"
@@ -335,6 +390,13 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                 label="Empty folders"
                 removeDeletedItems={removeDeletedItems}
                 size={calcSpace(emptyFolders)}
+                refetchByLabel={refechByLabel}
+              />
+              <FilesList
+                data={notInstalledApks as []}
+                label="Not installed apks"
+                removeDeletedItems={removeDeletedItems}
+                size={calcSpace(notInstalledApks)}
                 refetchByLabel={refechByLabel}
               />
               <View style={{marginTop: 10}}></View>

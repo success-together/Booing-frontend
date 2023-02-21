@@ -13,8 +13,7 @@ import Video from 'react-native-video';
 import {formatUri} from '../Uploads/Videos/Videos';
 import RNFS from 'react-native-fs';
 
-const getDisplayComponent = (type = 'other', uri?: string) => {
-  console.log(type);
+export const getDisplayComponent = (type = 'other', uri?: string) => {
   switch (true) {
     case type === 'image':
       return (

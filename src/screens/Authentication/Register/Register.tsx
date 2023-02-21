@@ -1,12 +1,11 @@
 import React, {useState} from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Image,
   Pressable,
-  Button,
   TextInput,
+  Text,
 } from 'react-native';
 import {Logo} from '../../../images/export';
 import {register} from '../../../shared/slices/Auth/AuthService';
@@ -66,12 +65,13 @@ function Register({navigation}: {navigation: any}) {
           flex: 1,
         }}>
         <View>
-          <Text>Username :</Text>
+          <Text style={styles.title}>Username </Text>
           <TextInput
             placeholder="Enter User Name"
             autoComplete={'name'}
             onChangeText={e => setFormRegister({...formRegister, name: e})}
             style={{
+              color: 'black',
               backgroundColor: '#F8F8F8',
               borderRadius: 8,
               marginBottom: '3.24%',
@@ -79,12 +79,13 @@ function Register({navigation}: {navigation: any}) {
             }}
             placeholderTextColor="#716D6D"
           />
-          <Text>Email :</Text>
+          <Text style={styles.title}>Email </Text>
           <TextInput
             placeholder="Enter Email Adress"
             autoComplete={'email'}
             onChangeText={e => setFormRegister({...formRegister, email: e})}
             style={{
+              color: 'black',
               backgroundColor: '#F8F8F8',
               borderRadius: 8,
               marginBottom: '3.24%',
@@ -92,12 +93,13 @@ function Register({navigation}: {navigation: any}) {
             }}
             placeholderTextColor="#716D6D"
           />
-          <Text>Phone number :</Text>
+          <Text style={styles.title}>Phone number </Text>
           <TextInput
             placeholder="Enter Phone Number"
             autoComplete={'tel'}
             onChangeText={e => setFormRegister({...formRegister, phone: e})}
             style={{
+              color: 'black',
               backgroundColor: '#F8F8F8',
               borderRadius: 8,
               marginBottom: '3.24%',
@@ -105,13 +107,14 @@ function Register({navigation}: {navigation: any}) {
             }}
             placeholderTextColor="#716D6D"
           />
-          <Text>Password :</Text>
+          <Text style={styles.title}>Password </Text>
           <TextInput
             placeholder="Enter Password"
             autoComplete={'password'}
             secureTextEntry={true}
             onChangeText={e => setFormRegister({...formRegister, password: e})}
             style={{
+              color: 'black',
               backgroundColor: '#F8F8F8',
               borderRadius: 8,
               marginBottom: '3.24%',

@@ -8,6 +8,7 @@ import ManageApps from '../../../../../utils/manageApps';
 import Toast from 'react-native-toast-message';
 import {useIsFocused} from '@react-navigation/native';
 
+
 const Images = ({navigation}: {navigation: any}) => {
   const [data, setData] = useState<any[]>([]);
   const [isShowingFile, setIsShowingFile] = useState<{
@@ -20,7 +21,9 @@ const Images = ({navigation}: {navigation: any}) => {
     title: undefined,
   });
   const isFocused = useIsFocused();
+  // console.log('data ',data)
 
+  
   useEffect(() => {
     if (isFocused) {
       useGetUploadData('image')
@@ -71,6 +74,7 @@ const Images = ({navigation}: {navigation: any}) => {
               resizeMode="contain"
             />
           }
+          uri={isShowingFile.uri}
           setIsShowingFile={setIsShowingFile}
         />
       ) : (

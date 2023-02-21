@@ -3,18 +3,34 @@ import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {threeVerticleDots} from '../../../../../images/export';
 import Feather from 'react-native-vector-icons/Feather';
+import Share from 'react-native-share';
 
 interface ShowFileWrapperProps {
   title?: string;
   displayComponent: ReactNode;
   setIsShowingFile: Dispatch<SetStateAction<any>>;
+  uri?: string;
 }
 
 const ShowFileWrapper = ({
   title,
   displayComponent,
   setIsShowingFile,
+  uri,
 }: ShowFileWrapperProps) => {
+
+  const sharing = async () => {
+    const shareOptions = {
+      message: ' ',
+      url: uri
+    };
+    try {
+      const shareResponse = await Share.open(shareOptions);
+    } catch (error) {
+      console.log('Error ==>', error);
+    }
+  };
+
   return (
     <View style={{flex: 1, display: 'flex'}}>
       <View
@@ -57,7 +73,7 @@ const ShowFileWrapper = ({
           </Text>
         </View>
         <View style={{display: 'flex', flexDirection: 'row'}}>
-          <AntDesign name="staro" size={20} color={'black'} />
+          {/* <AntDesign name="staro" size={20} color={'black'} /> */}
           <Image
             source={threeVerticleDots}
             resizeMode={'contain'}
@@ -75,7 +91,7 @@ const ShowFileWrapper = ({
       </View>
       <View style={styles.uploadContainer}>
         <View>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={{
               backgroundColor: 'white',
               borderRadius: 15,
@@ -86,10 +102,10 @@ const ShowFileWrapper = ({
               marginRight: 16,
             }}>
             <Feather name="check-square" size={18} color="#C6D2E8" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
         <View style={{display: 'flex', flexDirection: 'row'}}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={{
               backgroundColor: 'white',
               borderRadius: 15,
@@ -100,7 +116,7 @@ const ShowFileWrapper = ({
               marginRight: 16,
             }}>
             <Feather name="message-square" size={18} color="#C6D2E8" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={{
@@ -110,7 +126,8 @@ const ShowFileWrapper = ({
               justifyContent: 'center',
               alignItems: 'center',
               padding: 15,
-            }}>
+            }}
+            onPress={sharing}>
             <Text style={{color: '#49ACFA', fontWeight: '500'}}>Share</Text>
           </TouchableOpacity>
         </View>

@@ -75,6 +75,7 @@ const ApkFiles = ({navigation}: any) => {
               <FontAwsome name="android" size={200} />
             </View>
           }
+          uri={isShowingFile.uri}
           setIsShowingFile={setIsShowingFile}
         />
       ) : (

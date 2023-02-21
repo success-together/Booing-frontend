@@ -11,7 +11,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
 
-const TransactionsHeader = ({navigation}: any) => {
+const TransactionsHeader = (props: any) => {
+  
   return (
     <LinearGradient
       start={{x: 0, y: 0}}
@@ -47,7 +48,7 @@ const TransactionsHeader = ({navigation}: any) => {
           name="arrow-back-ios"
           size={20}
           color="white"
-          onPress={() => navigation.navigate('Dashboard')}
+          onPress={() => props.navigation.navigate('Dashboard')}
         />
         <View
           style={{
@@ -74,7 +75,7 @@ const TransactionsHeader = ({navigation}: any) => {
           />
         </View>
         <View style={styles.materialIcons}>
-          <MaterialIcons name="filter-list" size={25} color="white" />
+          <MaterialIcons name="filter-list" size={25} color="white" onPress={() => { props.SetIsClicked(true)}} />
           <MaterialIcons
             style={{marginLeft: 10}}
             name="arrow-downward"

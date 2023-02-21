@@ -52,7 +52,7 @@ const SelectableItems = ({
       setIsSelecting(true);
       handleSelect(id);
     },
-    [isSelecting],
+    [handleSelect],
   );
 
   const handleCheck = useCallback(() => {
@@ -98,10 +98,11 @@ const SelectableItems = ({
   }, [data, selectedIds]);
 
   const uncheckAll = useCallback(() => {
+    setIsSelecting(false);
     setSelectedIds((prev: string[]) =>
       prev.filter(e => !data.find(item => item.id === e)),
     );
-  }, [data, selectedIds]);
+  }, [data, selectedIds, isSelecting]);
 
   useEffect(() => {
     if (isSelecting === false) {
