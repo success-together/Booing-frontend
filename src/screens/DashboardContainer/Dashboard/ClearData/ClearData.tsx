@@ -6,7 +6,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import ManageApps from '../../../../utils/manageApps';
 import FilesList from '../FilesList/FilesList';
-import {nanoid} from '@reduxjs/toolkit';
+import {isAllOf, nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {ScrollView} from 'react-native';
 import {Bar} from 'react-native-progress';
@@ -14,6 +14,7 @@ import {useIsFocused} from '@react-navigation/native';
 import {store} from '../../../../shared';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {Transaction} from '../../../../shared/slices/wallet/walletService';
+import Toast from 'react-native-toast-message';
 
 export const Progress = ({progress, text}: any) => {
   return (
@@ -46,7 +47,9 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const {freeDiskStorage} = route.params;
   const [showData, setShowData] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
-  const [showModal, setShowModal] = useState({show: true, loading: false});
+  const [showModal, setShowModal] = useState<{show: boolean; loading: boolean}>(
+    {show: true, loading: false},
+  );
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
   const [music, setMusic] = useState([]);
@@ -55,6 +58,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [notInstalledApks, setNotInstalledApks] = useState([]);
   const [cancelPopup, setCancelPopup] = useState<boolean>(false);
   const [isSelledSpace, setIsSelledSpace] = useState<boolean>(false);
+  const [rescanOnFocuse, setRescanOnFocus] = useState(true);
   const user_id = store.getState().authentication.userId;
 
   const [progressProps, setProgressProps] = useState({
@@ -86,6 +90,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
 
   const scanUserStorage = useCallback(async () => {
     try {
+      setRescanOnFocus(false);
       store.dispatch(setRootLoading(false));
       setShowModal({show: true, loading: true});
       setProgressProps(prev => ({...prev, text: 'fetching images ...'}));
@@ -107,10 +112,15 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       console.log(e.stack);
     } finally {
       setShowData(true);
-
-      setTimeout(() => setShowModal({show: false, loading: false}), 200);
+      setTimeout(() => {
+        setShowModal({show: false, loading: false});
+        Toast.show({
+          text1: 'Scan completed !',
+          onPress: () => navigation.navigate('ClearData', {freeDiskStorage}),
+        });
+      }, 200);
     }
-  }, []);
+  }, [isFocused]);
 
   const removeDeletedItems = (ids: string[], label: string) => {
     const removeItems = (setFn: Function) => {
@@ -163,13 +173,30 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   };
 
   useEffect(() => {
-    if (isFocused) {
-      (async () => {
-        console.log(store.getState().wallet.data.isSpaceSelled);
-        setIsSelledSpace(store.getState().wallet.data.isSpaceSelled);
+    if (isFocused && showModal.loading === false && showModal.show === false) {
+      if (rescanOnFocuse) {
+        setShowData(false);
+        setPermissionGranted(false);
+        setShowModal({show: true, loading: false});
         setProgressProps({text: '', progress: 0});
-        await scanUserStorage();
-      })();
+        setRescanOnFocus(false);
+      }
+    }
+
+    if (
+      !isFocused &&
+      showData &&
+      showModal.loading === false &&
+      showModal.show === false
+    ) {
+      setRescanOnFocus(true);
+    }
+  }, [isFocused, rescanOnFocuse]);
+
+  useEffect(() => {
+    if (isFocused) {
+      console.log(store.getState()?.wallet?.data?.isSpaceSelled);
+      setIsSelledSpace(store.getState()?.wallet?.data?.isSpaceSelled);
     }
   }, [isFocused]);
 
@@ -186,11 +213,6 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         }
       });
   };
-
-  // useEffect(() => {
-  //   console.log(images.map(image => image.id));
-  // }, [images]);
-
   return (
     <View style={styles.container}>
       {showModal.show && (
@@ -303,7 +325,9 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                   }}>
                   <Text
                     style={{marginBottom: 20, color: '#9F9EB3', fontSize: 16}}>
-                    sell {freeDiskStorage / 2} Gb free space for {Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10} Boo coin ?
+                    sell {freeDiskStorage / 2} Gb free space for{' '}
+                    {Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10} Boo
+                    coin ?
                   </Text>
                   <View
                     style={{
