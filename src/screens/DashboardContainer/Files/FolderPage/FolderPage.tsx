@@ -576,6 +576,12 @@ const FolderPage = ({navigation, route}: any) => {
   }, [route, folderData, navigation]);
 
   const handleUpload = useCallback(async () => {
+    if (!(await ManageApps.checkAllFilesAccessPermission())) {
+      Toast.show({
+        type: 'error',
+        text1: 'cannot upload, you need to enable all files access permission',
+      });
+    }
     setIsUploadButtonDisabled(true);
     store.dispatch(setRootLoading(true));
     try {

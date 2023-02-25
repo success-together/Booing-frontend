@@ -14,7 +14,6 @@ import {useIsFocused} from '@react-navigation/native';
 import {store} from '../../../../shared';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {Transaction} from '../../../../shared/slices/wallet/walletService';
-import Toast from 'react-native-toast-message';
 
 export const Progress = ({progress, text}: any) => {
   return (
@@ -114,11 +113,11 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       setShowData(true);
       setTimeout(() => {
         setShowModal({show: false, loading: false});
-        Toast.show({
-          text1: 'Scan completed !',
-          onPress: () => navigation.navigate('ClearData', {freeDiskStorage}),
-        });
       }, 200);
+      ManageApps.showNotification(
+        'Scan Completed',
+        'you can find all your junk files in the scan page',
+      );
     }
   }, [isFocused]);
 

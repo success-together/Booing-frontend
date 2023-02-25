@@ -1,9 +1,14 @@
 package com.rnfrontend;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
@@ -30,6 +35,7 @@ public class MainActivity extends ReactActivity {
   public static void setPickerRequestCode(int newRequestCode) {
     pickerRequestCode = newRequestCode;
   }
+
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
@@ -85,6 +91,16 @@ public class MainActivity extends ReactActivity {
         }
         return;
       }
+      case 20:
+        if (grantResults.length > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+          ManageApps.setCanSendNotification(true);
+          promise.resolve(true);
+        }else {
+          ManageApps.setCanSendNotification(false);
+          promise.resolve(false);
+        }
+        setPromise(null);
       case 101:
         if (grantResults.length > 0
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -92,6 +108,7 @@ public class MainActivity extends ReactActivity {
         }else {
           promise.resolve(false);
         }
+        setPromise(null);
     }
   }
   /**

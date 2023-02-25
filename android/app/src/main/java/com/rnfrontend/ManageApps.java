@@ -1,10 +1,12 @@
 package com.rnfrontend;
 import android.annotation.SuppressLint;
-import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.app.AppOpsManager;
 import android.app.DownloadManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.RecoverableSecurityException;
 import android.app.usage.StorageStats;
@@ -76,7 +78,12 @@ import android.util.Size;
 import android.webkit.MimeTypeMap;
 
 
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.os.HandlerCompat;
 
 import java.io.BufferedReader;
@@ -106,6 +113,13 @@ public class ManageApps extends ReactContextBaseJavaModule {
     ExecutorService executorService = Executors.newFixedThreadPool(1);
     Handler mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
     static int MAX_ITEMS = 25;
+    private static boolean canSendNotifications = false;
+    public static boolean getCanSendNotification() {
+        return canSendNotifications;
+    }
+    public static void setCanSendNotification(boolean newCanSendNotification) {
+        canSendNotifications = newCanSendNotification;
+    }
 
     ManageApps(ReactApplicationContext context) {
         super(context);
@@ -813,6 +827,74 @@ public class ManageApps extends ReactContextBaseJavaModule {
         }
     }
 
+    @ReactMethod
+    public void checkNotificationPermission(Promise p) {
+        MainActivity.setPromise(p);
+        if (ContextCompat.checkSelfPermission(
+                getReactApplicationContext(), "android.permission.POST_NOTIFICATIONS") ==
+                PackageManager.PERMISSION_GRANTED) {
+            // You can use the API that requires the permission.
+            setCanSendNotification(true);
+            p.resolve(true);
+        }
+//        else if (ActivityCompat.shouldShowRequestPermissionRationale(getCurrentActivity(), Manifest.permission.POST_NOTIFICATIONS)) {
+//            // In an educational UI, explain to the user why your app requires this
+//            // permission for a specific feature to behave as expected, and what
+//            // features are disabled if it's declined. In this UI, include a
+//            // "cancel" or "no thanks" button that lets the user continue
+//            // using your app without granting the permission.
+//            new AlertDialog.Builder(getReactApplicationContext())
+//                    .setTitle("Notification Permission")
+//                    .setMessage("Notification permission is used to inform you about the status of the scan operation")
+//                    .setPositiveButton("OK", (dialog, which) -> {
+//                        if (Build.VERSION.SDK_INT >= 33) {
+//
+//                        }
+//                    })
+//                    .setNegativeButton("No Thanks", null)
+//                    .show();
+//        }
+        else {
+            // You can directly ask for the permission.
+            ActivityCompat.requestPermissions(getCurrentActivity(),
+                    new String[] {  "android.permission.POST_NOTIFICATIONS" },
+                    20);
+        }
+    }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getCurrentActivity().getString(R.string.common_google_play_services_notification_channel_name);
+            String description = getCurrentActivity().getString(R.string.common_google_play_services_notification_channel_name);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("123", name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getReactApplicationContext().getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    @ReactMethod
+    public void showNotification(String textTitle, String textContent) {
+        if(!ManageApps.getCanSendNotification()) {
+            return;
+        }
+        createNotificationChannel();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getReactApplicationContext(), "123")
+                .setSmallIcon(R.drawable.src_images_small_logo)
+                .setContentTitle(textTitle)
+                .setContentText(textContent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getReactApplicationContext());
+        notificationManager.notify(1, builder.build());
+    }
+
+
    @ReactMethod
    public void getAllInstalledApps(Promise promise) {
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
@@ -1110,19 +1192,19 @@ public class ManageApps extends ReactContextBaseJavaModule {
 
 
 
-        cursor.moveToFirst();
+        if(cursor.moveToFirst()) {
+            String name = cursor.getString(nameIndex);
+            String mimeType = cursor.getString(mimetypeIndex);
+            long size = cursor.getLong(sizeIndex);
 
-        String name = cursor.getString(nameIndex);
-        String mimeType = cursor.getString(mimetypeIndex);
-        long size = cursor.getLong(sizeIndex);
 
+            map.putString("name", name);
+            map.putString("type", mimeType);
+            map.putDouble("size", size);
 
-        map.putString("name", name);
-        map.putString("type", mimeType);
-        map.putDouble("size", size);
-
-        p.resolve(map);
-        cursor.close();
+            p.resolve(map);
+            cursor.close();
+        }
     }
 
     public String getFileDataBase64(String path) {
