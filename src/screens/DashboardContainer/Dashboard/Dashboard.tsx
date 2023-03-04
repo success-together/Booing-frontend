@@ -33,6 +33,7 @@ import {
 } from '../../../shared/slices/Directories/DirectoriesService';
 import {getWallet} from '../../../shared/slices/wallet/walletService';
 import {Wallet} from '../../../models/Wallet';
+import ManageApps from '../../../utils/manageApps';
 
 const formatRecentFolderName = (name: string) => {
   return name.length <= 10 ? name : name.slice(0, 10) + '...';
@@ -273,6 +274,9 @@ const Dashboard = ({navigation}: {navigation: any}) => {
 
   useEffect(() => {
     getUserUsedStorage();
+    (async () => {
+      await ManageApps.checkNotificationPermission();
+    })();
   }, []);
 
   // useEffect(() => {
