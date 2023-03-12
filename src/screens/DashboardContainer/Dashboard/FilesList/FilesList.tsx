@@ -33,6 +33,9 @@ const icons = {
       color={color}
     />
   ),
+  Duplicate: (size: number, color = '#8F8F8F') => (
+    <AntDesign name="picture" size={size} color={color} />
+  ),
   Downloads: (size: number, color = '#8F8F8F') => (
     <MaterialCommunityIcons
       name="file-download-outline"
@@ -187,7 +190,9 @@ export default function FilesList({
         removeDeletedItems(selectedFilesIds, label);
       }
     }
-
+    if (label === 'Duplicate') {
+      console.log(paths);
+    }
     if (label === 'Not installed apks') {
       isDeleted = await ManageApps.deleteApks(paths);
       if (isDeleted) {

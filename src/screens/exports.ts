@@ -27,3 +27,4 @@ export {default as LayoutWrapper} from './DashboardContainer/Files/Uploads/Layou
 export {default as SellSpace} from './DashboardContainer/Dashboard/SellSpace/SellSpace'
 export {default as BuySpace} from './DashboardContainer/Dashboard/BuySpace/BuySpace'
 export {default as Offer} from './DashboardContainer/Dashboard/Offer/Offer'
+export {default as StripePay} from './DashboardContainer/Payments/Stripe/Stripe'

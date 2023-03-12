@@ -15,10 +15,12 @@ const Downloads = ({navigation}: any) => {
     show: boolean;
     uri?: string;
     title?: string;
+    image?: boolean;
   }>({
     show: false,
     uri: undefined,
     title: undefined,
+    image: false
   });
   const isFocused = useIsFocused();
 
@@ -63,6 +65,7 @@ const Downloads = ({navigation}: any) => {
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}
+          image={isShowingFile.image}
           displayComponent={
             <View
               style={{

@@ -3,7 +3,7 @@ import Svg, {Ellipse, Path} from 'react-native-svg';
 
 const ScanIcon = () => {
   return (
-    <Svg width={35} height={37} fill="none">
+    <Svg width={30} height={33} fill="none">
       <Ellipse cx={2.863} cy={23.051} rx={2.863} ry={2.891} fill="#fff" />
       <Ellipse cx={4.924} cy={30.22} rx={2.099} ry={2.12} fill="#fff" />
       <Path

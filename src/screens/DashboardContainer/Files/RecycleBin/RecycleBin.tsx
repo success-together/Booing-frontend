@@ -8,6 +8,7 @@ import SelectableItems from '../Uploads/LayoutWrapper/SelectableItems';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import ShowFileWrapper from '../Uploads/LayoutWrapper/ShowFileWrapper';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useIsFocused} from '@react-navigation/native';
 import Video from 'react-native-video';
 import {formatUri} from '../Uploads/Videos/Videos';
@@ -36,6 +37,19 @@ export const getDisplayComponent = (type = 'other', uri?: string) => {
           resizeMode="contain"
           controls
         />
+      );
+    case type === 'document':
+      return (
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+          <Ionicons name="document-outline" size={200} />
+        </View>
       );
     default:
       return;
@@ -135,12 +149,10 @@ const RecycleBin = ({navigation}: any) => {
         return setData(
           response.data.data.map((e: any) => ({
             ...e,
-            type: transformType(
-              e.uri?.slice(e.uri?.indexOf(':') + 1, e.uri?.indexOf(';')),
-            ),
+            type: e.type,
             progress: 1,
             hasTriedToUpload: true,
-            isImage: e.uri?.startsWith('data:image/'),
+            isImage: e.category==='image',
           })),
         );
       }
@@ -167,25 +179,7 @@ const RecycleBin = ({navigation}: any) => {
 
   const showFile = useCallback(
     async (id: string) => {
-      const file = data.find(e => e.id === id);
-      if (file) {
-        let uri = file.uri;
-        if (file.type === 'video' || file.type === 'audio') {
-          const formated = await formatUri(
-            file.type,
-            file.uri,
-            Math.floor(Math.random() * 412515125).toString(),
-          );
-          if (formated) {
-            const {changed, path} = formated;
-            uri = path;
-            if (changed) {
-              addRemoveFileBeforeSave(path);
-            }
-          }
-        }
-        setIsShowingFile({show: true, uri, title: file.name, type: file.type});
-      }
+      console.log('please restore file.')
     },
     [data],
   );
@@ -315,27 +309,18 @@ const RecycleBin = ({navigation}: any) => {
     <LayoutWrapper
       setPressHandlerRoot={setPressHandler}
       onBackPress={() => navigation.navigate('Uploads')}>
-      {isShowingFile.show ? (
-        <ShowFileWrapper
-          title={isShowingFile.title}
-          displayComponent={getDisplayComponent(
-            isShowingFile.type,
-            isShowingFile.uri,
-          )}
-          setIsShowingFile={setIsShowingFile}
-        />
-      ) : (
         <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
           <View
             style={{
               display: 'flex',
               flexDirection: 'row',
               alignItems: 'center',
+              justifyContent: "center",
               marginTop: 34,
               marginBottom: 42,
               minHeight: 24,
             }}>
-            {selectedIds.length > 0 && (
+            {selectedIds.length > 0 ? (
               <>
                 <AntDesign
                   name="close"
@@ -347,6 +332,19 @@ const RecycleBin = ({navigation}: any) => {
                   {selectedIds.length} Selected
                 </Text>
               </>
+            ) : (
+              <View style={{
+                borderColor: '#FF0000',
+                borderWidth: 3,
+                borderStyle: 'solid',
+                width: "90%",
+                textAlign: 'center',
+                padding: 10,
+                marginTop: -20,
+                marginBottom: -20
+              }}>
+                <Text style={{color: 'red'}}>All files will be deleted permanantly after 24 hours.</Text>
+              </View>
             )}
           </View>
           {groupByCategory(data).map(
@@ -405,7 +403,6 @@ const RecycleBin = ({navigation}: any) => {
             )}
           </View>
         </View>
-      )}
     </LayoutWrapper>
   );
 };

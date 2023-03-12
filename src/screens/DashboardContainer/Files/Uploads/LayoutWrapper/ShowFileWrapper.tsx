@@ -4,6 +4,10 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import {threeVerticleDots} from '../../../../../images/export';
 import Feather from 'react-native-vector-icons/Feather';
 import Share from 'react-native-share';
+import ManageApps from '../../../../../utils/manageApps';
+import RNFS from 'react-native-fs';
+import Toast from 'react-native-toast-message';
+import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 
 interface ShowFileWrapperProps {
   title?: string;
@@ -17,6 +21,7 @@ const ShowFileWrapper = ({
   displayComponent,
   setIsShowingFile,
   uri,
+  image
 }: ShowFileWrapperProps) => {
 
   const sharing = async () => {
@@ -30,7 +35,49 @@ const ShowFileWrapper = ({
       console.log('Error ==>', error);
     }
   };
+  const download = async() => {
+    console.log(title, uri.length, image)
+    const results = await requestMultiple([
+      PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
+      PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
+    ]);
+    const readWriteExternalStorage = Object.values(results).every(
+      v => v === RESULTS.GRANTED || v === RESULTS.BLOCKED,
+    );
 
+    const allFilesAccess = await ManageApps.checkAllFilesAccessPermission();
+
+    if (!readWriteExternalStorage || !allFilesAccess) {
+      return Toast.show({
+        type: 'error',
+        text1: 'you need to enable permissions to upload files',
+      });
+    }
+    var path = `${RNFS.ExternalStorageDirectoryPath}/BooingApp`;
+    RNFS.mkdir(path);
+    path += '/'+title;
+    // await RNFS.copyFile(internalFilePath, `RNFS.DownloadDirectoryPath/${fileName}`);
+    try {
+      if (image) {
+        await RNFS.writeFile(
+          path,
+          uri.slice(uri.indexOf('base64,') + 7),
+          'base64',
+        );
+      } else {
+        await RNFS.copyFile(uri, path);
+      }
+      Toast.show({
+        type: 'success',
+        text1: 'successfuly file donwloaded to BooingApp directory.',
+      });
+    } catch  {
+        Toast.show({
+          type: 'error',
+          text1: 'cannot download file.',
+        });      
+    }
+  }
   return (
     <View style={{flex: 1, display: 'flex'}}>
       <View
@@ -129,6 +176,18 @@ const ShowFileWrapper = ({
             }}
             onPress={sharing}>
             <Text style={{color: '#49ACFA', fontWeight: '500'}}>Share</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              backgroundColor: 'white',
+              borderRadius: 15,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 15,
+            }}
+            onPress={download}>
+            <Text style={{color: '#49ACFA', fontWeight: '500'}}>Download</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -13,9 +13,8 @@ export const getWallet = async (data: {user_id: string}) => {
     },
   });
 };
-
 export const Transaction = async (data: {
-  isIncremenet: boolean;
+  space: number;
   coins: number;
   user_id: string;
   isSpaceSelled?: boolean;
@@ -24,6 +23,19 @@ export const Transaction = async (data: {
     method: 'post',
     url: BaseUrl + '/transaction',
     isSilent: false,
+    data: data,
+  });
+};
+
+export const getStripeSheet = async (data: {
+  product: any,
+  user_id: string
+}) => {
+  return Executor({
+    method: 'post',
+    url: BaseUrl + '/stripe-sheet/'+ data.user_id,
+    isSilent: true,
+    withoutToast: true,
     data: data,
   });
 };

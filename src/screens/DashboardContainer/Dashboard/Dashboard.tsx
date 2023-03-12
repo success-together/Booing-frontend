@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   PermissionsAndroid,
   Pressable,
@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import {DashboardHeader} from '../../exports';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -24,16 +25,20 @@ import FolderIcon from '../../../Components/FolderIcon/FolderIcon';
 import LinearGradient from 'react-native-linear-gradient';
 import {setRootLoading} from '../../../shared/slices/rootSlice';
 import Toast from 'react-native-toast-message';
+import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import EvilIcons from 'react-native-vector-icons/EvilIcons';
+
+import ManageApps from '../../../utils/manageApps';
 import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
 import {useIsFocused} from '@react-navigation/native';
-import {userUsedStorage} from '../../../shared/slices/Fragmentation/FragmentationService';
+import {userUsedStorage, checkAutoDeleteFile} from '../../../shared/slices/Fragmentation/FragmentationService';
 import {
   getDirectories,
   getRecentDirectories,
 } from '../../../shared/slices/Directories/DirectoriesService';
 import {getWallet} from '../../../shared/slices/wallet/walletService';
 import {Wallet} from '../../../models/Wallet';
-import ManageApps from '../../../utils/manageApps';
 
 const formatRecentFolderName = (name: string) => {
   return name.length <= 10 ? name : name.slice(0, 10) + '...';
@@ -43,9 +48,28 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   const [freeDiskStorage, setFreeDiskSotrage] = useState<number>(0);
   const [totalDiskStorage, setTotalDiskStorage] = useState<number>(0);
   const [freeSpacePerCent, setFreeSpacePerCent] = useState<number>(0);
-  const [usedStorage, setUsedStorage] = useState<number>(0);
-  const [availabledStorage, setAvailableStorage] = useState<number>(1);
-  const [usedStoragePerGiga, setUsedStoragePerGiga] = useState<number>(0);
+  const [myCloud, setMyCloud] = useState<{
+    used: number; 
+    available: number; 
+    usedPerGiga: number
+  }>({
+      used: 0,
+      available: 1,
+      usedPerGiga: 0
+  })
+  const [occupyCloud, setOccupyCloud] = useState<{
+    used: number; 
+    available: number; 
+    usedPerGiga: number
+  }>({
+      used: 0,
+      available: 1,
+      usedPerGiga: 0
+  })
+  // const [usedStorage, setUsedStorage] = useState<number>(0);
+  // const [availabledStorage, setAvailableStorage] = useState<number>(1);
+  // const [usedStoragePerGiga, setUsedStoragePerGiga] = useState<number>(0);
+
   const [position, setPosition] = useState<{lat: number; lon: number}>();
   const [recentFolders, setRecentFolders] = useState<
     {name: string; id: string}[]
@@ -68,6 +92,11 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   const [wallet, setWallet] = useState<Wallet>();
   const isFocused = useIsFocused();
   const user_id = store.getState().authentication.userId;
+  const [sdCardStats, setSdCardStats] = useState({
+    present: false,
+    fullSize: 0,
+    availableSize: 0,
+  });
 
   useEffect(() => {
     if (isFocused) {
@@ -156,12 +185,6 @@ const Dashboard = ({navigation}: {navigation: any}) => {
 
   const addNewDevice = async (data: any) => {
     await addDevice(data).then(async () => {
-      if (position?.lat && position?.lon)
-        await updateGeoLocation({
-          device_ref: data.device_ref,
-          lat: position?.lat,
-          lon: position?.lon,
-        });
     });
   };
 
@@ -189,17 +212,27 @@ const Dashboard = ({navigation}: {navigation: any}) => {
         Number(((freeDiskStorage / totalStorage) * 100).toFixed(0)),
       );
     });
-
+    ManageApps.getSDcardStorageStats().then(
+      (stats: (typeof sdCardStats & {present: boolean}) | null) => {
+        if (stats) {
+          return setSdCardStats({
+            present: true,
+            fullSize: stats.fullSize,
+            availableSize: stats.availableSize,
+          });
+        }
+      },
+    );
     let deviceId: string;
     let system: string;
     let userData: any = store.getState().authentication.loggedInUser;
 
     DeviceInfo.getUniqueId().then(uniqueId => {
       deviceId = uniqueId;
-
+      
       DeviceInfo.getDeviceName().then(deviceName => {
         system = DeviceInfo.getSystemName();
-
+        console.log("deviceName: ", deviceName)
         const result = requestLocationPermission();
         result.then(res => {
           // console.log('res is:', res);
@@ -212,14 +245,14 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                   lon: position.coords.longitude,
                 });
 
-                // console.log({
-                //   user_id: userData?._id,
-                //   device_ref: deviceId,
-                //   lat: position.coords.latitude,
-                //   lon: position.coords.longitude,
-                //   name: deviceName,
-                //   type: system,
-                // });
+                console.log({
+                  user_id: userData?._id,
+                  device_ref: deviceId,
+                  lat: position.coords.latitude,
+                  lon: position.coords.longitude,
+                  name: deviceName,
+                  type: system,
+                });
 
                 addNewDevice({
                   user_id: userData?._id,
@@ -247,16 +280,27 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       let user: any = store.getState().authentication.loggedInUser;
       if (user?._id)
         await userUsedStorage({user_id: user?._id}).then(res => {
-          if (res?.data[0]?.total) {
-            console.log(res?.data[0]?.total);
-            setUsedStorage(res?.data[0]?.total);
-            setAvailableStorage(
-              Number(((1000000000 - res.data[0].total) / 1000000).toFixed(1)),
-            );
-            setUsedStoragePerGiga(
-              Number((res.data[0].total / Math.pow(10, 9)).toFixed(2)),
-            );
-            console.log(usedStoragePerGiga);
+          const data = res.data.data;
+          console.log(res.data)
+          if (res.data.myCloudTotal) {
+
+            let available = bytesToSize(res.data.myCloudTotal*1000000000 - res.data.myCloud);
+            let usedPerGiga = Number((res.data.myCloud / (res.data.myCloudTotal*1000000000)).toFixed(2));
+            setMyCloud({
+              used: res.data.myCloud,
+              available,
+              usedPerGiga
+            })
+          }
+          if (res.data.occupyCloudTotal) {
+            console.log(res.data.occupyCloudTotal*1000000000 , res.data.occupyCloudTotal*1000000000 - res.data.occupyCloud)
+            available = bytesToSize(res.data.occupyCloudTotal*1000000000 - res.data.occupyCloud);
+            usedPerGiga = Number((res.data.occupyCloud / (res.data.occupyCloudTotal*1000000000)).toFixed(2));
+            setOccupyCloud({
+              used: res.data.occupyCloud,
+              available,
+              usedPerGiga
+            })
           }
         });
     } catch (error) {
@@ -264,21 +308,35 @@ const Dashboard = ({navigation}: {navigation: any}) => {
     }
   };
 
+  const checkAutoDelete = async () => {
+    try {
+      let user: any = store.getState().authentication.loggedInUser;
+      if (user?._id) checkAutoDeleteFile({user_id: user?._id});
+    } catch (error) {
+      console.log(error);
+    }  
+  }
+  
   const bytesToSize = (bytes: number) => {
     var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     if (bytes == 0) return '0 MB';
-    var i = Math.floor(Math.log(bytes) / Math.log(1024));
+    var i = Math.floor(Math.log(bytes) / Math.log(1000));
     if (i == 0) return bytes + ' ' + sizes[i];
-    return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
+    return Math.trunc((bytes / Math.pow(1000, i))*100)/100 + ' ' + sizes[i];
   };
 
   useEffect(() => {
-    getUserUsedStorage();
+    if (isFocused) {
+      getUserUsedStorage();
+    }
+  }, [isFocused]);
+
+  useEffect(() => {
     (async () => {
+      checkAutoDelete();
       await ManageApps.checkNotificationPermission();
     })();
   }, []);
-
   // useEffect(() => {
   //   console.log(Device.brand);
   //   if (Device.isDevice && Device.brand) {
@@ -344,7 +402,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                 navigation.navigate('ClearData', {freeDiskStorage})
               }>
               <ScanIcon />
-              <Text style={{color: 'white', fontSize: 10, marginTop: 10}}>
+              <Text style={{color: 'white', fontSize: 10, marginTop: 8}}>
                 Scan
               </Text>
             </Pressable>
@@ -367,6 +425,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                 borderColor: '#EFF4F0',
               }}>
               <FontAwesome5 name="cloud" size={40} color="#33a1f9" />
+              <Text style={styles.cloudText}>MyCloud</Text>
             </View>
             <View style={styles.availbleStorage}>
               <View style={{padding: 4}}>
@@ -378,7 +437,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                   <Text style={styles.available}>AVAILABLE</Text>
                   <Text style={styles.available}>
                     {' '}
-                    {availabledStorage} {availabledStorage == 1 ? 'GB' : 'MB'}
+                    {myCloud.available}
                   </Text>
                 </View>
                 <View
@@ -390,11 +449,11 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                   <Text style={styles.usedSpace}>USED</Text>
                   <Text style={styles.usedSpace}>
                     {' '}
-                    {bytesToSize(usedStorage)}
+                    {bytesToSize(myCloud.used)}
                   </Text>
                 </View>
                 <Progress.Bar
-                  progress={usedStoragePerGiga}
+                  progress={myCloud.usedPerGiga}
                   width={220}
                   height={14}
                   color="orange"
@@ -403,6 +462,64 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                 />
               </View>
             </View>
+          </View>
+          <View style={styles.thirdScreenContainer}>
+            <View
+              style={{
+                backgroundColor: '#33a1f9',
+                height: '100%',
+                width: '6%',
+                borderTopLeftRadius: 20,
+                borderBottomLeftRadius: 20,
+              }}></View>
+            <View
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '25%',
+                borderRightWidth: 2,
+                borderColor: '#EFF4F0',
+              }}>
+              <FontAwesome5 name="cloud" size={40} color="#33a1f9" />
+              <Text style={styles.cloudText}>Occupy</Text>
+              <Text style={styles.cloudText}>Cloud</Text>
+            </View>
+
+            <View style={styles.availbleStorage}>
+              <View style={{padding: 4}}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  <Text style={styles.available}>AVAILABLE</Text>
+                  <Text style={styles.available}>
+                    {' '}
+                    {occupyCloud.available}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    marginTop: 4,
+                  }}>
+                  <Text style={styles.usedSpace}>USED</Text>
+                  <Text style={styles.usedSpace}>
+                    {' '}
+                    {bytesToSize(occupyCloud.used)}
+                  </Text>
+                </View>
+                <Progress.Bar
+                  progress={occupyCloud.usedPerGiga}
+                  width={220}
+                  height={14}
+                  color="orange"
+                  unfilledColor="#33a1f9"
+                  style={{marginTop: 4}}
+                />
+              </View>
+            </View>            
           </View>
           <View style={{marginTop: 20}}>
             <Text
@@ -536,9 +653,113 @@ const Dashboard = ({navigation}: {navigation: any}) => {
                 </View>
               </View>
             ) : (
-              <NoDataFound style={{marginBottom: 50}} />
+              <NoDataFound style={{marginBottom: 20}} />
             )}
           </View>
+
+          <View>
+            <Text style={styles.title}>
+              Storage
+            </Text>
+          </View>
+          <View style={styles.list1}>
+            <View style={styles.Storage}>
+              <View>
+                <SimpleLineIcons
+                  name="screen-smartphone"
+                  size={24}
+                  color="grey"
+                  style={{marginRight: 10}}
+                />
+              </View>
+              <View style={styles.Storage1}>
+                <View>
+                  <Text style={styles.Storage2}>Internal Storage</Text>
+                </View>
+                <View>
+                  <Text style={styles.Storage3}>
+                    {freeDiskStorage} GB / {totalDiskStorage} GB
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* <Hr lineColor="#eee" width={1} text="Dummy Text" textStyles={customStylesHere}/> */}
+            <View
+              style={{
+                marginBottom: 10,
+                marginTop: 10,
+                borderBottomColor: 'grey',
+                borderBottomWidth: 1,
+              }}
+            />
+            <View style={styles.Storage}>
+              <View>
+                <AntDesign
+                  name="clockcircleo"
+                  size={24}
+                  color="grey"
+                  style={{marginRight: 10}}
+                />
+              </View>
+              <View style={styles.Storage1}>
+                <View>
+                  <Text style={styles.Storage2}>SD card</Text>
+                </View>
+                <View>
+                  <Text style={styles.Storage3}>
+                    {sdCardStats.present
+                      ? `${bytes(sdCardStats.availableSize)}/${bytes(
+                          sdCardStats.fullSize,
+                        )}`
+                      : 'No SD card'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View>
+            <Text
+              style={{
+                fontSize: 16,
+                lineHeight: 21,
+                fontWeight: 'bold',
+                letterSpacing: 0.25,
+                color: 'grey',
+                textAlign: 'left',
+                marginLeft: 0,
+                marginTop: 10,
+              }}>
+              Recycle Bin
+            </Text>
+            <TouchableWithoutFeedback
+              onPress={() => navigation.navigate('RecycleBin')}>
+              <View
+                style={{
+                  ...styles.row,
+                  marginBottom: 40,
+                  marginTop: 10,
+                }}>
+                <EvilIcons
+                  style={{marginLeft: 14}}
+                  name="trash"
+                  size={30}
+                  color="grey"
+                />
+                <Text
+                  style={{
+                    fontSize: 16,
+                    lineHeight: 21,
+                    fontWeight: 'bold',
+                    letterSpacing: 0.25,
+                    color: 'black',
+                    marginLeft: 14,
+                  }}>
+                  Recycle bin
+                </Text>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>          
         </View>
       </ScrollView>
     </View>
@@ -566,8 +787,8 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
     justifyContent: 'center',
-    width: 65,
-    height: 83,
+    width: 60,
+    height: 73,
     position: 'absolute',
     right: 9,
     top: -6,
@@ -678,6 +899,13 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
   },
+  cloudText: {
+    fontSize: 14,
+    lineHeight: 21,
+    letterSpacing: 0.25,
+    fontWeight: 'bold',
+    color: '#33a1f9',
+  },
   usedSpace: {
     fontSize: 17,
     lineHeight: 21,
@@ -685,6 +913,63 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'orange',
   },
+  Storage: {
+    flexDirection: 'row',
+  },
+  Storage1: {
+    flexDirection: 'column',
+    marginTop: -7,
+  },
+  Storage2: {
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  Storage3: {
+    fontSize: 10,
+    color: 'grey',
+  },  
+
+  list: {
+    marginTop: 10,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    padding: 25,
+    borderRadius: 10,
+    // width: '90%',
+    height: 80,
+    flexDirection: 'row',
+  },
+
+  list1: {
+    marginTop: 10,
+    marginBottom: 10,
+    backgroundColor: 'white',
+    justifyContent: 'flex-start',
+    padding: 25,
+    borderRadius: 10,
+    // width: '90%',
+    height: 120,
+    flexDirection: 'column',
+  },
+  title: {
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: 'bold',
+    letterSpacing: 0.25,
+    color: 'grey',
+    textAlign: 'left',
+    marginTop: 8,
+  },
+  row: {
+    backgroundColor: 'white',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    width: '90%',
+    height: 60,
+    borderRadius: 10,
+  },  
 });
 
 export default Dashboard;

@@ -10,6 +10,7 @@ import {isAllOf, nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {ScrollView} from 'react-native';
 import {Bar} from 'react-native-progress';
+import RNFS from 'react-native-fs';
 import {useIsFocused} from '@react-navigation/native';
 import {store} from '../../../../shared';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
@@ -52,12 +53,14 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
   const [music, setMusic] = useState([]);
+  const [duplicate, setDuplicate] = useState([]);
   const [thumbnails, setThumbnails] = useState([]);
   const [emptyFolders, setEmptyFolders] = useState([]);
   const [notInstalledApks, setNotInstalledApks] = useState([]);
   const [cancelPopup, setCancelPopup] = useState<boolean>(false);
   const [isSelledSpace, setIsSelledSpace] = useState<boolean>(false);
   const [rescanOnFocuse, setRescanOnFocus] = useState(true);
+  const [clearManually, setClearManually] = useState(false);
   const user_id = store.getState().authentication.userId;
 
   const [progressProps, setProgressProps] = useState({
@@ -89,6 +92,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
 
   const scanUserStorage = useCallback(async () => {
     try {
+      setClearManually(false);
       setRescanOnFocus(false);
       store.dispatch(setRootLoading(false));
       setShowModal({show: true, loading: true});
@@ -102,7 +106,6 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
       setProgressProps({text: 'fetching junk files ...', progress: 0.75});
       const {notInstalledApps, thumbnails, emptyFolders} =
         await ManageApps.getJunkData();
-
       setNotInstalledApks(addId(notInstalledApps));
       setThumbnails(addId(thumbnails));
       setEmptyFolders(addId(emptyFolders));
@@ -170,6 +173,50 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         break;
     }
   };
+  const findDuplicateFiles = async (data) => {
+      let duplicatedFiles = [];
+      data.sort((a, b) => a.size - b.size);
+      let temp = "";
+      let sizeArr = {};
+      for (let i = 0; i < data.length; i++) {
+        if (sizeArr[data[i].size]) sizeArr[data[i].size].push(data[i]);
+        else sizeArr[data[i].size] = [data[i]]
+      }
+      for (let key in sizeArr) {
+        if (sizeArr[key].length > 1) {
+          const arr = sizeArr[key];
+          for (let i = 0; i < arr.length; i++) {
+            arr[i]['temp'] = (await RNFS.readFile(arr[i].path, 'base64')).slice(0, 1000);
+          }
+          for (let i = 0; i < arr.length; i++) {
+            for (let j = i+1; j < arr.length; j++) {
+              if (arr[i]['temp'] === arr[j]['temp']) {
+                if (arr[i]['dupl'] !== true) {
+                  console.log(arr[i].name)
+                  arr[i]['dupl'] = true;
+                  duplicatedFiles.push(arr[i]);
+                }
+                if (arr[j]['dupl'] !== true) {
+                  console.log(arr[j].name)
+                  arr[j]['dupl'] = true;
+                  duplicatedFiles.push(arr[j]);
+                }
+              } else console.log('differnt')
+            }
+          }
+          // console.log(arr)
+        }
+      }
+      if (duplicatedFiles.length > 0) setDuplicate([...duplicate, ...duplicatedFiles]);
+  }
+  useEffect(() => {
+    (async () => {
+      setDuplicate([]);
+      await findDuplicateFiles(images);
+      await findDuplicateFiles(videos);
+      await findDuplicateFiles(music);
+    })()
+  }, [clearManually])
 
   useEffect(() => {
     if (isFocused && showModal.loading === false && showModal.show === false) {
@@ -199,11 +246,12 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
     }
   }, [isFocused]);
 
-  const sellSpace = async (coins: number) => {
+  const sellSpace = async (space: number, coins: number) => {
+    console.log(user_id, space, coins)
     user_id &&
       Transaction({
-        coins: coins,
-        isIncremenet: true,
+        space,
+        coins,
         user_id: user_id,
         isSpaceSelled: true,
       }).then(res => {
@@ -339,6 +387,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                       title="yes"
                       onPress={() =>
                         sellSpace(
+                          freeDiskStorage / 2,
                           Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10,
                         )
                       }
@@ -370,6 +419,15 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                 size={calcSpace(music)}
                 refetchByLabel={refechByLabel}
               />
+              {!!clearManually && (
+                <FilesList
+                  data={duplicate as []}
+                  label="Duplicate"
+                  removeDeletedItems={removeDeletedItems}
+                  size={calcSpace(duplicate)}
+                  refetchByLabel={refechByLabel}
+                />
+              )}
               {/* <FilesList
                 data={apps.filter((e: any) => e.visibleCacheSize > 0) as []}
                 label="Cache"
@@ -401,11 +459,12 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
               <View style={{marginTop: 10}}></View>
               <Button
                 title="free up space (manullay)"
-                onPress={async () => await ManageApps.freeSpace()}
+                onPress={() => setClearManually(true)}
+                // onPress={async () => await ManageApps.freeSpace()}
               />
               <View style={{marginTop: 10}} />
               <Button
-                title="clear all visible cache"
+                title="clear all"
                 onPress={async () => await ManageApps.clearAllVisibleCache()}
               />
             </>

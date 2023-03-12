@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {StyleSheet} from 'react-native';
+import {Dimensions, Image, StyleSheet, View, Text, TouchableOpacity} from 'react-native';
 import ManageApps from '../../../../../utils/manageApps';
 import {LayoutWrapper} from '../../../../exports';
 import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
@@ -9,7 +9,11 @@ import useGetUploadData from '../LayoutWrapper/getUploadedDataHook';
 import Toast from 'react-native-toast-message';
 import RNFS from 'react-native-fs';
 import {useIsFocused} from '@react-navigation/native';
-
+import useSocket from '../../../../../shared/socket';
+import {store} from '../../../../../shared';
+import {setRootLoading} from '../../../../../shared/slices/rootSlice';
+import * as Progress from 'react-native-progress';
+let isFileFetching = false;
 export const formatUri = async (
   type: string,
   file: string,
@@ -17,9 +21,12 @@ export const formatUri = async (
 ): Promise<{changed: boolean; path: string} | null> => {
   if (file.startsWith(`data:${type}`)) {
     try {
-      const mimeType = file.slice(file.indexOf(`${type}/`), file.indexOf(';'));
-      const extension = await ManageApps.getExtensionFromMimeType(mimeType);
-      const path = `file://${RNFS.DocumentDirectoryPath}/${fileName}.${extension}`;
+      // const mimeType = file.slice(file.indexOf(`${type}/`), file.indexOf(';'));
+      // const extension = await ManageApps.getExtensionFromMimeType(mimeType);
+      const path = `file://${RNFS.DocumentDirectoryPath}/${fileName}`;
+      if (await RNFS.exists(path)) {
+        return {changed: true, path};
+      }
       await RNFS.writeFile(
         path,
         file.slice(file.indexOf('base64,') + 7),
@@ -36,20 +43,26 @@ export const formatUri = async (
 
 const Videos = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchProcess, setFetchProcess] = useState(0);
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
     uri?: string;
     title?: string;
+    image?: boolean;
   }>({
     show: false,
     uri: undefined,
     title: undefined,
+    image: false
   });
   const [removeFilesAfterFinish, setRemoveFilesAfterFinish] = useState<
     string[]
   >([]);
   const isFocused = useIsFocused();
-
+  const {createOffer, recreateOffer} = useSocket();
+  const WIDTH = Dimensions.get('window').width;
+  const progressSize = WIDTH*0.8;  
   useEffect(() => {
     if (isFocused) {
       useGetUploadData('video')
@@ -86,27 +99,75 @@ const Videos = ({navigation}: any) => {
       }
     };
   }, [isFocused]);
+  const handleAbort = () => {
+    setIsFetching(false);
+    isFileFetching = false;
 
+  }
   const showFile = useCallback(
     async (id: string) => {
       const file = data.find(e => e.id === id);
-      if (file) {
-        const formated = await formatUri('video', file.uri, file.name);
+      let arrayBuffer = ""
+      let state = false;
+      setFetchProcess(0);
+      setIsFetching(true);
+      isFileFetching = true;
+      // store.dispatch(setRootLoading(true)); 
+      const len = file["updates"].length;
+      for (let i = 0; i < file["updates"].length; i++) {
+        const filename = `${file["updates"][i]['fragmentID']}-${file["updates"][i]['uid']}-${file["updates"][i]['user_id']}.json`
+        for (let j = 0; j < file["updates"][i]['devices'].length; j++) {
+          const success = new Promise((resolve, reject) => {
+            createOffer(file["updates"][i]['devices'][j]['device_id'], filename, file["updates"][i]['fragmentID'], function(res) {
+              if (res === false) {
+                resolve(false);
+              } else {
+                arrayBuffer += res;
+                resolve(true);
+              }
+            })
+          })
+          state = await success;
+          if (!isFileFetching) {
+            Toast.show({
+              type: 'error',
+              text1: 'aborted fetch file.',
+            });
+            return true;
+          }          
+          if (state) break;
+        }
+        if (!state) break;
+        setFetchProcess((i+1)/len);      
+      }
+      if (state) {
+        setIsFetching(false);
+        isFileFetching = false;
+        console.log(file.type,file['updates'][0]['fileName'])
+        const uri = "data:"+file.type+";base64,"+arrayBuffer;
+        const formated = await formatUri('video', uri, file['updates'][0]['fileName']);
         if (!formated) {
           return Toast.show({
             type: 'error',
-            text1: `cannot play video ${file.name}`,
+            text1: `cannot play video ${file['updates'][0]['fileName']}`,
           });
+        } else {
+          const {changed, path} = formated;
+          if (changed) {
+            setRemoveFilesAfterFinish(prev => [...new Set([...prev, path])]);
+          }
+          setIsShowingFile({
+            show: true,
+            uri: path,
+            title: file['updates'][0]['fileName'],
+          });
+          return ;
         }
 
-        const {changed, path} = formated;
-        if (changed) {
-          setRemoveFilesAfterFinish(prev => [...new Set([...prev, path])]);
-        }
-        setIsShowingFile({
-          show: true,
-          uri: path,
-          title: file.name,
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'cannot fetch file.',
         });
       }
     },
@@ -115,31 +176,60 @@ const Videos = ({navigation}: any) => {
 
   return (
     <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
-      {isShowingFile.show ? (
-        <ShowFileWrapper
-          title={isShowingFile.title}
-          displayComponent={
-            <Video
-              source={{uri: isShowingFile.uri}}
+      {
+        isFetching ? (
+          <View
+            style={{
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Progress.Bar progress={fetchProcess} width={progressSize} />
+            <Text style={{marginTop: 20}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
+            <TouchableOpacity
               style={{
-                flex: 1,
+                width: 82,
+                height: 49,
+                backgroundColor: 'white',
+                borderRadius: 15,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginTop: 20
               }}
-              resizeMode="contain"
-              controls
+              onPress={handleAbort}>
+              <Text style={{color: '#49ACFA', fontWeight: '500'}}>Abort</Text>
+            </TouchableOpacity>              
+          </View>
+        ) : (      
+          isShowingFile.show ? (
+            <ShowFileWrapper
+              title={isShowingFile.title}
+              image={isShowingFile.image}
+              displayComponent={
+                <Video
+                  source={{uri: isShowingFile.uri}}
+                  style={{
+                    flex: 1,
+                  }}
+                  resizeMode="contain"
+                  controls
+                />
+              }
+              uri={isShowingFile.uri}
+              setIsShowingFile={setIsShowingFile}
             />
-          }
-          uri={isShowingFile.uri}
-          setIsShowingFile={setIsShowingFile}
-        />
-      ) : (
-        <SelectableUploadWrapper
-          showFile={showFile}
-          data={data}
-          pickItemsFn={() => ManageApps.pickVideos()}
-          setData={setData}
-          isImageWrapper={false}
-        />
-      )}
+          ) : (
+            <SelectableUploadWrapper
+              showFile={showFile}
+              data={data}
+              pickItemsFn={() => ManageApps.pickVideos()}
+              setData={setData}
+              isImageWrapper={false}
+            />
+          )
+        )
+      }
     </LayoutWrapper>
   );
 };

@@ -13,6 +13,7 @@ import {Loader} from './src/Components/exports';
 import {store} from './src/shared';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StripeProvider } from '@stripe/stripe-react-native';
 import {Settings} from 'react-native-fbsdk-next';
 
 // Setting the facebook app id using setAppID
@@ -67,31 +68,31 @@ export default function App() {
 
   return (
     <>
-      <Loader isLoading={isLoading} />
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-          }}
-          initialRouteName="Home">
-          {!isLoggedIn ? (
-            <Stack.Group>
-              <Stack.Screen name="Home" component={Home} />
-              <Stack.Screen name="Login" component={Login} />
-              <Stack.Screen name="Register" component={Register} />
-              <Stack.Screen name="Verification" component={VerificationCode} />
-            </Stack.Group>
-          ) : (
-            <Stack.Group>
-              <Stack.Screen
-                name="DashboardContainer"
-                component={DashboardContainer}
-              />
-            </Stack.Group>
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-      <Toast />
+        <Loader isLoading={isLoading} />
+        <NavigationContainer>
+          <Stack.Navigator
+            screenOptions={{
+              headerShown: false,
+            }}
+            initialRouteName="Home">
+            {!isLoggedIn ? (
+              <Stack.Group>
+                <Stack.Screen name="Home" component={Home} />
+                <Stack.Screen name="Login" component={Login} />
+                <Stack.Screen name="Register" component={Register} />
+                <Stack.Screen name="Verification" component={VerificationCode} />
+              </Stack.Group>
+            ) : (
+              <Stack.Group>
+                <Stack.Screen
+                  name="DashboardContainer"
+                  component={DashboardContainer}
+                />
+              </Stack.Group>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+        <Toast />
     </>
   );
 }

@@ -150,6 +150,7 @@ const SelectableUploadWrapper = ({
 
     try {
       const pickedFiles = await pickItemsFn();
+      console.log(pickedFiles)
       if (pickedFiles && pickedFiles.length > 0) {
         const body = new FormData();
         for (const file of pickedFiles) {
@@ -161,21 +162,20 @@ const SelectableUploadWrapper = ({
             id: Math.floor(Math.random() * 9999).toString(), // change this later
             createdAt: new Date(),
           };
-
-          if (
-            data.find(
-              item =>
-                (item.name === fileDesc.name ||
-                  item.name.includes('_' + fileDesc.name)) &&
-                item.progress === 1,
-            )
-          ) {
-            setIsUploadButtonDisabled(false);
-            return Toast.show({
-              type: 'info',
-              text1: 'file already uploaded',
-            });
-          }
+          // if (
+          //   data.find(
+          //     item =>
+          //       (item.name === fileDesc.name ||
+          //         item.name.includes('_' + fileDesc.name)) &&
+          //       item.progress === 1,
+          //   )
+          // ) {
+          //   setIsUploadButtonDisabled(false);
+          //   return Toast.show({
+          //     type: 'info',
+          //     text1: 'file already uploaded',
+          //   });
+          // }
 
           if (fileDesc.size >= MAX_SIZE) {
             // 16mb
@@ -192,7 +192,6 @@ const SelectableUploadWrapper = ({
             type: fileDesc.type,
             name: fileDesc.name,
           });
-
           fileDescs.push(fileDesc);
         }
 
@@ -208,24 +207,27 @@ const SelectableUploadWrapper = ({
           }));
 
         setData((prevData: any[]) => [...prevData, ...newData]);
-
+        console.log(body, user_id)
         const response = await uploadFiles(body, user_id, newProgress => {
           mergeData({progress: newProgress});
         });
-
         if (response.status === 200) {
           const data = response.data.data;
           setIsUploadButtonDisabled(false);
           return setData((prevData: any[]) => {
             for (const {name} of fileDescs) {
+              const nameArr = name.split('.');nameArr.pop();
               const item = prevData.find((e: any) => e.name === name);
-              const fileData = data.find((e: any) =>
-                e.name.includes(item.name),
-              );
+              const fileData = data.findLast((e: any) =>{
+                const enameArr = e.name.split("_");enameArr.pop();
+                return enameArr.join("_").includes(nameArr.join("."))
+              });
 
               if (item && fileData) {
                 Object.assign(item, {
                   progress: 1,
+                  updates: fileData.updates,
+                  thumbnail: fileData.thumbnail,
                   hasTriedToUpload: true,
                   id: fileData.id,
                 });
@@ -300,9 +302,45 @@ const SelectableUploadWrapper = ({
 
   return (
     <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
+    <View
+      style={{
+        display: 'flex',
+        justifyContent: "space-between",
+        flexDirection: 'row',
+        alignItems: 'center',        
+      }}
+    >
+      <TouchableOpacity
+        style={{
+          width: 82,
+          height: 49,
+          backgroundColor: 'white',
+          borderRadius: 15,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        disabled={isUploadButtonDisabled}
+        onPress={handleUpload}>
+        <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
+      </TouchableOpacity>  
+        {selectedIds.length > 0 && (
+          <TouchableOpacity
+            style={{
+              width: 82,
+              height: 49,
+              marginRight: 10,
+              backgroundColor: 'white',
+              borderRadius: 15,
+              // display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={handleDelete}>
+            <Text style={{color: '#49ACFA', fontWeight: '500'}}>Delete</Text>
+          </TouchableOpacity>
+        )}
       <View
         style={{
-          display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
           marginTop: 34,
@@ -323,6 +361,7 @@ const SelectableUploadWrapper = ({
           </>
         )}
       </View>
+    </View>
       <ScrollView showsVerticalScrollIndicator={false} style={{flex: 1}}>
         {data.length === 0 ? (
           <NoDataFound />
@@ -343,38 +382,7 @@ const SelectableUploadWrapper = ({
           })
         )}
       </ScrollView>
-      <View style={styles.uploadContainer}>
-        {selectedIds.length > 0 && (
-          <TouchableOpacity
-            style={{
-              width: 82,
-              height: 49,
-              marginRight: 10,
-              backgroundColor: 'white',
-              borderRadius: 15,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-            onPress={handleDelete}>
-            <Text style={{color: '#49ACFA', fontWeight: '500'}}>Delete</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          style={{
-            width: 82,
-            height: 49,
-            backgroundColor: 'white',
-            borderRadius: 15,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-          disabled={isUploadButtonDisabled}
-          onPress={handleUpload}>
-          <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
-        </TouchableOpacity>
-      </View>
+
     </View>
   );
 };

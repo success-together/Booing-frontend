@@ -404,7 +404,7 @@ const Files = ({navigation}: {navigation: any}) => {
       </View>
       <View style={styles.body}>
         <View style={styles.recentFilesContainer}>
-          <Pressable
+ {/*         <Pressable
             style={styles.button}
             onPress={() => {
               navigation.navigate('Uploads');
@@ -416,7 +416,7 @@ const Files = ({navigation}: {navigation: any}) => {
               style={{marginRight: 10}}
             />
             <Text style={styles.buttonText}>Upload</Text>
-          </Pressable>
+          </Pressable>*/}
           <Pressable style={styles.button} onPress={showCreateFolder}>
             <ImagePlusIcon style={{marginRight: 10}} />
             <Text style={styles.buttonText}>Folder</Text>
@@ -426,28 +426,6 @@ const Files = ({navigation}: {navigation: any}) => {
               <CreateFolder closeModel={hideCreateFolder} />
             </Dialog>
           )}
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            marginTop: 14,
-            marginBottom: 43,
-          }}>
-          <View style={{flexDirection: 'row', alignItems: 'center'}}>
-            <Text style={styles.title}>Essentials</Text>
-            <AntDesign
-              name="caretdown"
-              size={12}
-              color="black"
-              style={{marginLeft: 4}}
-            />
-          </View>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-            <SortListIcon />
-            <View style={{marginLeft: 36}} />
-            <ArrowDown />
-          </View>
         </View>
         <ScrollView
           style={styles.scrollView}
@@ -548,6 +526,7 @@ const styles = StyleSheet.create({
   recentFilesContainer: {
     justifyContent: 'flex-start',
     flexDirection: 'row',
+    marginBottom: 20
   },
 
   row3: {},

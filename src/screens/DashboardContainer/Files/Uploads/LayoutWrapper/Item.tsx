@@ -129,7 +129,7 @@ const Item = ({
     } else {
       content = isImage ? (
         <FastImage
-          source={{uri}}
+          source={{uri: uri}}
           resizeMode="cover"
           style={{
             width: size,

@@ -27,9 +27,11 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = createStore(persistedReducer);
 export const persistor = persistStore(store);
-
+// 
 // export const BaseUrl = 'http://10.0.2.2:3001/booing';
+// export const FilesUrl = 'http://10.0.2.2:3001/files';
+export const FilesUrl = 'https://booing-server.onrender.com/files';
 export const BaseUrl = 'https://booing-server.onrender.com/booing';
 
 export const AXIOS_ERROR = 'AxiosError';
-export const MAX_SIZE = 16000000; // 16mb
+export const MAX_SIZE = 26000000; // 16mb

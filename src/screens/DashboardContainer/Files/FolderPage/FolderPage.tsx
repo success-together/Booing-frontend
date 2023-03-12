@@ -6,6 +6,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Dimensions,
   View,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
@@ -27,7 +28,10 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import ShowFileWrapper from '../Uploads/LayoutWrapper/ShowFileWrapper';
 import {getDisplayComponent} from '../RecycleBin/RecycleBin';
 import RNFS from 'react-native-fs';
+import useSocket from '../../../../shared/socket';
+import * as Progress from 'react-native-progress';
 
+let isFileFetching = false;
 // const AddFiles = ({handleHide, reload, id}: any) => {
 //   const [files, setFiles] = useState([]);
 //   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
@@ -459,14 +463,21 @@ const FolderPage = ({navigation, route}: any) => {
     type?: string;
     uri?: string;
     title?: string;
+    image?: boolean;
   }>({
     show: false,
     uri: undefined,
     title: undefined,
     type: undefined,
+    image: true,
   });
   const user_id = store.getState().authentication.userId;
   const isFocused = useIsFocused();
+  const {createOffer, recreateOffer} = useSocket();
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchProcess, setFetchProcess] = useState(0);
+  const WIDTH = Dimensions.get('window').width;
+  const progressSize = WIDTH*0.8;  
 
   const handleSelect = useCallback(
     (id: string) => {
@@ -511,9 +522,10 @@ const FolderPage = ({navigation, route}: any) => {
               ...item,
               progress: 1,
               hasTriedToUpload: true,
-              isImage: item.uri?.startsWith('data:image/'),
+              isImage: item.category==='image',
             }));
           }
+
           setFolderData(data);
         }
       } catch (e: any) {
@@ -737,34 +749,95 @@ const FolderPage = ({navigation, route}: any) => {
   const addRemoveFileBeforeSave = useCallback((path: string) => {
     setRemoveFilesAfterFinish(prev => [...new Set([...prev, path])]);
   }, []);
-
+  const handleAbort = () => {
+    setIsFetching(false);
+    isFileFetching = false;
+  }
   const showFile = useCallback(
     async (id: string) => {
-      const file = folderData.items.find((e: any) => e.id === id) as any;
+      const file = folderData.items.find(e => e.id === id);
+      let arrayBuffer = ""
+      let state = true;
+      setFetchProcess(0);
+      setIsFetching(true);
+      isFileFetching = true;
+      // store.dispatch(setRootLoading(true)); 
+      const len = file["updates"].length;
+      for (let i = 0; i < file["updates"].length; i++) {
+        const filename = `${file["updates"][i]['fragmentID']}-${file["updates"][i]['uid']}-${file["updates"][i]['user_id']}.json`
+        for (let j = 0; j < file["updates"][i]['devices'].length; j++) {
+          const success = new Promise((resolve, reject) => {
+            createOffer(file["updates"][i]['devices'][j]['device_id'], filename, file["updates"][i]['fragmentID'], function(res) {
+              if (res === false) {
+                resolve(false);
+              } else {
+                arrayBuffer += res;
+                resolve(true);
+              }
+            })
+          })
+          state = await success;
+          if (!isFileFetching) {
+            Toast.show({
+              type: 'error',
+              text1: 'aborted fetch file.',
+            });
+            return true;
+          }                    
+          if (state) break;
+        }
+        if (!state) break;
+        setFetchProcess((i+1)/len);
+      }
+      if (state) {
+         const uri = "data:"+file.type+";base64,"+arrayBuffer;
+         const type = file.category;
 
-      if (file) {
-        let uri = file.uri;
-        const type = transformType(file.type);
-        if (type === 'video' || type === 'audio') {
+         // setIsShowingFile({show: true, uri: uri, title: file['updates'][0]['fileName'], type: file['category']});
+        if (type === 'video' || type === 'audio' || type === 'document') {
           const formated = await formatUri(
-            type,
-            file.uri,
+            file.type,
+            uri,
             Math.floor(Math.random() * 412515125).toString(),
           );
 
           if (formated) {
             const {changed, path} = formated;
-            uri = path;
             if (changed) {
               addRemoveFileBeforeSave(path);
             }
+            setIsFetching(false);
+            isFileFetching = false
+            setIsShowingFile({
+              show: true,
+              uri: path,
+              title: file['updates'][0]['fileName'],
+              type: type as any,
+              image: false
+            });         
+            return;   
+          } else {
+            return Toast.show({
+              type: 'error',
+              text1: `cannot play audio ${file['updates'][0]['fileName']}`,
+            });
           }
+        } else {
+          setIsFetching(false);
+          isFileFetching = false          
+          setIsShowingFile({
+            show: true,
+            uri: uri,
+            title: file['updates'][0]['fileName'],
+            type: type as any,
+            image: true,
+          });     
+          return;  
         }
-        setIsShowingFile({
-          show: true,
-          uri,
-          title: file.name,
-          type: type as any,
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'cannot fetch file.',
         });
       }
     },
@@ -799,123 +872,153 @@ const FolderPage = ({navigation, route}: any) => {
         </Text>
       }
       setPressHandlerRoot={setPressHandler}>
-      {isShowingFile.show ? (
-        <ShowFileWrapper
-          title={isShowingFile.title}
-          displayComponent={getDisplayComponent(
-            isShowingFile.type,
-            isShowingFile.uri,
-          )}
-          setIsShowingFile={setIsShowingFile}
-        />
-      ) : (
-        <View style={{flex: 1}}>
-          <ScrollView style={{flex: 1}}>
-            <View
-              style={{
-                flex: 1,
-                paddingHorizontal: '4.67%',
-                paddingVertical: '2.45%',
-                backgroundColor: '#F6F7FB',
-              }}>
-              <View
-                style={{
-                  display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  marginTop: 34,
-                  marginBottom: 42,
-                  minHeight: 24,
-                }}>
-                {selectedIds.length > 0 && (
-                  <>
-                    <AntDesign
-                      name="close"
-                      size={20}
-                      color="#49ACFA"
-                      onPress={uncheckAll}
-                    />
-                    <Text
-                      style={{marginLeft: 17, color: 'black', fontSize: 16}}>
-                      {selectedIds.length} Selected
-                    </Text>
-                  </>
-                )}
-              </View>
-              {folderData.items.length !== 0 ? (
-                [
-                  dirs.map((dir: FolderProps) => (
-                    <Folder
-                      {...dir}
-                      key={dir.id}
-                      showFolder={showFolder(dir.id)}
-                      reload={showFolder(folderData.id)}
-                    />
-                  )),
-                  ...files.map((group: {label: string; items: FileProps[]}) => (
-                    <SelectableItems
-                      data={group.items}
-                      handleSelect={handleSelect}
-                      selectedIds={selectedIds}
-                      text={group.label + 's'}
-                      setSelectedIds={setSelectedIds}
-                      key={group.label}
-                      setPressHandler={pressHandler}
-                      showFile={showFile}
-                    />
-                  )),
-                ]
-              ) : (
-                <NoDataFound />
-              )}
-            </View>
-            {isAddingFolders && (
-              <Dialog isVisible={true}>
-                <CreateFolder
-                  id={folderData.id}
-                  reload={showFolder(folderData.id)}
-                  handleHide={() => setIsAddingFolders(false)}
-                />
-              </Dialog>
-            )}
-          </ScrollView>
-          <View style={styles.uploadContainer}>
-            {selectedIds.length > 0 && (
-              <TouchableOpacity
-                style={{
-                  width: 82,
-                  height: 49,
-                  marginRight: 10,
-                  backgroundColor: 'white',
-                  borderRadius: 15,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-                onPress={handleDelete}
-                disabled={isDeleteButtonDisabled}>
-                <Text style={{color: '#49ACFA', fontWeight: '500'}}>
-                  Delete
-                </Text>
-              </TouchableOpacity>
-            )}
+      {
+        isFetching ? (   
+          <View
+            style={{
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Progress.Bar progress={fetchProcess} width={progressSize} />
+            <Text style={{marginTop: 20}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
             <TouchableOpacity
               style={{
                 width: 82,
                 height: 49,
                 backgroundColor: 'white',
                 borderRadius: 15,
-                display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
+                marginTop: 20
               }}
-              disabled={isUploadButtonDisabled}
-              onPress={handleUpload}>
-              <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
-            </TouchableOpacity>
+              onPress={handleAbort}>
+              <Text style={{color: '#49ACFA', fontWeight: '500'}}>Abort</Text>
+            </TouchableOpacity>              
           </View>
-        </View>
-      )}
+        ) : (              
+          isShowingFile.show ? (
+            <ShowFileWrapper
+              title={isShowingFile.title}
+              image={isShowingFile.image}
+              uri={isShowingFile.uri}
+              displayComponent={getDisplayComponent(
+                isShowingFile.type,
+                isShowingFile.uri,
+              )}
+              setIsShowingFile={setIsShowingFile}
+            />
+          ) : (
+            <View style={{flex: 1}}>
+              <ScrollView style={{flex: 1}}>
+                <View
+                  style={{
+                    flex: 1,
+                    paddingHorizontal: '4.67%',
+                    paddingVertical: '2.45%',
+                    backgroundColor: '#F6F7FB',
+                  }}>
+                  <View
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginTop: 34,
+                      marginBottom: 42,
+                      minHeight: 24,
+                    }}>
+                    {selectedIds.length > 0 && (
+                      <>
+                        <AntDesign
+                          name="close"
+                          size={20}
+                          color="#49ACFA"
+                          onPress={uncheckAll}
+                        />
+                        <Text
+                          style={{marginLeft: 17, color: 'black', fontSize: 16}}>
+                          {selectedIds.length} Selected
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                  {folderData.items.length !== 0 ? (
+                    [
+                      dirs.map((dir: FolderProps) => (
+                        <Folder
+                          {...dir}
+                          key={dir.id}
+                          showFolder={showFolder(dir.id)}
+                          reload={showFolder(folderData.id)}
+                        />
+                      )),
+                      ...files.map((group: {label: string; items: FileProps[]}) => (
+                        <SelectableItems
+                          data={group.items}
+                          handleSelect={handleSelect}
+                          selectedIds={selectedIds}
+                          text={group.label + 's'}
+                          setSelectedIds={setSelectedIds}
+                          key={group.label}
+                          setPressHandler={pressHandler}
+                          showFile={showFile}
+                        />
+                      )),
+                    ]
+                  ) : (
+                    <NoDataFound />
+                  )}
+                </View>
+                {isAddingFolders && (
+                  <Dialog isVisible={true}>
+                    <CreateFolder
+                      id={folderData.id}
+                      reload={showFolder(folderData.id)}
+                      handleHide={() => setIsAddingFolders(false)}
+                    />
+                  </Dialog>
+                )}
+              </ScrollView>
+              <View style={styles.uploadContainer}>
+                {selectedIds.length > 0 && (
+                  <TouchableOpacity
+                    style={{
+                      width: 82,
+                      height: 49,
+                      marginRight: 10,
+                      backgroundColor: 'white',
+                      borderRadius: 15,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                    onPress={handleDelete}
+                    disabled={isDeleteButtonDisabled}>
+                    <Text style={{color: '#49ACFA', fontWeight: '500'}}>
+                      Delete
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={{
+                    width: 82,
+                    height: 49,
+                    backgroundColor: 'white',
+                    borderRadius: 15,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                  disabled={isUploadButtonDisabled}
+                  onPress={handleUpload}>
+                  <Text style={{color: '#49ACFA', fontWeight: '500'}}>Upload</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )
+        )
+      }
     </LayoutWrapper>
   );
 };

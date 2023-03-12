@@ -60,7 +60,7 @@ const SelectableItems = ({
   }, []);
 
   const renderItem = ({
-    item: {name, id, progress, hasTriedToUpload, isImage, uri},
+    item: {name, id, progress, hasTriedToUpload, isImage, thumbnail},
     index,
   }: any) => {
     return (
@@ -73,7 +73,7 @@ const SelectableItems = ({
         handlePress={handlePress(id)}
         hasTriedToUpload={hasTriedToUpload}
         isImage={isImage}
-        uri={uri}
+        uri={thumbnail}
       />
     );
   };

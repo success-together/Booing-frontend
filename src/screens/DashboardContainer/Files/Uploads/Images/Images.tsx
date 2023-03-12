@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {Image, StyleSheet} from 'react-native';
+import {Dimensions, Image, StyleSheet, View, Text, TouchableOpacity} from 'react-native';
 import useGetUploadData from '../LayoutWrapper/getUploadedDataHook';
 import LayoutWrapper from '../LayoutWrapper/LayoutWrapper';
 import ShowFileWrapper from '../LayoutWrapper/ShowFileWrapper';
@@ -7,23 +7,32 @@ import SelectableUploadWrapper from '../LayoutWrapper/SelectableUploadWrapper';
 import ManageApps from '../../../../../utils/manageApps';
 import Toast from 'react-native-toast-message';
 import {useIsFocused} from '@react-navigation/native';
+import useSocket from '../../../../../shared/socket';
+import {store} from '../../../../../shared';
+import {setRootLoading} from '../../../../../shared/slices/rootSlice';
+import * as Progress from 'react-native-progress';
 
-
+let isFileFetching = false;
 const Images = ({navigation}: {navigation: any}) => {
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchProcess, setFetchProcess] = useState(0);
   const [data, setData] = useState<any[]>([]);
   const [isShowingFile, setIsShowingFile] = useState<{
     show: boolean;
     uri?: string;
     title?: string;
+    image?: boolean;
   }>({
     show: false,
     uri: undefined,
     title: undefined,
+    image: false,
   });
   const isFocused = useIsFocused();
   // console.log('data ',data)
-
-  
+  const {createOffer, sendTrafficData} = useSocket();
+  const WIDTH = Dimensions.get('window').width;
+  const progressSize = WIDTH*0.8;
   useEffect(() => {
     if (isFocused) {
       useGetUploadData('image')
@@ -49,43 +58,124 @@ const Images = ({navigation}: {navigation: any}) => {
         });
     }
   }, [isFocused]);
+  const handleAbort = () => {
+    setIsFetching(false);
+    isFileFetching = false;
 
-  const showFile = useCallback(
-    (id: string) => {
+  }
+  const showFile = async (id: string) => {
       const file = data.find(e => e.id === id);
-      if (file) {
-        setIsShowingFile({show: true, uri: file.uri, title: file.name});
+      let arrayBuffer = ""
+      let state = true;
+      setFetchProcess(0);
+      setIsFetching(true);
+      isFileFetching  = true;
+      // store.dispatch(setRootLoading(true)); 
+      let traffic = {};
+      const len = file["updates"].length;
+      for (let i = 0; i < file["updates"].length; i++) {
+        const filename = `${file["updates"][i]['fragmentID']}-${file["updates"][i]['uid']}-${file["updates"][i]['user_id']}.json`
+        for (let j = 0; j < file["updates"][i]['devices'].length; j++) {
+          const success = new Promise((resolve, reject) => {
+            const device_id = file["updates"][i]['devices'][j]['device_id'];
+            createOffer(device_id, filename, file["updates"][i]['fragmentID'], function(res) {
+              if (res === false) {
+                resolve(false);
+              } else {
+                arrayBuffer += res;
+                if (traffic[device_id]) traffic[device_id] += file["updates"][i]['size'];
+                else traffic[device_id] = file["updates"][i]['size']
+                resolve(true);
+              }
+            })
+          })
+          state = await success;
+          if (!isFileFetching) {
+            Toast.show({
+              type: 'error',
+              text1: 'aborted fetch file.',
+            });
+            return true;
+          }
+          if (state) break;
+        }
+        if (!state) break;
+        setFetchProcess((i+1)/len);
       }
-    },
-    [data],
-  );
+
+      //
+        // sendTrafficData(traffic);
+        // traffic = {};
+      //
+      setIsFetching(false);
+      isFileFetching = false;
+      if (state) {
+        const uri = "data:"+file.type+";base64,"+arrayBuffer;
+        setIsShowingFile({show: true, uri: uri, title: file['updates'][0]['fileName'], image: true});
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'cannot fetch file.',
+        });
+      }
+    }
 
   return (
     <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
-      {isShowingFile.show ? (
-        <ShowFileWrapper
-          title={isShowingFile.title}
-          displayComponent={
-            <Image
-              source={{uri: isShowingFile.uri}}
+      {
+        isFetching ? (
+          <View
+            style={{
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Progress.Bar progress={fetchProcess} width={progressSize} />
+            <Text style={{marginTop: 20}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
+            <TouchableOpacity
               style={{
-                flex: 1,
+                width: 82,
+                height: 49,
+                backgroundColor: 'white',
+                borderRadius: 15,
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginTop: 20
               }}
-              resizeMode="contain"
+              onPress={handleAbort}>
+              <Text style={{color: '#49ACFA', fontWeight: '500'}}>Abort</Text>
+            </TouchableOpacity>              
+          </View>
+        ) : (
+          isShowingFile.show ? (
+            <ShowFileWrapper
+              title={isShowingFile.title}
+              image={isShowingFile.image}
+              displayComponent={
+                <Image
+                  source={{uri: isShowingFile.uri}}
+                  style={{
+                    flex: 1,
+                  }}
+                  resizeMode="contain"
+                />
+              }
+              uri={isShowingFile.uri}
+              setIsShowingFile={setIsShowingFile}
             />
-          }
-          uri={isShowingFile.uri}
-          setIsShowingFile={setIsShowingFile}
-        />
-      ) : (
-        <SelectableUploadWrapper
-          showFile={showFile}
-          data={data}
-          pickItemsFn={() => ManageApps.pickImages()}
-          setData={setData}
-          isImageWrapper={true}
-        />
-      )}
+          ) : (
+            <SelectableUploadWrapper
+              showFile={showFile}
+              data={data}
+              pickItemsFn={() => ManageApps.pickImages()}
+              setData={setData}
+              isImageWrapper={true}
+            />
+          )
+
+        ) 
+      }
     </LayoutWrapper>
   );
 };

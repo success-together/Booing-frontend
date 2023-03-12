@@ -35,7 +35,6 @@ public class MainActivity extends ReactActivity {
   public static void setPickerRequestCode(int newRequestCode) {
     pickerRequestCode = newRequestCode;
   }
-
   @Override
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);

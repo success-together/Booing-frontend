@@ -21,6 +21,7 @@ import {
   SellSpace,
   Offer,
   InviteFriends,
+  StripePay,
 } from '../exports';
 import {small_logo} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -33,39 +34,17 @@ import {
   checkForUploads,
 } from '../../shared/slices/Fragmentation/FragmentationService';
 import FolderPage from './Files/FolderPage/FolderPage';
-
+import useSocket from '../../shared/socket';
 const Stack = createBottomTabNavigator();
-
-const DashboardContainer = () => {
+const DashboardContainer =  () => {
+  const {initSocket, createOffer} = useSocket();
   const device = store.getState().devices;
   const user_id = store.getState().authentication.userId;
-
-  console.log({user_id});
-
   useEffect(() => {
-    const intervalDownloads = checkForDownloads({user_id} as unknown as {
-      user_id: string;
-    });
-
-    let intervalUploads: number | undefined;
-    intervalUploads = checkForUploads({
-      user_id,
-      deviceRef: (device as any)?.deviceId,
-    } as unknown as {
-      user_id: string;
-      deviceRef: string;
-    });
-
-    return () => {
-      if (intervalDownloads) {
-        clearInterval(intervalDownloads);
-      }
-      if (typeof intervalUploads !== 'undefined') {
-        clearInterval(intervalUploads);
-      }
-    };
-  }, [device, user_id]);
-
+    console.log("_!______________!______________!_!______________!______________!_")
+    initSocket();
+  }, [])
+ 
   return (
     <>
       <NavigationContainer independent={true}>
@@ -139,7 +118,14 @@ const DashboardContainer = () => {
               tabBarItemStyle: {display: 'none'},
             }}
           />
-          <Stack.Screen name="Files" component={Files} />
+          <Stack.Screen name="Files" component={Uploads} />
+          <Stack.Screen 
+            name="Others" 
+            component={Files} 
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
           <Stack.Screen
             name="Uploads"
             component={Uploads}
@@ -234,6 +220,13 @@ const DashboardContainer = () => {
           <Stack.Screen
             name="RecycleBin"
             component={RecycleBin}
+            options={{
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
+          <Stack.Screen
+            name="StripePay"
+            component={StripePay}
             options={{
               tabBarItemStyle: {display: 'none'},
             }}

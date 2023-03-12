@@ -1,9 +1,22 @@
-import React from 'react'
+import React, {useState} from 'react'
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { OfferImage } from '../../../../images/export'
+import { OfferImageNew } from '../../../../images/export'
 import OfferHeader from './OfferHeader/OfferHeader'
 
-const Offer = () => {
+const Offer = ({navigation}) => {
+    const [offer, setOffer] = useState({
+        down: -71,
+        space: '2TB',
+        before: '1400',
+        after: '400',
+        offer: true,
+        price: 400,
+        id: '2TB-Booing-Space'
+    })
+    const navigateToCheckout = () => {
+        console.log('to pay', offer)
+        navigation.navigate("StripePay", offer)
+    }
     return (
         <View style={styles.container}>
             <View style={styles.containerImage}>
@@ -23,20 +36,20 @@ const Offer = () => {
                                 borderBottomLeftRadius: 60,
                                 borderTopRightRadius: 20,
                             }}>
-                                <Text style={styles.whitetext}>-71%</Text>
+                                <Text style={styles.whitetext}>{offer.down}%</Text>
                             </View>
                             <View style={{
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                             }}>
-                                <Text style={styles.redtext}>2TB Booing Space</Text>
+                                <Text style={styles.redtext}>{offer.space} Booing Space</Text>
                                 <Text style={styles.normaltext}>LEFTTIME</Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Text style={{ color: '#797D7F', fontSize: 24, textDecorationLine: 'line-through' }}> 1400 </Text>
+                                    <Text style={{ color: '#797D7F', fontSize: 24, textDecorationLine: 'line-through' }}> {offer.before} </Text>
                                     <Text style={{ color: '#797D7F', fontSize: 14, textDecorationLine: 'line-through' }}> EUR</Text>
                                     <Text style={{ color: '#797D7F', fontSize: 28, }}>/</Text>
-                                    <Text style={{ color: 'black', fontSize: 28, fontWeight: 'bold' }}>400</Text>
+                                    <Text style={{ color: 'black', fontSize: 28, fontWeight: 'bold' }}>{offer.after}</Text>
                                     <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold' }}> EUR</Text>
                                 </View>
 
@@ -47,7 +60,7 @@ const Offer = () => {
                                 </Text>
 
                             </View>
-                            <Pressable style={styles.button} >
+                            <Pressable style={styles.button} onPress={navigateToCheckout}>
                                 <Text style={styles.whitetext}>
                                     BUY NOW
                                 </Text>
@@ -55,7 +68,7 @@ const Offer = () => {
 
                         </View>
                         <View style={styles.cardBody}>
-                            <Image style={styles.image} source={OfferImage} />
+                            <Image style={styles.image} source={OfferImageNew} />
                         </View>
                     </View>
                     <View style={{ marginTop: 0, marginBottom: 20, paddingBottom: 20, paddingLeft: 20, paddingRight: 20, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
