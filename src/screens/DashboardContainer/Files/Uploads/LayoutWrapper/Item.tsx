@@ -1,11 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, TouchableOpacity, Text, View} from 'react-native';
+import {Dimensions, TouchableOpacity, Text, View, Image} from 'react-native';
 import {Selected} from '../../../Dashboard/File/File';
 import * as Progress from 'react-native-progress';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FastImage from 'react-native-fast-image';
 import {Loader} from '../../../../../Components/exports';
-
+import {musicIcon, docIcon, apkIcon, otherIcon} from '../../../../../images/export'
 const {Circle} = Progress;
 
 const WIDTH = Dimensions.get('window').width;
@@ -19,7 +19,7 @@ const Item = ({
   handlePress,
   handleLongPress,
   hasTriedToUpload,
-  isImage,
+  category,
   uri,
 }: any) => {
   const [showProgress, setShowProgress] = useState(progress !== 1);
@@ -90,7 +90,7 @@ const Item = ({
               height: '100%',
             }}
           />
-          <Text style={{position: 'absolute', top: 30, left: 4, fontSize: 10}}>
+          <Text style={{position: 'absolute', top: 30, left: 4, fontFamily: 'Rubik-Regular', fontSize: 10}}>
             fragmentation...
           </Text>
         </View>
@@ -127,24 +127,30 @@ const Item = ({
         </View>
       );
     } else {
-      content = isImage ? (
+      content = uri ? (
         <FastImage
           source={{uri: uri}}
           resizeMode="cover"
           style={{
             width: size,
             height: size,
-            position: 'absolute',
-            top: 0,
-            left: 0,
+            borderRadius: 5
           }}
         />
       ) : (
-        <Text>{name}</Text>
+        <View style={{justifyContent: 'center', alignItems: 'center', height: size}}>
+          {category === 'document' && <Image source={docIcon} size={size} />}
+          {category === 'apk' && <Image source={apkIcon} size={size} />}
+          {category === 'audio' && <Image source={musicIcon} size={size} />}
+          {category !== 'audio' && category !== 'document' && category !=='apk' && <Image source={otherIcon} size={size} />}
+        </View>
       );
     }
   }
-
+        // <Text>{name}</Text>
+  const formatName = (name: string) => {
+    return name.length <= 10 ? name : name.slice(0, 10) + '...';
+  };
   return (
     <TouchableOpacity
       onPress={progress === 1 && hasTriedToUpload ? handlePress : undefined}
@@ -153,8 +159,8 @@ const Item = ({
       }
       style={{
         width: size,
-        height: size,
-        backgroundColor: '#D9D9D9',
+        height: size+30,
+        // backgroundColor: '#D9D9D9',
         borderRadius: 8,
         marginRight: (index + 1) % NUM_COLS !== 0 ? 10 : undefined,
         marginBottom: NUM_COLS > 1 ? 5 : undefined,
@@ -163,7 +169,10 @@ const Item = ({
         overflow: 'hidden',
       }}>
       {selected && <Selected />}
-      {content}
+      <View style={{alignItems: 'center'}}>
+        {content}
+        <Text>{formatName(name)}</Text>
+      </View>
     </TouchableOpacity>
   );
 };

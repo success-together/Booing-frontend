@@ -2,10 +2,10 @@ import {BaseUrl, store} from '../..';
 import {Executor} from '../../Executor';
 import {setDirectories, setCategoryInfo} from './DirectoriesSlice';
 
-export const getRecentDirectories = async (data: {user_id: string}) => {
+export const getRecentFiles = async (data: {user_id: string}) => {
   return Executor({
     method: 'post',
-    url: `${BaseUrl}/logged-in-user/recentDirectories`,
+    url: `${BaseUrl}/logged-in-user/recentFiles`,
     data: data,
     isSilent: true,
     withoutToast: true,

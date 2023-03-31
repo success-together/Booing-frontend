@@ -17,6 +17,7 @@ export const rootSlice = createSlice({
   initialState: rootInitialState,
   reducers: {
     setRootLoading: (state: any, action: PayloadAction<boolean>) => {
+      console.log('setRootLoading-> ', action.payload)
       state.isLoading = action.payload;
     },
     setRootRef: (

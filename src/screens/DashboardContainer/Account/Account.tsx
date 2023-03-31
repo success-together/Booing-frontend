@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, Switch, Text, View } from "react-native";
+import { ScrollView, Switch, Text, View, Image } from "react-native";
 import { Pressable, StyleSheet } from "react-native";
 import { store } from "../../../shared";
 import AccountHeader from "./AccountHeader/AcountHeader";
@@ -11,6 +11,7 @@ import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import Octicons from "react-native-vector-icons/Octicons";
 import AntDesign from "react-native-vector-icons/AntDesign"
 import { Logout } from "../../Authentication/Logout/Logout";
+import { securityPng, userGroupPng } from "../../../images/export";
 const Account = ({ navigation }: { navigation: any }) => {
   const [isEnabled, setIsEnabled] = useState(false);
   const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
@@ -27,11 +28,11 @@ const Account = ({ navigation }: { navigation: any }) => {
             <Text style={styles.title}>Personal</Text>
             <View>
               <Pressable
-                style={styles.button}
+                style={[styles.button, {borderTopLeftRadius: 10, borderTopRightRadius: 10}]}
                 onPress={() => navigation.navigate("UpdateProfile")}
               >
                 <View style={{ flexDirection: "row" }}>
-                  <FontAwesome5
+                  <AntDesign
                     style={styles.icon}
                     name="user"
                     size={20}
@@ -52,9 +53,9 @@ const Account = ({ navigation }: { navigation: any }) => {
                 onPress={() => navigation.navigate("UpdatePassword")}
               >
                 <View style={{ flexDirection: "row" }}>
-                  <MaterialCommunityIcons
-                    style={styles.icon}
-                    name="security"
+                  <Image 
+                    source={securityPng} 
+                    style={styles.icon} 
                     size={20}
                     color="#CED5D8"
                   />
@@ -69,13 +70,13 @@ const Account = ({ navigation }: { navigation: any }) => {
                 />
               </Pressable>
               <Pressable
-                style={styles.button}
+                style={[styles.button, {borderBottomLeftRadius: 10, borderBottomRightRadius: 10}]}
                 onPress={() => navigation.navigate("InviteFriends")}
               >
                 <View style={{ flexDirection: "row" }}>
-                  <FontAwesome5
-                    style={styles.icon}
-                    name="user-friends"
+                  <Image 
+                    source={userGroupPng} 
+                    style={styles.icon} 
                     size={20}
                     color="#CED5D8"
                   />
@@ -93,7 +94,7 @@ const Account = ({ navigation }: { navigation: any }) => {
           </View>
           <View style={styles.sectionView}>
             <Text style={styles.title}>Synchronization</Text>
-            <Pressable style={styles.button}>
+{/*            <Pressable style={styles.button}>
               <View style={{ flexDirection: "row" }}>
                 <MaterialCommunityIcons
                   style={styles.icon}
@@ -110,8 +111,8 @@ const Account = ({ navigation }: { navigation: any }) => {
                 onValueChange={toggleSwitch}
                 value={isEnabled}
               />
-            </Pressable>
-            <Pressable style={styles.button} onPress={() => navigation.navigate("RegistredDevices")}>
+            </Pressable>*/}
+            <Pressable style={[styles.button, {borderTopLeftRadius: 10, borderTopRightRadius: 10, borderBottomLeftRadius: 10, borderBottomRightRadius: 10}]} onPress={() => navigation.navigate("RegistredDevices")}>
               <View style={{ flexDirection: "row" }}>
                 <Octicons
                   style={styles.icon}
@@ -124,8 +125,7 @@ const Account = ({ navigation }: { navigation: any }) => {
               {/* <Text
                 style={{
                   marginRight: 10,
-                  fontSize: 16,
-                  fontWeight: "bold",
+              fontFamily: 'Rubik-Bold', fontSize: 16,
                   color: "#CED5D8",
                 }}
               >
@@ -153,7 +153,7 @@ const Account = ({ navigation }: { navigation: any }) => {
           </View>
           <View style={styles.sectionView}>
             <Text style={styles.title}>Account information</Text>
-            <Pressable style={styles.button} onPress={() => navigation.navigate("Booingcoin")}>
+            <Pressable style={[styles.button, {borderTopLeftRadius: 10, borderTopRightRadius: 10, borderBottomLeftRadius: 10, borderBottomRightRadius: 10}]} onPress={() => navigation.navigate("Booingcoin")}>
               <View style={{ flexDirection: "row" }}>
                 <MaterialIcons
                   style={styles.icon}
@@ -173,7 +173,7 @@ const Account = ({ navigation }: { navigation: any }) => {
             </Pressable>
           </View>
           <View style={styles.sectionView}>
-            <Pressable style={styles.button} onPress={() => { Logout(navigation) }}>
+            <Pressable style={[styles.button, {borderTopLeftRadius: 10, borderTopRightRadius: 10, borderBottomLeftRadius: 10, borderBottomRightRadius: 10}]} onPress={() => { Logout(navigation) }}>
               <View style={{ flexDirection: "row" }}>
                 <AntDesign
                   style={styles.icon}
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#F2F6F7",
+    backgroundColor: "#F4F7F8",
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   containerHeader: {
     backgroundColor: "#33a1f9",
     width: "100%",
-    flex: 0.5,
+    // flex: 0.5,
   },
   containerBody: {
     width: "100%",
@@ -241,11 +241,11 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   title: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 16,
     lineHeight: 21,
-    fontWeight: "bold",
     letterSpacing: 0.25,
-    color: "#8F9395",
+    color: "#9F9EB3",
     // marginTop: 5,
     marginBottom: 8,
     marginLeft: 8,
@@ -253,10 +253,10 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   text: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 14,
     lineHeight: 21,
     letterSpacing: 0.25,
-    fontWeight: "bold",
     color: "black",
     marginLeft: 14,
   },

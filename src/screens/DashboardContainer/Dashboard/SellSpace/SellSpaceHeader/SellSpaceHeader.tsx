@@ -31,14 +31,13 @@ const styles = StyleSheet.create({
       marginTop: 20,
     },
     image: {
-      width: 50,
+      width: 87,
       height: 30,
       marginLeft:20
     },
     title: {
-      fontSize: 16,
+      fontFamily: 'Rubik-Bold', fontSize: 16,
       lineHeight: 21,
-      fontWeight: "bold",
       letterSpacing: 0.25,
       color: "white",
       marginLeft: 70,
@@ -58,16 +57,14 @@ const styles = StyleSheet.create({
     txt: {
       marginTop: 0,
       color: "white",
-      fontSize: 14,
+      fontFamily: 'Rubik-Bold', fontSize: 14,
       lineHeight: 15,
-      fontWeight: "bold",
       letterSpacing: 0.25,
       textAlign: "center",
     },
     BooingTitle: {
-      fontSize: 20,
+      fontFamily: 'Rubik-Bold', fontSize: 20,
       lineHeight: 21,
-      fontWeight: "bold",
       letterSpacing: 0.25,
       color: "white",
       textAlign: "center",

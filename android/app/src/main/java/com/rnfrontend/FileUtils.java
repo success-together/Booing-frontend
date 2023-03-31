@@ -1,4 +1,4 @@
-package com.rnfrontend;
+package com.rr.booingapp;
 
 import android.annotation.SuppressLint;
 import android.content.ContentUris;

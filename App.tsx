@@ -6,6 +6,8 @@ import {
   Home,
   Login,
   Register,
+  Splash,
+  CounterDown,
   VerificationCode,
 } from './src/screens/exports';
 import {useEffect, useState} from 'react';
@@ -18,7 +20,7 @@ import {Settings} from 'react-native-fbsdk-next';
 
 // Setting the facebook app id using setAppID
 // Remember to set CFBundleURLSchemes in Info.plist on iOS if needed
-Settings.setAppID('472027605133427');
+Settings.setAppID('727628018866085');
 Settings.initializeSDK();
 
 const Stack = createNativeStackNavigator();
@@ -77,6 +79,8 @@ export default function App() {
             initialRouteName="Home">
             {!isLoggedIn ? (
               <Stack.Group>
+                <Stack.Screen name="Splash" component={Splash} />
+                <Stack.Screen name="CounterDown" component={CounterDown} />
                 <Stack.Screen name="Home" component={Home} />
                 <Stack.Screen name="Login" component={Login} />
                 <Stack.Screen name="Register" component={Register} />

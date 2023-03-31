@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
+  Dimensions,
   FlatList,
   SafeAreaView,
   StyleSheet,
@@ -8,13 +9,15 @@ import {
   View,
   ViewabilityConfigCallbackPair,
   ViewToken,
+  Image,
+  Pressable,
 } from 'react-native';
 
 import File from '../File/File';
 import Toast from 'react-native-toast-message';
 import ManageApps from '../../../../utils/manageApps';
 import bytes from 'bytes';
-
+import {musicIcon} from '../../../../images/export';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
@@ -32,6 +35,10 @@ const icons = {
       size={size}
       color={color}
     />
+    // <Image source={musicIcon} style={{width: size, height: size}}/>
+  ),
+  Manually: (size: number, color = '#8F8F8F') => (
+    <AntDesign name="picture" size={size} color={color} />
   ),
   Duplicate: (size: number, color = '#8F8F8F') => (
     <AntDesign name="picture" size={size} color={color} />
@@ -44,8 +51,8 @@ const icons = {
     />
   ),
   Videos: (size: number, color = '#8F8F8F') => (
-    <MaterialCommunityIcons
-      name="file-video-outline"
+    <Feather
+      name="video"
       size={size}
       color={color}
     />
@@ -79,8 +86,11 @@ interface FilesListProps {
   label: keyof typeof icons;
   removeDeletedItems: Function;
   size: number;
+  type?: string;
   setTriggerRerender?: Function;
   refetchByLabel: Function;
+  isCategoryView?: Function;
+  categoryView: string;
 }
 
 interface DeleteBtnProps {
@@ -117,15 +127,22 @@ const DeleteBtn = ({onPress, disabled}: DeleteBtnProps) => {
 export default function FilesList({
   data,
   label,
+  type,
   size,
   refetchByLabel,
   removeDeletedItems,
+  isCategoryView,
+  categoryView
 }: FilesListProps) {
+  console.log(label)
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
   const [deleteBtnProps, setDeleteBtnProps] = useState({
     disabled: false,
     show: false,
   });
+  const WIDTH = Dimensions.get('window').width;
+  const minHeight = Dimensions.get('window').height/3;
+  const FlatWidth = WIDTH/4;
   // const [items, setItems] = useState([]);
   // const [iterator, setIterator] = useState<Iterator<[]>>();
   // const [viewedItems, setViewedItems] = useState<
@@ -164,59 +181,79 @@ export default function FilesList({
 
   const onDeleteFilesPress = useCallback(async () => {
     // setItems([]);
-    const paths = selectedFilesIds.reduce<string[]>((acc, id) => {
-      const item = data.find((e: RenderFileData['item']) => e.id === id);
-      if (item) {
-        acc.push((item as any).path);
+    if (label === 'Manually') {
+      let pathArr = {};
+      selectedFilesIds.map((id) => {
+        const item = data.find((e: RenderFileData['item']) => e.id === id);
+        if (item) {
+          if (pathArr[item.type]) pathArr[item.type].push((item as any).path);
+          else pathArr[item.type] = [(item as any).path];
+        }
+      })
+      for (let key in pathArr) {
+        if (key === 'Pictures') {
+          isDeleted = await ManageApps.deleteImages(pathArr[key]);
+        }
+        if (key === 'Videos') {
+          isDeleted = await ManageApps.deleteVideos(pathArr[key]);
+        }
+        if (key === 'Music') {
+          isDeleted = await ManageApps.deleteAudios(pathArr[key]);
+        }      
+      }
+    } else {
+
+      const paths = selectedFilesIds.reduce<string[]>((acc, id) => {
+        const item = data.find((e: RenderFileData['item']) => e.id === id);
+        if (item) {
+          acc.push((item as any).path);
+          return acc;
+        }
         return acc;
+      }, []);
+
+      let isDeleted;
+
+      if (label === 'Pictures') {
+        isDeleted = await ManageApps.deleteImages(paths);
       }
-      return acc;
-    }, []);
+      if (label === 'Videos') {
+        isDeleted = await ManageApps.deleteVideos(paths);
+      }
+      if (label === 'Music') {
+        isDeleted = await ManageApps.deleteAudios(paths);
+      }
+      if (label === 'Empty folders' || label === 'Thumbnails') {
+        isDeleted = await ManageApps.deleteDirs(paths);
+        if (isDeleted) {
+          removeDeletedItems(selectedFilesIds, label);
+        }
+      }
+      if (label === 'Not installed apks') {
+        isDeleted = await ManageApps.deleteApks(paths);
+        if (isDeleted) {
+          removeDeletedItems(selectedFilesIds, label);
+        }
+      }
 
-    let isDeleted;
+      setDeleteBtnProps({disabled: true, show: true});
 
-    if (label === 'Pictures') {
-      isDeleted = await ManageApps.deleteImages(paths);
-    }
-    if (label === 'Videos') {
-      isDeleted = await ManageApps.deleteVideos(paths);
-    }
-    if (label === 'Music') {
-      isDeleted = await ManageApps.deleteAudios(paths);
-    }
-    if (label === 'Empty folders' || label === 'Thumbnails') {
-      isDeleted = await ManageApps.deleteDirs(paths);
+      if (
+        label !== 'Empty folders' &&
+        label !== 'Thumbnails' &&
+        label !== 'Not installed apks'
+      ) {
+        await refetchByLabel(label);
+      }
+
+      setSelectedFilesIds([]);
+      setDeleteBtnProps({disabled: false, show: false});
       if (isDeleted) {
-        removeDeletedItems(selectedFilesIds, label);
+        return Toast.show({
+          type: 'success',
+          text1: 'items deleted successfully',
+        });
       }
-    }
-    if (label === 'Duplicate') {
-      console.log(paths);
-    }
-    if (label === 'Not installed apks') {
-      isDeleted = await ManageApps.deleteApks(paths);
-      if (isDeleted) {
-        removeDeletedItems(selectedFilesIds, label);
-      }
-    }
-
-    setDeleteBtnProps({disabled: true, show: true});
-
-    if (
-      label !== 'Empty folders' &&
-      label !== 'Thumbnails' &&
-      label !== 'Not installed apks'
-    ) {
-      await refetchByLabel(label);
-    }
-
-    setSelectedFilesIds([]);
-    setDeleteBtnProps({disabled: false, show: false});
-    if (isDeleted) {
-      return Toast.show({
-        type: 'success',
-        text1: 'items deleted successfully',
-      });
     }
   }, [selectedFilesIds, refetchByLabel]);
 
@@ -244,22 +281,24 @@ export default function FilesList({
       text1: `cache cleared for apps ${apps.map(e => e.name).join(',')}`,
     });
   };
-
+  const otherPress = (id) => {
+    ShowCategory();
+  }
   const renderFile = useCallback(
     ({item: {name, path, id, thumbnail, visibleCacheSize}}: RenderFileData) => {
       if (name.includes('other')) {
-        console.log({name});
       }
       return (
         <File
           name={name}
           id={id}
           thumbnail={thumbnail}
-          onPress={path !== null ? onPress : undefined}
+          onPress={path !== null ? onPress : otherPress}
           visibleCacheSize={visibleCacheSize}
           selected={selectedFilesIds.includes(id)}
           Icon={icons[label]}
           loaded={() => void 0}
+          isVideo={(label=='Videos'||label=='Music')?true:false}
           // loaded={() => {
           //   setLoadedItemsIds(prev =>
           //     prev.includes(id) ? prev : [...prev, id],
@@ -355,29 +394,32 @@ export default function FilesList({
   //   setIterator(iterator);
   //   nextSet(iterator);
   // }, [data]);
-
+  const ShowCategory = () => {
+    if (data.length > 0)
+      isCategoryView(type?type+label:label)
+  }
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTitle}>
           {icons[label](20)}
-          <Text
-            style={{
-              marginLeft: 10,
-              color: '#8F8F8F',
-              fontSize: 16,
-              borderBottomWidth: 1,
-              borderBottomColor: '#8F8F8F',
-              borderStyle: 'solid',
-              marginRight: 10,
-            }}>
-            {label}
-          </Text>
+          <View>
+            <Text
+              style={{
+                marginLeft: 10,
+                color: '#A0A0A0',
+                fontFamily: 'Rubik-Regular', fontSize: 16,
+                marginRight: 10,
+              }}>
+              {type} {label}
+            </Text>
+          </View>
           {/* {viewedItems.filter(item => !item.isLoaded).length !== 0 && (
             <Circle size={16} indeterminate={true} />
           )} */}
         </View>
-        <View
+        <Pressable
+          onPress={() => ShowCategory()}
           style={{
             height: 30,
             display: 'flex',
@@ -385,7 +427,8 @@ export default function FilesList({
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-          <Text style={{marginRight: 10}}>{bytes(size)}</Text>
+          {/*<Text style={{marginRight: 10}}>{bytes(size)}</Text>*/}
+          <Text style={{marginRight: 10, color: '#6DBDFE'}}>{data.length === 0?'Add':'Open'}</Text>
           {deleteBtnProps.show && (
             <DeleteBtn
               onPress={
@@ -394,28 +437,42 @@ export default function FilesList({
               disabled={deleteBtnProps.disabled}
             />
           )}
-        </View>
+        </Pressable>
       </View>
       <SafeAreaView style={{paddingTop: 10, paddingBottom: 10}}>
         {data.length === 0 ? (
           <NoDataFound />
         ) : (
-          <FlatList
-            data={data}
-            renderItem={renderFile}
-            keyExtractor={item => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            initialNumToRender={5}
-            removeClippedSubviews={true}
-            maxToRenderPerBatch={5}
-            // viewabilityConfigCallbackPairs={
-            //   viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
-            // }
-            viewabilityConfig={{
-              minimumViewTime: 200,
-            }}
-          />
+          categoryView===(type?type:''+label)?(
+            <FlatList
+              key={"duple"}
+              data={data}
+              scrollEnabled={false}
+              renderItem={renderFile}
+              keyExtractor={item => item.id}
+              horizontal={false}
+              numColumns={5}
+            />
+          ):(
+            <FlatList
+              data={data}
+              renderItem={renderFile}
+              scrollEnabled={false}
+              keyExtractor={item => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              initialNumToRender={5}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={5}
+              // viewabilityConfigCallbackPairs={
+              //   viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
+              // }
+              viewabilityConfig={{
+                minimumViewTime: 200,
+              }}
+            />
+          )
+
         )}
       </SafeAreaView>
     </View>
@@ -425,6 +482,10 @@ export default function FilesList({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 8,
+    marginTop: 10
   },
   header: {
     display: 'flex',

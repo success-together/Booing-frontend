@@ -1,4 +1,4 @@
-package com.rnfrontend;
+package com.rr.booingapp;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;

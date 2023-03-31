@@ -35,3 +35,50 @@ export const BaseUrl = 'https://booing-server.onrender.com/booing';
 
 export const AXIOS_ERROR = 'AxiosError';
 export const MAX_SIZE = 26000000; // 16mb
+
+
+// from backend (needs to be sync with backend)
+export const types = {
+  document: (type: string) => {
+    const arr = [
+      'text/csv',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/html',
+      'text/calendar',
+      'text/javascript',
+      'application/json',
+      'application/ld+json',
+      'text/javascript',
+      'application/vnd.oasis.opendocument.spreadsheet',
+      'application/vnd.oasis.opendocument.text',
+      'application/pdf',
+      'application/x-httpd-php',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/rtf',
+      'application/x-sh',
+      'text/plain',
+      'application/xhtml+xml',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/xml',
+      'application/vnd.mozilla.xul+xml',
+    ];
+
+    return arr.includes(type) || arr.find(e => e.includes(type));
+  },
+  apk: (type: string) => type === 'application/vnd.android.package-archive',
+  video: (type: string) => type?.startsWith('video/'),
+  audio: (type: string) => type?.startsWith('audio/'),
+  image: (type: string) => type?.startsWith('image/'),
+  download(type: string) {
+    return (
+      !this.document(type) &&
+      !this.apk(type) &&
+      !this.video(type) &&
+      !this.audio(type) &&
+      !this.image(type)
+    );
+  },
+};

@@ -13,9 +13,9 @@ function Home({navigation}: {navigation: any}) {
           <Text style={styles.text}>Login</Text>
         </Pressable>
         <Pressable
-          style={styles.button}
+          style={[styles.button, {backgroundColor: '#eee'}]}
           onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.text}>Signup</Text>
+          <Text style={[styles.text, {color: '#33A1F9'}]}>Signup</Text>
         </Pressable>
       </View>
     </View>
@@ -27,22 +27,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#33a1f9',
     alignItems: 'center',
-    justifyContent: 'center',
+
+    // justifyContent: 'center',
   },
   image: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '90%',
+    marginTop: '65%',
+    resizeMode: "contain"
   },
   containerButtons: {
     display: 'flex',
     position: 'absolute',
-    bottom: 48,
-    flexDirection: 'row',
-    height: 60,
-    paddingLeft: 20,
-    paddingRight: 20,
-    alignItems: 'stretch',
+    bottom: 0,
+    flexDirection: 'column',
+    height: 180,
+    padding: 30,
     width: '100%',
+    backgroundColor: 'white'
   },
 
   button: {
@@ -50,14 +51,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 4,
     elevation: 3,
-    backgroundColor: 'white',
-    flex: 1,
+    backgroundColor: '#33A1F9',
+    color: 'white',
+    width: '100%',
+    height: 50,
+    borderRadius: 15,
+    marginBottom: 20,
   },
 
   text: {
-    fontSize: 20,
+    fontFamily: 'Rubik-Regular', 
+    fontSize: 18,
     letterSpacing: 0.25,
-    color: '#33A1F9',
+    color: '#ffffff',
   },
 
   // inputView: {

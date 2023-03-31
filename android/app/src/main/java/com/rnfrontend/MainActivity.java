@@ -1,4 +1,4 @@
-package com.rnfrontend;
+package com.rr.booingapp;
 
 import android.app.Activity;
 import android.app.AlertDialog;

@@ -247,7 +247,7 @@ const CreateFolder = ({closeModel}: {closeModel: (bool?: boolean) => void}) => {
         style={{
           color: 'black',
           fontWeight: '600',
-          fontSize: 18,
+          fontFamily: 'Rubik-Regular', fontSize: 18,
           marginBottom: 20,
         }}>
         Create Folder
@@ -400,7 +400,7 @@ const Files = ({navigation}: {navigation: any}) => {
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
-        <FilesHeader onBackPress={() => navigation.navigate('Dashboard')} />
+        <FilesHeader onBackPress={() => navigation.navigate('Home')} />
       </View>
       <View style={styles.body}>
         <View style={styles.recentFilesContainer}>
@@ -465,9 +465,8 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   title: {
-    fontSize: 16,
+    fontFamily: 'Rubik-Bold', fontSize: 16,
     letterSpacing: 0.25,
-    fontWeight: 'bold',
     color: 'black',
     marginLeft: 10,
   },
@@ -495,30 +494,28 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 15,
+    padding: 10,
     marginRight: 10,
     borderRadius: 15,
     backgroundColor: 'white',
     flexDirection: 'row',
   },
   text: {
-    fontSize: 16,
+    fontFamily: 'Rubik-Bold', fontSize: 16,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'black',
   },
   buttonText: {
     color: '#9F9EB3',
-    fontSize: 16,
+    fontFamily: 'Rubik-Regular', fontSize: 16,
     fontWeight: '500',
   },
   createAccount: {
-    fontSize: 16,
+    fontFamily: 'Rubik-Bold', fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
     color: 'black',
-    fontWeight: 'bold',
   },
   containerFolder: {
     flexDirection: 'row',
@@ -552,7 +549,7 @@ const styles = StyleSheet.create({
   },
   item: {
     padding: 10,
-    fontSize: 18,
+    fontFamily: 'Rubik-Regular', fontSize: 18,
     height: 44,
   },
 });

@@ -23,6 +23,14 @@ const Login = ({navigation}: {navigation: any}) => {
     if (email && password)
       await login({email, password}).then(res => {
         if (res.success) navigation.navigate('DashboardContainer');
+      }).catch(err => {
+        console.log(err.response?.data?.user_id)
+        if (err.response?.data?.user_id) {
+          navigation.navigate('Verification', {
+            user_id: err.response?.data?.user_id,
+            isSignup: true,
+          });
+        }
       });
   };
 
@@ -40,21 +48,22 @@ const Login = ({navigation}: {navigation: any}) => {
           alignItems: 'stretch',
           width: '100%',
           backgroundColor: 'white',
-          paddingLeft: '2.15%',
-          paddingRight: '2.15%',
+          paddingLeft: '3.15%',
+          paddingRight: '3.15%',
           paddingTop: '5.18%',
           paddingBottom: '5.18%',
           flex: 1,
         }}>
         <Text style={styles.title}>Email </Text>
         <TextInput
-          placeholder="Enter Email Adress"
+          placeholder="Email"
           autoComplete={'email'}
           onChangeText={e => setEmail(e)}
           style={{
-            color: 'black',
+            color: '#B6B0B0',
             backgroundColor: '#F8F8F8',
             borderRadius: 8,
+            paddingLeft: 15,
             marginBottom: '5.18%',
             marginTop: 4,
           }}
@@ -68,7 +77,8 @@ const Login = ({navigation}: {navigation: any}) => {
           }}>
           <Text style={styles.title}>Password </Text>
           <Text
-            style={{color: '#33A1F9', fontSize: 14}}
+            style={{color: '#33A1F9', fontFamily: 'Rubik-Regular',
+    fontSize: 14}}
             onPress={() =>
               navigation.navigate('Verification', {
                 isSignup: false,
@@ -78,14 +88,15 @@ const Login = ({navigation}: {navigation: any}) => {
           </Text>
         </View>
         <TextInput
-          placeholder="Enter Password"
+          placeholder="Password"
           autoComplete={'password'}
           secureTextEntry={true}
           onChangeText={e => setPassword(e)}
           style={{
-            color: 'black',
+            color: '#B6B0B0',
             backgroundColor: '#F8F8F8',
             borderRadius: 8,
+            paddingLeft: 15,
             marginBottom: '5.18%',
             marginTop: 4,
           }}
@@ -140,6 +151,8 @@ const styles = StyleSheet.create({
   image: {
     alignItems: 'center',
     justifyContent: 'center',
+    width: '90%',
+    resizeMode: "contain"
   },
   button: {
     marginBottom: 10,
@@ -154,21 +167,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#33a1f9',
   },
   text: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 20,
     lineHeight: 21,
     letterSpacing: 0.25,
     color: 'white',
   },
   title: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 17,
     lineHeight: 21,
     letterSpacing: 0.25,
-    color: '#797D7F',
+    color: '#716D6D',
 
     // marginLeft: 70,
     // marginRight: 70,
   },
   createAccount: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 16,
     letterSpacing: 0.25,
     marginBottom: '4.32%',
@@ -186,6 +202,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   forgetPassword: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,

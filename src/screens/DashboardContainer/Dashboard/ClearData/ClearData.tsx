@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, {useCallback, useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Button} from 'react-native';
+import {View, Text, StyleSheet, Button, BackHandler, Image, TouchableOpacity, Pressable} from 'react-native';
 import {ReadDirItem} from 'react-native-fs';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Feather from 'react-native-vector-icons/Feather';
@@ -10,11 +10,16 @@ import {isAllOf, nanoid} from '@reduxjs/toolkit';
 import {PERMISSIONS, requestMultiple, RESULTS} from 'react-native-permissions';
 import {ScrollView} from 'react-native';
 import {Bar} from 'react-native-progress';
+import Toast from 'react-native-toast-message';
 import RNFS from 'react-native-fs';
 import {useIsFocused} from '@react-navigation/native';
 import {store} from '../../../../shared';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {Transaction} from '../../../../shared/slices/wallet/walletService';
+import {sellSpace} from '../../../../shared/slices/Fragmentation/FragmentationService';
+import {small_logo} from '../../../../images/export';
+import LinearGradient from 'react-native-linear-gradient';
+import {setStorage} from '../../../../shared/slices/Auth/AuthSlice';
 
 export const Progress = ({progress, text}: any) => {
   return (
@@ -53,7 +58,11 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [images, setImages] = useState([]);
   const [videos, setVideos] = useState([]);
   const [music, setMusic] = useState([]);
+  const [apps, setApps] = useState([]);
   const [duplicate, setDuplicate] = useState([]);
+  const [duplicatePictures, setDuplicatePictures] = useState([]);
+  const [duplicateVideos, setDuplicateVideos] = useState([]);
+  const [duplicateMusic, setDuplicateMusic] = useState([]);
   const [thumbnails, setThumbnails] = useState([]);
   const [emptyFolders, setEmptyFolders] = useState([]);
   const [notInstalledApks, setNotInstalledApks] = useState([]);
@@ -61,6 +70,7 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
   const [isSelledSpace, setIsSelledSpace] = useState<boolean>(false);
   const [rescanOnFocuse, setRescanOnFocus] = useState(true);
   const [clearManually, setClearManually] = useState(false);
+  const [categoryView, setCategoryView] = useState('All')
   const user_id = store.getState().authentication.userId;
 
   const [progressProps, setProgressProps] = useState({
@@ -89,40 +99,66 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
 
     setPermissionGranted(readWriteExternalStorage && allFilesAccess);
   }, []);
-
+  const showMessage = ({text, progress}) => {
+    if (isFocused) {
+      setProgressProps({text: text, progress: progress});
+    } 
+      ManageApps.showNotification(
+        "Hey, I'm optimizing your device's space.",
+        `${text}    ${progress*100}%`,
+        true
+      );
+    // Toast.show({
+    //   type: 'success',
+    //   text1: text + '   ' + progress*100 + '%',
+    //   autoHide: progress===1?true:false
+    // })        
+  }
+  const delay = (delayInms) => {
+    return new Promise(resolve => setTimeout(resolve, delayInms));
+  }  
   const scanUserStorage = useCallback(async () => {
     try {
       setClearManually(false);
       setRescanOnFocus(false);
       store.dispatch(setRootLoading(false));
       setShowModal({show: true, loading: true});
-      setProgressProps(prev => ({...prev, text: 'fetching images ...'}));
+      setApps(addId(await ManageApps.getAllInstalledApps()));
+      showMessage(prev => ({...prev, text: 'fetching images ...', progress: 0}));
       setImages(addId(await ManageApps.getImages()));
-      setProgressProps({text: 'fetching videos ...', progress: 0.25});
+      showMessage({text: 'fetching videos ...', progress: 0.25});
       setVideos(addId(await ManageApps.getVideos()));
-      setProgressProps({text: 'fetching audio files ...', progress: 0.5});
+      showMessage({text: 'fetching audio files ...', progress: 0.5});
       setMusic(addId(await ManageApps.getAudios()));
-      // setApps(addId(await ManageApps.getAllInstalledApps()));
-      setProgressProps({text: 'fetching junk files ...', progress: 0.75});
+      showMessage({text: 'fetching junk files ...', progress: 0.75});
       const {notInstalledApps, thumbnails, emptyFolders} =
         await ManageApps.getJunkData();
       setNotInstalledApks(addId(notInstalledApps));
       setThumbnails(addId(thumbnails));
       setEmptyFolders(addId(emptyFolders));
-      setProgressProps({text: 'done !', progress: 1});
+      showMessage({text: 'done !', progress: 1});
+      const delaytime = await delay(1500);
     } catch (e: any) {
       console.log(e.stack);
     } finally {
-      setShowData(true);
       setTimeout(() => {
         setShowModal({show: false, loading: false});
       }, 200);
+      setShowData(true);
       ManageApps.showNotification(
         'Scan Completed',
         'you can find all your junk files in the scan page',
+        false
       );
     }
   }, [isFocused]);
+  const analyseStorage = () => {
+      const totalMediaSize = calcSpace([...images, ...videos, ...music]);
+      const totalCacheSize = calcSpace(apps, 'visibleCacheSize', 0);
+      console.log('totalMediaSize', totalMediaSize)
+      console.log('totalCacheSize', totalCacheSize)
+      store.dispatch(setStorage({media: totalMediaSize, cache: totalCacheSize}));     
+  }
 
   const removeDeletedItems = (ids: string[], label: string) => {
     const removeItems = (setFn: Function) => {
@@ -173,7 +209,8 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
         break;
     }
   };
-  const findDuplicateFiles = async (data) => {
+  
+  const findDuplicateFiles = async (data, type) => {
       let duplicatedFiles = [];
       data.sort((a, b) => a.size - b.size);
       let temp = "";
@@ -187,17 +224,16 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
           const arr = sizeArr[key];
           for (let i = 0; i < arr.length; i++) {
             arr[i]['temp'] = (await RNFS.readFile(arr[i].path, 'base64')).slice(0, 1000);
+            arr[i]['type'] = type;
           }
           for (let i = 0; i < arr.length; i++) {
             for (let j = i+1; j < arr.length; j++) {
               if (arr[i]['temp'] === arr[j]['temp']) {
                 if (arr[i]['dupl'] !== true) {
-                  console.log(arr[i].name)
                   arr[i]['dupl'] = true;
                   duplicatedFiles.push(arr[i]);
                 }
                 if (arr[j]['dupl'] !== true) {
-                  console.log(arr[j].name)
                   arr[j]['dupl'] = true;
                   duplicatedFiles.push(arr[j]);
                 }
@@ -207,59 +243,99 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
           // console.log(arr)
         }
       }
-      if (duplicatedFiles.length > 0) setDuplicate([...duplicate, ...duplicatedFiles]);
+      if (duplicatedFiles.length > 0) {
+        if (type === 'Pictures')  setDuplicatePictures(duplicatedFiles);
+        else if (type === 'Videos') setDuplicateVideos(duplicatedFiles);
+        else if (type === 'Music') setDuplicateMusic(duplicatedFiles);
+        else setDuplicate(duplicatedFiles);
+      }
   }
+
   useEffect(() => {
     (async () => {
-      setDuplicate([]);
-      await findDuplicateFiles(images);
-      await findDuplicateFiles(videos);
-      await findDuplicateFiles(music);
+      console.log('find images duplicate')
+      await findDuplicateFiles(images, "Pictures");
+      analyseStorage();
     })()
-  }, [clearManually])
+  }, [images])
 
   useEffect(() => {
-    if (isFocused && showModal.loading === false && showModal.show === false) {
-      if (rescanOnFocuse) {
-        setShowData(false);
-        setPermissionGranted(false);
-        setShowModal({show: true, loading: false});
-        setProgressProps({text: '', progress: 0});
-        setRescanOnFocus(false);
+    (async () => {
+      console.log('find video duplicate')
+      await findDuplicateFiles(videos, "Videos");
+      analyseStorage();
+    })()
+  }, [videos])
+
+  useEffect(() => {
+    (async () => {
+      console.log('find music duplicate')
+      await findDuplicateFiles(music, "Music");
+      analyseStorage();
+    })()
+  }, [music])
+
+  useEffect(() => {
+    const backAction = (e) => {
+      if (categoryView !== 'All') {
+        setCategoryView('All');
+        return true;
+      } else {
+        return false;
       }
-    }
+    };
 
-    if (
-      !isFocused &&
-      showData &&
-      showModal.loading === false &&
-      showModal.show === false
-    ) {
-      setRescanOnFocus(true);
-    }
-  }, [isFocused, rescanOnFocuse]);
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
 
+    return () => backHandler.remove();
+  }, []);    
+  const handleSellSpace = async (quantity) => {
+    await sellSpace({user_id, quantity}).then(res => {
+      if (res.success) {
+        setIsSelledSpace(true);
+        return Toast.show({
+          type: "success",
+          text1: res.msg
+        })
+      } else {
+        return Toast.show({
+          type: 'error',
+          text1: res.msg
+        })
+      }
+    })
+  }
   useEffect(() => {
-    if (isFocused) {
-      console.log(store.getState()?.wallet?.data?.isSpaceSelled);
-      setIsSelledSpace(store.getState()?.wallet?.data?.isSpaceSelled);
-    }
-  }, [isFocused]);
-
-  const sellSpace = async (space: number, coins: number) => {
-    console.log(user_id, space, coins)
-    user_id &&
-      Transaction({
-        space,
-        coins,
-        user_id: user_id,
-        isSpaceSelled: true,
-      }).then(res => {
-        if (res.success) {
-          setCancelPopup(true);
+    console.log(isFocused, showModal, rescanOnFocuse)
+    // if (!showData) {
+      if (isFocused && showModal.loading === false && showModal.show === false) {
+        if (rescanOnFocuse) {
+          setShowData(false);
+          setPermissionGranted(false);
+          setShowModal({show: true, loading: false});
+          setProgressProps({text: '', progress: 0});
+          setRescanOnFocus(false);
         }
-      });
-  };
+      }
+
+      if (
+        !isFocused &&
+        showData &&
+        showModal.loading === false &&
+        showModal.show === false
+      ) {
+        setRescanOnFocus(true);
+      }
+    // } else {
+    //   // setShowModal({show: false, loading: false});
+    // }
+  }, [isFocused, rescanOnFocuse]);
+  useEffect(() => {
+    console.log(categoryView)
+  }, [categoryView])
   return (
     <View style={styles.container}>
       {showModal.show && (
@@ -312,11 +388,10 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
                     <View>
                       <Text
                         style={{
-                          fontSize: 11,
+                          fontFamily: 'Rubik-Bold', fontSize: 11,
                           textAlign: 'center',
                           marginBottom: 20,
                           color: 'black',
-                          fontWeight: 'bold',
                         }}>
                         you need to enable permission to perform this action
                       </Text>
@@ -332,141 +407,249 @@ function ClearData({route, navigation}: {navigation: any; route: any}) {
           </View>
         </View>
       )}
-      <View style={styles.header}>
+      <LinearGradient
+        start={{x: 0, y: 0}}
+        end={{x: 0, y: 1}}
+        colors={['#55A4F7', '#82BEFA']}
+        style={styles.header}>
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            position: 'relative',
+            width: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 40,
+          }}>
+          <Image
+            source={small_logo}
+            style={{width: 87, height: 30, position: 'absolute', left: 0}}
+          />
+        </View>
         <View style={styles.subContainer}>
-          <View style={styles.navContainer}>
+          <TouchableOpacity onPress={() => navigation.navigate('Home')}>
             <MaterialIcons
               name="arrow-back-ios"
               size={20}
               color="white"
-              onPress={() => navigation.goBack()}
             />
-            <Text style={styles.text}>Available Storage</Text>
-
-            <Feather name="search" size={20} color="white" />
-          </View>
-          <View style={styles.percentageContainer}>
-            <Text style={styles.percentage}>+{freeDiskStorage} GB</Text>
+          </TouchableOpacity>
+          <View>
+            <View style={styles.navContainer}>
+              <Text style={styles.text}>Available Storage</Text>
+            </View>
+            <View style={styles.percentageContainer}>
+              <Text style={styles.percentage}>+{freeDiskStorage} GB</Text>
+            </View>
+            
           </View>
         </View>
-      </View>
+      </LinearGradient>
       <ScrollView style={styles.scrollView}>
         <View style={styles.main}>
           {showData && (
             <>
-              {!cancelPopup && !isSelledSpace && (
-                <View
-                  style={{
-                    padding: 10,
-                    backgroundColor: '#FCFCFC',
-                    borderRadius: 10,
-                    shadowColor: '#000',
-                    shadowOffset: {
-                      width: 0,
-                      height: 2,
-                    },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 3.84,
-                    elevation: 5,
-                    marginBottom: 10,
-                  }}>
-                  <Text
-                    style={{marginBottom: 20, color: '#9F9EB3', fontSize: 16}}>
-                    sell {freeDiskStorage / 2} Gb free space for{' '}
-                    {Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10} Boo
-                    coin ?
-                  </Text>
-                  <View
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      width: '100%',
-                      justifyContent: 'center',
-                    }}>
-                    <Button
-                      title="yes"
-                      onPress={() =>
-                        sellSpace(
-                          freeDiskStorage / 2,
-                          Math.round(((50000 * freeDiskStorage) / 2) * 10) / 10,
-                        )
-                      }
-                    />
-                    <View style={{marginLeft: 10}} />
-                    <Button title="no" onPress={() => setCancelPopup(true)} />
-                  </View>
-                </View>
-              )}
+              {categoryView !== 'Manually' && (
+                <>
+                  {!cancelPopup && !isSelledSpace && categoryView==="All" && (
+                    <View
+                      style={{
+                        paddingHorizontal: 20,
+                        paddingVertical: 15,
+                        backgroundColor: '#FCFCFC',
+                        borderRadius: 10,
+                        shadowColor: '#000',
+                        shadowOffset: {
+                          width: 0,
+                          height: 2,
+                        },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                        // elevation: 5,
+                        marginBottom: 10,
+                        flexDirection: 'row',
+                        width: '100%',
+                        // justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}>
+                      <Text
+                        style={styles.sellOffer}>
+                        Do you want sell {Math.round(freeDiskStorage / 2)} Gb of free space for{' '}
+                        {Math.round(65000 * Math.round(freeDiskStorage / 2))} Boo
+                        coin ?
+                      </Text>
+                      <View style={{
+                        width: '30%',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
 
-              <FilesList
-                data={images as []}
-                label="Pictures"
-                size={calcSpace(images)}
-                removeDeletedItems={removeDeletedItems}
-                refetchByLabel={refechByLabel}
-              />
-              <FilesList
-                data={videos as []}
-                label="Videos"
-                removeDeletedItems={removeDeletedItems}
-                size={calcSpace(videos)}
-                refetchByLabel={refechByLabel}
-              />
-              <FilesList
-                data={music as []}
-                label="Music"
-                removeDeletedItems={removeDeletedItems}
-                size={calcSpace(music)}
-                refetchByLabel={refechByLabel}
-              />
-              {!!clearManually && (
-                <FilesList
-                  data={duplicate as []}
-                  label="Duplicate"
-                  removeDeletedItems={removeDeletedItems}
-                  size={calcSpace(duplicate)}
-                  refetchByLabel={refechByLabel}
-                />
+                      }}>
+                        <Pressable onPress={() => setCancelPopup(true)} style={[styles.offerBtn, {backgroundColor: '#F4F7F8'}]}>
+                          <Text style={[styles.offerBtnText, {color: '#929292'}]}>No</Text>
+                        </Pressable>
+                        <View style={{width: 10}}></View>
+                        <Pressable onPress={() => handleSellSpace(Math.round(freeDiskStorage / 2))} style={styles.offerBtn}>
+                          <Text style={styles.offerBtnText}>Yes</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  )}
+                  {(categoryView === 'All' || categoryView==='Pictures') && (
+                    <FilesList
+                      data={images as []}
+                      label="Pictures"
+                      size={calcSpace(images)}
+                      removeDeletedItems={removeDeletedItems}
+                      refetchByLabel={refechByLabel}
+                      isCategoryView={setCategoryView}
+                      categoryView={categoryView}
+                    />
+                  )}
+                  {(categoryView === 'All' || categoryView==='Videos') && (
+                  <FilesList
+                    data={videos as []}
+                    label="Videos"
+                    removeDeletedItems={removeDeletedItems}
+                    size={calcSpace(videos)}
+                    refetchByLabel={refechByLabel}
+                    isCategoryView={setCategoryView}
+                    categoryView={categoryView}
+                  />
+                  )}
+                  {(categoryView === 'All' || categoryView==='Music') && (
+                  <FilesList
+                    data={music as []}
+                    label="Music"
+                    removeDeletedItems={removeDeletedItems}
+                    size={calcSpace(music)}
+                    refetchByLabel={refechByLabel}
+                    isCategoryView={setCategoryView}
+                    categoryView={categoryView}
+                  />
+                  )}
+                  {(categoryView === 'All' || categoryView==='Thumbnails') && (
+                  <FilesList
+                    data={thumbnails as []}
+                    label="Thumbnails"
+                    removeDeletedItems={removeDeletedItems}
+                    size={calcSpace(thumbnails)}
+                    refetchByLabel={refechByLabel}
+                    isCategoryView={setCategoryView}
+                    categoryView={categoryView}
+                  />
+                  )}
+                  {(categoryView === 'All' || categoryView==='Empty folders') && (
+                  <FilesList
+                    data={emptyFolders as []}
+                    label="Empty folders"
+                    removeDeletedItems={removeDeletedItems}
+                    size={calcSpace(emptyFolders)}
+                    refetchByLabel={refechByLabel}
+                    isCategoryView={setCategoryView}
+                    categoryView={categoryView}
+                  />
+                  )}
+                  {(categoryView === 'All' || categoryView==='Not installed apks') && (
+                  <FilesList
+                    data={notInstalledApks as []}
+                    label="Not installed apks"
+                    removeDeletedItems={removeDeletedItems}
+                    size={calcSpace(notInstalledApks)}
+                    refetchByLabel={refechByLabel}
+                    isCategoryView={setCategoryView}
+                    categoryView={categoryView}
+                  />
+                  )}
+                  {(categoryView === 'All' || categoryView==='DuplicatePictures') && (
+                  <FilesList
+                    data={duplicatePictures as []}
+                    label="Pictures"
+                    type="Duplicate"
+                    removeDeletedItems={removeDeletedItems}
+                    size={calcSpace(duplicatePictures)}
+                    refetchByLabel={refechByLabel}
+                    isCategoryView={setCategoryView}
+                    categoryView={categoryView}
+                  />
+                  )}
+                  {(categoryView === 'All' || categoryView==='DuplicateVideos') && (
+                  <FilesList
+                    data={duplicateVideos as []}
+                    label="Videos"
+                    type="Duplicate"
+                    removeDeletedItems={removeDeletedItems}
+                    size={calcSpace(duplicateVideos)}
+                    refetchByLabel={refechByLabel}
+                    isCategoryView={setCategoryView}
+                    categoryView={categoryView}
+                  />
+                  )}
+                  {(categoryView === 'All' || categoryView==='DuplicateMusic') && (
+                  <FilesList
+                    data={duplicateMusic as []}
+                    label="Music"
+                    type="Duplicate"
+                    removeDeletedItems={removeDeletedItems}
+                    size={calcSpace(duplicateMusic)}
+                    refetchByLabel={refechByLabel}
+                    isCategoryView={setCategoryView}
+                    categoryView={categoryView}
+                  />
+                  )}
+                {/*  {(categoryView === 'All' || categoryView==='Cache') && (
+                    <FilesList
+                      data={apps as []}
+                      label="Cache"
+                      removeDeletedItems={removeDeletedItems}
+                      size={calcSpace(apps, 'visibleCacheSize', 0)}
+                      refetchByLabel={refechByLabel}
+                      isCategoryView={setCategoryView}
+                      categoryView={categoryView}                      
+                    />
+                  )}*/}
+                </>
               )}
-              {/* <FilesList
-                data={apps.filter((e: any) => e.visibleCacheSize > 0) as []}
-                label="Cache"
-                removeDeletedItems={removeDeletedItems}
-                size={calcSpace(apps, 'visibleCacheSize', 0)}
-                refetchByLabel={refechByLabel}
-              /> */}
-              <FilesList
-                data={thumbnails as []}
-                label="Thumbnails"
-                removeDeletedItems={removeDeletedItems}
-                size={calcSpace(thumbnails)}
-                refetchByLabel={refechByLabel}
-              />
-              <FilesList
-                data={emptyFolders as []}
-                label="Empty folders"
-                removeDeletedItems={removeDeletedItems}
-                size={calcSpace(emptyFolders)}
-                refetchByLabel={refechByLabel}
-              />
-              <FilesList
-                data={notInstalledApks as []}
-                label="Not installed apks"
-                removeDeletedItems={removeDeletedItems}
-                size={calcSpace(notInstalledApks)}
-                refetchByLabel={refechByLabel}
-              />
-              <View style={{marginTop: 10}}></View>
-              <Button
-                title="free up space (manullay)"
-                onPress={() => setClearManually(true)}
-                // onPress={async () => await ManageApps.freeSpace()}
-              />
-              <View style={{marginTop: 10}} />
-              <Button
-                title="clear all"
-                onPress={async () => await ManageApps.clearAllVisibleCache()}
-              />
+              {categoryView === 'Manually' && (
+                <FilesList
+                  data={[...images, ...videos, ...music]}
+                  label="Manually"
+                  size={calcSpace([...images, ...videos, ...music])}
+                  removeDeletedItems={removeDeletedItems}
+                  refetchByLabel={refechByLabel}
+                  isCategoryView={setCategoryView}
+                  categoryView={categoryView}
+                />
+              )}              
+              {categoryView !== 'All' && (
+                <>
+                  <View style={{marginTop: 10}} />
+                  <Button
+                    title="return"
+                    onPress={() => setCategoryView('All')}
+                  />                 
+                </>
+              )}
+              {categoryView === 'All' && (
+                <>
+                  <View style={{marginTop: 10}}></View>
+                  <Button
+                   title="free up space (manullay)"
+                   onPress={() => setCategoryView('Manually')}
+                   // onPress={async () => await ManageApps.freeSpace()}
+                 />
+                 {/*<Button
+                    title="free up space (manullay)"
+                    onPress={async () => await ManageApps.freeSpace()}
+                  />*/}
+                  <View style={{marginTop: 10}} />
+                  <Button
+                    title="clear all"
+                    onPress={async () => await ManageApps.clearAllVisibleCache()}
+                  />  
+                </>
+              )}      
+
             </>
           )}
         </View>
@@ -487,23 +670,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    // flexWrap: "wrap",
-    // flexDirecton: "row",
   },
   header: {
     width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingTop: 50,
+    paddingBottom: 23,
+    paddingLeft: 20,
+    paddingRight: 36,
     backgroundColor: '#33A1F9',
-    paddingTop: 66,
-    paddingBottom: 28,
-    paddingLeft: 60,
-    paddingRight: 60,
   },
   subContainer: {
     width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   navContainer: {
     display: 'flex',
@@ -513,16 +693,15 @@ const styles = StyleSheet.create({
   },
   text: {
     color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'Rubik-Bold', fontSize: 20,
   },
   percentageContainer: {
-    alignSelf: 'center',
+    alignSelf: 'flex-end',
+    // textAlign: 'flex-end'
   },
   percentage: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Rubik-Bold', fontSize: 16,
   },
   main: {
     width: '100%',
@@ -531,6 +710,26 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     paddingTop: 30,
   },
+  sellOffer: {
+    width: '60%',
+    marginRight: 30,
+    color: '#75B7FA',
+    fontFamily: 'Rubik-Regular', 
+    fontSize: 13, 
+    lineHeight: 20,
+    letterSpacing: 0.02,
+  },
+  offerBtn: {
+    height: 25,
+    width: 50,
+    backgroundColor: '#6DBDFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15
+  },
+  offerBtnText: {
+    color: 'white'
+  }
 });
 
 export default ClearData;

@@ -1,6 +1,8 @@
 export {default as Login} from './Authentication/Login/Login';
 export {default as Register} from './Authentication/Register/Register';
 export {default as Home} from './Home/Home';
+export {default as Splash} from './Splash/Splash';
+export {default as CounterDown} from './Counter/CounterDown';
 
 // Under Dashboard ( Logged In User )
 export {default as VerificationCode} from './Authentication/VerificationCode/VerificationCode';
@@ -27,4 +29,4 @@ export {default as LayoutWrapper} from './DashboardContainer/Files/Uploads/Layou
 export {default as SellSpace} from './DashboardContainer/Dashboard/SellSpace/SellSpace'
 export {default as BuySpace} from './DashboardContainer/Dashboard/BuySpace/BuySpace'
 export {default as Offer} from './DashboardContainer/Dashboard/Offer/Offer'
-export {default as StripePay} from './DashboardContainer/Payments/Stripe/Stripe'
+export {default as Payments} from './DashboardContainer/Payments/Payments'

@@ -9,6 +9,10 @@ export const AuthentificationInitialState = {
   errorMessage: '',
   userId: undefined,
   token: '',
+  storage: {
+    media: 0,
+    cache: 0
+  }
 };
 
 export const authentificationSlice = createSlice({
@@ -35,6 +39,23 @@ export const authentificationSlice = createSlice({
     ) => {
       state.token = action.payload;
     },
+    setStorage: (
+      state: {
+        storage: any;
+      },
+      action: PayloadAction<any>,
+    ) => {
+      console.log('storage', action.payload)
+      state.storage = action.payload;
+    },
+    saveUserAvatar: (
+      state: {
+        loggedInUser: User | undefined;
+      },
+      action: PayloadAction<any>,
+    ) => {
+      state.loggedInUser = {...state.loggedInUser, avatar: action.payload};
+    },
 
     disconnect: (state: {isLoggedIn: boolean; loggedInUser: any}): void => {
       state.isLoggedIn = false;
@@ -52,5 +73,5 @@ export const authentificationSlice = createSlice({
   },
 });
 
-export const {setLoggedInUser, disconnect, setErrorMessage, setToken} =
+export const {setLoggedInUser, disconnect, setErrorMessage, setToken, saveUserAvatar, setStorage} =
   authentificationSlice.actions;

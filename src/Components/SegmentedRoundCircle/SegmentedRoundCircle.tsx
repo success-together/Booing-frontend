@@ -112,7 +112,7 @@ const SegmentedRoundCircle = ({
           style={{
             position: 'absolute',
             top: 0,
-            left: 110,
+            left: 80,
             backgroundColor: '#FAFAFA',
             padding: 10,
             borderRadius: 10,
@@ -123,7 +123,7 @@ const SegmentedRoundCircle = ({
               style={{
                 color,
                 textTransform: 'capitalize',
-                fontSize: 15,
+            fontFamily: 'Rubik', fontSize: 15,
                 fontWeight: '600',
               }}
               key={index}>
@@ -136,8 +136,8 @@ const SegmentedRoundCircle = ({
       <View
         style={{
           position: 'absolute',
-          top: 35,
-          left: 35,
+          top: 28,
+          left: 28,
         }}>
         <Text style={globalPercentStyles}>{globalPercent}%</Text>
       </View>

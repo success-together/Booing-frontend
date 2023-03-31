@@ -8,10 +8,11 @@ import {
   TouchableOpacity,
   Dimensions,
   View,
+  BackHandler
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
-import {AXIOS_ERROR, BaseUrl, MAX_SIZE, store} from '../../../../shared';
+import {AXIOS_ERROR, BaseUrl, MAX_SIZE, store, types} from '../../../../shared';
 import Toast from 'react-native-toast-message';
 import Folder, {FolderProps} from './Folder';
 import {FileProps} from './File';
@@ -292,7 +293,7 @@ const CreateFolder = ({
         style={{
           color: 'black',
           fontWeight: '600',
-          fontSize: 18,
+          fontFamily: 'Rubik-Regular', fontSize: 18,
           marginBottom: 20,
         }}>
         Create Folder
@@ -351,52 +352,6 @@ const CreateFolder = ({
       </View>
     </View>
   );
-};
-
-// from backend (needs to be sync with backend)
-const types = {
-  document: (type: string) => {
-    const arr = [
-      'text/csv',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/html',
-      'text/calendar',
-      'text/javascript',
-      'application/json',
-      'application/ld+json',
-      'text/javascript',
-      'application/vnd.oasis.opendocument.spreadsheet',
-      'application/vnd.oasis.opendocument.text',
-      'application/pdf',
-      'application/x-httpd-php',
-      'application/vnd.ms-powerpoint',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      'application/rtf',
-      'application/x-sh',
-      'text/plain',
-      'application/xhtml+xml',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/xml',
-      'application/vnd.mozilla.xul+xml',
-    ];
-
-    return arr.includes(type) || arr.find(e => e.includes(type));
-  },
-  apk: (type: string) => type === 'application/vnd.android.package-archive',
-  video: (type: string) => type?.startsWith('video/'),
-  audio: (type: string) => type?.startsWith('audio/'),
-  image: (type: string) => type?.startsWith('image/'),
-  download(type: string) {
-    return (
-      !this.document(type) &&
-      !this.apk(type) &&
-      !this.video(type) &&
-      !this.audio(type) &&
-      !this.image(type)
-    );
-  },
 };
 
 const transformType = (type: string | null) => {
@@ -489,9 +444,23 @@ const FolderPage = ({navigation, route}: any) => {
   );
 
   const uncheckAll = useCallback(() => setSelectedIds([]), [selectedIds]);
+  useEffect(() => {
+    const backAction = (e) => {
+      console.log('backAction')
+      navigation.navigate("Files");
+      return true
+    };
 
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);  
   useEffect(() => {
     const {id} = route?.params;
+    console.log(user_id, id);
     setFolderData(prev => ({...prev, id}));
     (async () => {
       if (!user_id || !id) {
@@ -882,19 +851,20 @@ const FolderPage = ({navigation, route}: any) => {
               alignItems: 'center',
             }}>
             <Progress.Bar progress={fetchProcess} width={progressSize} />
-            <Text style={{marginTop: 20}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
+            <Text style={{marginTop: 20, color: "#000000"}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
             <TouchableOpacity
               style={{
                 width: 82,
                 height: 49,
-                backgroundColor: 'white',
-                borderRadius: 15,
+                backgroundColor: '#33a1f9',
+                color: '#FFFFFF',
+                borderRadius: 5,
                 justifyContent: 'center',
                 alignItems: 'center',
                 marginTop: 20
               }}
               onPress={handleAbort}>
-              <Text style={{color: '#49ACFA', fontWeight: '500'}}>Abort</Text>
+              <Text style={{color: '#FFFFFF', fontWeight: '500'}}>Abort</Text>
             </TouchableOpacity>              
           </View>
         ) : (              
@@ -937,7 +907,7 @@ const FolderPage = ({navigation, route}: any) => {
                           onPress={uncheckAll}
                         />
                         <Text
-                          style={{marginLeft: 17, color: 'black', fontSize: 16}}>
+                          style={{marginLeft: 17, color: 'black', fontFamily: 'Rubik-Regular', fontSize: 16}}>
                           {selectedIds.length} Selected
                         </Text>
                       </>

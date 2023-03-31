@@ -10,6 +10,7 @@ interface FileProps {
   id: string;
   name: string;
   thumbnail?: string;
+  isVideo?: string;
   visibleCacheSize?: number;
   Icon: (size: number, color: string) => Element;
   loaded: () => void;
@@ -36,6 +37,27 @@ export const Selected = () => {
   );
 };
 
+export const VideoFile = () => {
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        top: 44,
+        right: 44,
+        width: 25,
+        height: 25,
+        backgroundColor: '#FFF',
+        borderRadius: 25 / 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 999,
+      }}>
+      <Feather name="check-circle" size={19} color={'#BDECB6'} />
+    </View>
+  );
+};
+
 const File = ({
   selected,
   id,
@@ -45,6 +67,7 @@ const File = ({
   onPress,
   Icon,
   loaded,
+  isVideo
 }: FileProps) => {
   // for items that does not have a thumbnail
   useEffect(() => {
@@ -58,6 +81,7 @@ const File = ({
       style={styles.container}
       disabled={!onPress}>
       {selected && <Selected />}
+      {/*{isVideo && <VideoFile />}*/}
       {thumbnail ? (
         <FastImage
           source={{uri: thumbnail}}
@@ -65,21 +89,20 @@ const File = ({
           onLoadEnd={loaded}
         />
       ) : (
-        <View style={{width: 80, position: 'relative', minHeight: 80}}>
-          <Text style={{padding: 10}}>{name}</Text>
+        <View style={{width: 65, position: 'relative', minHeight: 65, textAlign: 'center'}}>
+          <Text style={{padding: 10, fontFamily: 'Rubik-Bold', textAlign: 'center'}}>{name}</Text>
           {visibleCacheSize && (
-            <Text style={{color: 'black', padding: 5}}>
-              size: {bytes(visibleCacheSize)}
-            </Text>
+            <Text style={{color: 'black', padding: 5}}>size: </Text>
           )}
           <View
             style={{
               position: 'absolute',
               top: 0,
               left: 0,
-              width: 80,
-              height: 80,
+              width: 65,
+              height: 65,
               zIndex: -1,
+              alignItems: 'center'
             }}>
             {Icon(70, '#ffffff63') as ReactNode}
           </View>
@@ -91,7 +114,7 @@ const File = ({
 
 const styles = StyleSheet.create({
   container: {
-    minWidth: 80,
+    minWidth: 65,
     marginRight: 6,
     position: 'relative',
     borderRadius: 8,
@@ -99,8 +122,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   image: {
-    width: 80,
-    height: 80,
+    width: 65,
+    height: 65,
   },
 });
 

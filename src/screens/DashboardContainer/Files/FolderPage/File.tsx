@@ -45,12 +45,12 @@ const File = ({createdAt, name}: FileProps) => {
           <Text
             style={{
               color: 'black',
-              fontSize: 16,
+              fontFamily: 'Rubik-Regular', fontSize: 16,
               fontWeight: '500',
             }}>
             {name}
           </Text>
-          <Text style={{color: '#C6D2E8', fontSize: 12, fontWeight: '500'}}>
+          <Text style={{color: '#C6D2E8', fontFamily: 'Rubik-Regular', fontSize: 12, fontWeight: '500'}}>
             {formatDate(createdAt)}
           </Text>
         </View>

@@ -22,8 +22,8 @@ RNTwitterSignIn.init(
 );
 
 GoogleSignin.configure({
-  webClientId:
-    '17871285593-8hiaii38s6kifagjg5dunc29bidvfj3u.apps.googleusercontent.com',
+  webClientId: '1004306547703-4salgg6e7oqrc745madpvr2m9aqf5r5p.apps.googleusercontent.com',
+  webClientSecret: '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',
 });
 
 const SocialMediaAuth = ({navigation}: {navigation: any}) => {
@@ -36,9 +36,10 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
     try {
       // Check if your device supports Google Play
       await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+      console.log('has play service')
       // Get the users ID token
       const {idToken, user} = await GoogleSignin.signIn();
-
+      console.log(idToken, user)
       await socialMediaSignIn({
         name: user.name || '',
         email: user.email,
@@ -52,6 +53,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
 
       navigation.navigate('DashboardContainer');
     } catch (error: any) {
+      console.log(error.code, error.message)
       Toast.show({
         type: 'error',
         text1: 'there was an error with logging with google',
@@ -288,13 +290,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#33a1f9',
   },
   text: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 16,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
   },
   title: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 17,
     lineHeight: 21,
     marginBottom: 30,
@@ -305,13 +308,14 @@ const styles = StyleSheet.create({
     // marginRight: 70,
   },
   createAccount: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 13,
     letterSpacing: 0.25,
     color: '#8F9395',
   },
   containerSocialMedia: {
     flexDirection: 'row',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 20,
     alignItems: 'center',
     justifyContent: 'center',

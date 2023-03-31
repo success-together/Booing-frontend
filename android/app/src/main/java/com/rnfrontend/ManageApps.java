@@ -1,4 +1,4 @@
-package com.rnfrontend;
+package com.rr.booingapp;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -879,16 +879,22 @@ public class ManageApps extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void showNotification(String textTitle, String textContent) {
+    public void showNotification(String textTitle, String textContent, Boolean isSilent) {
         if(!ManageApps.getCanSendNotification()) {
             return;
         }
         createNotificationChannel();
+      
+        Intent intent = new Intent(getCurrentActivity(), getCurrentActivity().getClass());
+        PendingIntent sender = PendingIntent.getActivity(getCurrentActivity(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getReactApplicationContext(), "123")
                 .setSmallIcon(R.drawable.src_images_small_logo)
                 .setContentTitle(textTitle)
                 .setContentText(textContent)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                .setSilent(isSilent?true:false)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(sender);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getReactApplicationContext());
         notificationManager.notify(1, builder.build());
@@ -1386,7 +1392,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
         if(!dir.exists() || !dir.canRead()) {
          return;
         }
-
+        showNotification( "Hey, I'm optimizing your device's space.", "fetching " + dir.getAbsolutePath(), true);
         if(isDirectory(dir)) {
             if(isEmpty(dir)) {
                 WritableMap item = new WritableNativeMap();

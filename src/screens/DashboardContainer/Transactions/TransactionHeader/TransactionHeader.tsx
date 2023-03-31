@@ -17,7 +17,7 @@ const TransactionsHeader = (props: any) => {
     <LinearGradient
       start={{x: 0, y: 0}}
       end={{x: 0, y: 1}}
-      colors={['#33A1F9', '#33A1F9']}
+      colors={['#55A4F7', '#82BEFA']}
       style={styles.header}>
       <View
         style={{
@@ -27,16 +27,16 @@ const TransactionsHeader = (props: any) => {
           width: '100%',
           justifyContent: 'center',
           alignItems: 'center',
-          marginBottom: 36,
+          marginBottom: 40,
         }}>
         <Image
           source={small_logo}
-          style={{width: 50, height: 30, position: 'absolute', left: 0}}
+          style={{width: 87, height: 30, position: 'absolute', left: 0}}
         />
-        <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
-          TRANSACTION
-        </Text>
       </View>
+      <Text style={{fontFamily: 'Rubik-Bold',color: 'white',  fontSize: 18, marginBottom: 20}}>
+        Transactions
+      </Text>
       <View
         style={{
           display: 'flex',
@@ -48,7 +48,7 @@ const TransactionsHeader = (props: any) => {
           name="arrow-back-ios"
           size={20}
           color="white"
-          onPress={() => props.navigation.navigate('Dashboard')}
+          onPress={() => props.navigation.navigate('Home')}
         />
         <View
           style={{
@@ -58,35 +58,38 @@ const TransactionsHeader = (props: any) => {
           }}>
           <Feather
             name="search"
-            size={24}
-            style={{position: 'absolute', zIndex: 900, top: 10, left: 13}}
+            size={14}
+            style={{position: 'absolute', zIndex: 999, top: 15, left: 13}}
           />
           <TextInput
             style={{
               flexBasis: '70%',
               height: 44,
               backgroundColor: 'white',
+              fontFamily: 'Rubik-Regular', 
+              fontSize: 12,
               borderRadius: 8,
-              paddingLeft: 44,
+              paddingLeft: 33,
               color: 'black',
             }}
             placeholder="Search"
             placeholderTextColor={'#9190A8'}
-          />
+            onChangeText={(val) => props.handleSearch(val)}
+          />      
         </View>
         <View style={styles.materialIcons}>
-          <MaterialIcons name="filter-list" size={25} color="white" onPress={() => { props.SetIsClicked(true)}} />
-          <MaterialIcons
-            style={{marginLeft: 10}}
-            name="arrow-downward"
-            size={25}
-            color="white"
-          />
+          <MaterialCommunityIcons name={props.isFilter?"filter":"filter-outline"} size={25} color="white" onPress={() => { props.handleIsFilter()}} />
         </View>
       </View>
     </LinearGradient>
   );
 };
+          // <MaterialIcons
+          //   style={{marginLeft: 10}}
+          //   name="arrow-downward"
+          //   size={25}
+          //   color="white"
+          // />
 const styles = StyleSheet.create({
   materialIcons: {
     flexDirection: 'row',
@@ -115,9 +118,9 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   title: {
+    fontFamily: 'Rubik-Bold', 
     fontSize: 16,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
     justifyContent: 'center',
@@ -147,23 +150,18 @@ const styles = StyleSheet.create({
   txt: {
     marginTop: 10,
     color: 'white',
+    fontFamily: 'Rubik-Bold', 
     fontSize: 16,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     textAlign: 'center',
   },
   header: {
     width: '100%',
-    paddingTop: 63,
+    paddingTop: 50,
     paddingBottom: 23,
     paddingLeft: 20,
     paddingRight: 36,
-  },
-  main: {
-    width: '100%',
-    position: 'relative',
-    minHeight: '100%',
   },
 });
 

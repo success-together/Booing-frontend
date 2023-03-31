@@ -11,11 +11,12 @@ const Offer = ({navigation}) => {
         after: '400',
         offer: true,
         price: 400,
+        total: 400,
         id: '2TB-Booing-Space'
     })
     const navigateToCheckout = () => {
         console.log('to pay', offer)
-        navigation.navigate("StripePay", offer)
+        navigation.navigate("Payments", offer)
     }
     return (
         <View style={styles.container}>
@@ -46,15 +47,15 @@ const Offer = ({navigation}) => {
                                 <Text style={styles.redtext}>{offer.space} Booing Space</Text>
                                 <Text style={styles.normaltext}>LEFTTIME</Text>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Text style={{ color: '#797D7F', fontSize: 24, textDecorationLine: 'line-through' }}> {offer.before} </Text>
-                                    <Text style={{ color: '#797D7F', fontSize: 14, textDecorationLine: 'line-through' }}> EUR</Text>
-                                    <Text style={{ color: '#797D7F', fontSize: 28, }}>/</Text>
-                                    <Text style={{ color: 'black', fontSize: 28, fontWeight: 'bold' }}>{offer.after}</Text>
-                                    <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold' }}> EUR</Text>
+                                    <Text style={{ color: '#797D7F', fontFamily: 'Rubik-Regular', fontSize: 24, textDecorationLine: 'line-through' }}> {offer.before} </Text>
+                                    <Text style={{ color: '#797D7F', fontFamily: 'Rubik-Regular', fontSize: 14, textDecorationLine: 'line-through' }}> EUR</Text>
+                                    <Text style={{ color: '#797D7F', fontFamily: 'Rubik-Regular', fontSize: 28, }}>/</Text>
+                                    <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 28 }}>{offer.after}</Text>
+                                    <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14 }}> EUR</Text>
                                 </View>
 
                                 <Text style={{
-                                    color: 'black', fontSize: 14, lineHeight: 21, fontWeight: 'bold', letterSpacing: 0.25,
+                                    color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14, lineHeight: 21, letterSpacing: 0.25,
                                 }}>
                                     ON-TIME PAYMENT
                                 </Text>
@@ -166,40 +167,35 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     whitetext: {
-        fontSize: 14,
+        fontFamily: 'Rubik-Bold', fontSize: 14,
         lineHeight: 21,
-        fontWeight: 'bold',
         letterSpacing: 0.25,
         color: 'white',
     },
     boldtext: {
-        fontSize: 16,
+        fontFamily: 'Rubik-Bold', fontSize: 16,
         lineHeight: 21,
-        fontWeight: 'bold',
         letterSpacing: 0.25,
         color: 'black',
     },
 
     normaltext: {
-        fontSize: 14,
+        fontFamily: 'Rubik-Bold', fontSize: 14,
         lineHeight: 21,
-        fontWeight: 'bold',
         letterSpacing: 0.25,
         color: '#797D7F',
         marginTop: 10,
         marginBottom: 10,
     },
     redtext: {
-        fontSize: 16,
+        fontFamily: 'Rubik-Bold', fontSize: 16,
         lineHeight: 21,
-        fontWeight: 'bold',
         letterSpacing: 0.25,
         color: 'red',
     },
     bottomText: {
-        fontSize: 12,
+        fontFamily: 'Rubik-Bold', fontSize: 12,
         lineHeight: 21,
-        fontWeight: 'bold',
         letterSpacing: 0.25,
         color: '#797D7F',
     }

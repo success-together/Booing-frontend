@@ -60,9 +60,10 @@ const SelectableItems = ({
   }, []);
 
   const renderItem = ({
-    item: {name, id, progress, hasTriedToUpload, isImage, thumbnail},
+    item: {name, id, progress, hasTriedToUpload, thumbnail, category},
     index,
   }: any) => {
+    console.log(category)
     return (
       <Item
         name={name}
@@ -72,7 +73,7 @@ const SelectableItems = ({
         handleLongPress={handleLongPress(id)}
         handlePress={handlePress(id)}
         hasTriedToUpload={hasTriedToUpload}
-        isImage={isImage}
+        category={category}
         uri={thumbnail}
       />
     );
@@ -135,7 +136,7 @@ const SelectableItems = ({
               <Text
                 style={{
                   marginLeft: 13,
-                  fontWeight: 'bold',
+                  fontFamily: 'Rubik-Bold', 
                   fontSize: 16,
                   color: 'black',
                 }}>

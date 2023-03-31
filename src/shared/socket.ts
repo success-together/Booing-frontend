@@ -342,5 +342,8 @@ export default function useSocket() {
   const sendTrafficData = async function (data) {
     socketIns.emit('traffic', data);
   }
+  const logout = function () {
+    socketIns.emit('logout');
+  }
   return {initSocket, createOffer,recreateOffer}
 }

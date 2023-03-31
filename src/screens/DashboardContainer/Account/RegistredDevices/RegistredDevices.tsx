@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Switch, Text, View} from 'react-native';
+import {Switch, Text, View, BackHandler} from 'react-native';
 import {Pressable, StyleSheet} from 'react-native';
 import {store} from '../../../../shared/index';
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -30,7 +30,20 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
       console.log(error);
     }
   };
+  useEffect(() => {
+    const backAction = (e) => {
+      console.log('backAction')
+      navigation.navigate("Account");
+      return true
+    };
 
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);  
   useEffect(() => {
     getDevices();
   }, []);
@@ -66,7 +79,7 @@ const RegistredDevices = ({navigation}: {navigation: any}) => {
                         size={20}
                         color="#CED5D8"
                       />
-                      <Text style={styles.text}>{device?.name}</Text>
+                      <Text style={styles.text}>{device?.name}-{device?.device_ref}</Text>
                     </View>
                   </Pressable>
                 );
@@ -102,7 +115,7 @@ const styles = StyleSheet.create({
   containerHeader: {
     backgroundColor: '#33a1f9',
     width: '100%',
-    flex: 0.5,
+    // flex: 0.5,
   },
   containerBody: {
     width: '100%',
@@ -132,9 +145,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   title: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 16,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: '#8F9395',
     // marginTop: 5,
@@ -144,10 +157,10 @@ const styles = StyleSheet.create({
     // textAlign: 'left',
   },
   text: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
     lineHeight: 21,
-    letterSpacing: 0.25,
-    fontWeight: 'bold',
+    letterSpacing: 0.20,
     color: 'black',
     marginLeft: 14,
   },

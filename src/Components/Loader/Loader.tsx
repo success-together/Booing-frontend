@@ -1,6 +1,7 @@
 import React from 'react';
 import {ActivityIndicator, Modal, StyleSheet, View} from 'react-native';
-
+import {store} from '../../shared';
+import {setRootLoading} from '../../shared/slices/rootSlice';
 const Loader = (Props: {isLoading: boolean}) => {
   return (
     <>
@@ -11,6 +12,7 @@ const Loader = (Props: {isLoading: boolean}) => {
           visible={Props.isLoading}
           onRequestClose={() => {
             console.log('close modal');
+            store.dispatch(setRootLoading(false));
           }}>
           <View style={styles.modalBackground}>
             <View style={[styles.container, styles.horizontal]}>

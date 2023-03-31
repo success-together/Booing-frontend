@@ -12,3 +12,6 @@ if (settings.hasProperty("newArchEnabled") && settings.newArchEnabled == "true")
 
 include ':react-native-fs'
 project(':react-native-fs').projectDir = new File(settingsDir, '../node_modules/react-native-fs/android')
+
+// include ':react-native-paypal'
+// project(':react-native-paypal').projectDir = new File(settingsDir, '../node_modules/react-native-paypal/android')

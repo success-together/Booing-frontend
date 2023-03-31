@@ -6,7 +6,7 @@ export const GetDevicesService = (data: {user_id: string}) => {
   return Executor({
     method: 'post',
     url: BaseUrl + '/logged-in-user/getDevices',
-    isSilent: false,
+    isSilent: true,
     data,
     withoutToast: true,
   });

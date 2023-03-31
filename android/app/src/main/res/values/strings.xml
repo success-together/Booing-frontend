@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">Boing</string>
-    <string name="facebook_app_id">472027605133427</string>
-    <string name="fb_login_protocol_scheme">fb1234</string>
-    <string name="facebook_client_token">874af167f1826cb57d51b64bf4d1b50a</string>
+    <string name="app_name">Booing</string>
+    <string name="facebook_app_id">727628018866085</string>
+    <string name="fb_login_protocol_scheme">fb727628018866085</string>
+    <string name="facebook_client_token">80da57adc3a927f7d1e68ce00855aecc</string>
 </resources>

@@ -14,6 +14,7 @@ const SellSpace = () => {
   const [quantity, setQuantity] = useState(1);
   const [traffic, setTraffic] = useState(0);
   const user_id = store.getState().authentication.userId;
+  const freeSpace = store.getState().devices.freeSpace;
   const isFocused = useIsFocused();
 
   const WIDTH = Dimensions.get('window').width;
@@ -52,19 +53,29 @@ const SellSpace = () => {
   }
 
   const handleSellSpace = async () => {
-    await sellSpace({user_id, quantity}).then(res => {
-      if (res.success) {
-        return Toast.show({
-          type: "success",
-          text1: res.msg
-        })
-      } else {
-        return Toast.show({
-          type: 'error',
-          text1: res.msg
-        })
-      }
-    })
+    const available = Math.trunc(freeSpace.freeStorage/1000000000-freeSpace.occupyCloud);
+    if (quantity > available) {
+      Toast.show({
+        type: 'error',
+        text1: `You don't have available ${quantity}GB storage`,
+        text2: `Available storage is about ${Math.trunc(freeSpace.freeStorage/1000000000)}GB and already solded ${freeSpace.occupyCloud}GB`
+      })
+    } else {
+      await sellSpace({user_id, quantity}).then(res => {
+        if (res.success) {
+          return Toast.show({
+            type: "success",
+            text1: res.msg
+          })
+        } else {
+          return Toast.show({
+            type: 'error',
+            text1: res.msg
+          })
+        }
+      })
+
+    }
   }
 
   useEffect(() => {
@@ -72,6 +83,9 @@ const SellSpace = () => {
       getTrafficData();
     }
   }, [isFocused]);
+  useEffect(() => {
+    console.log(freeSpace)
+  }, [freeSpace])
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
@@ -87,10 +101,10 @@ const SellSpace = () => {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <View >
                   <Progress.Bar progress={traffic} width={progressSize} height={8} style={{height: 8}}/>
-                  <Text style={{ color: 'red', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5, marginTop: 5, textAlign: 'right' }}> {Math.trunc(traffic*10000)/100}% </Text>
+                  <Text style={{ color: 'red', fontFamily: 'Rubik-Bold', fontSize: 16,  letterSpacing: 0.5, marginTop: 5, textAlign: 'right' }}> {Math.trunc(traffic*10000)/100}% </Text>
                 </View>
                 <View style={{width: '30%', marginLeft:30, alignItems: 'center'}}>
-                  <Text style={[styles.normaltext, {marginLeft: 10, marginTop: -8}]}>65000 Boo</Text>
+                  <Text style={[styles.normaltext, {marginLeft: 10, marginTop: -8}]}>50000 Boo</Text>
                   <Pressable style={[styles.claim, {backgroundColor: traffic>=1?'green':'grey', marginLeft: 10}]} onPress={receiveGift}>
                     <Text style={styles.whitetext}>
                       CLAIM
@@ -123,7 +137,7 @@ const SellSpace = () => {
                   <Text style={styles.cloudText}>OccupyCloud</Text>
                 </View>
                 <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                  <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', }}>Quantity</Text>
+                  <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14,  }}>GB</Text>
                   <View style={{
                     justifyContent: 'center', alignItems: 'center', flexDirection: 'row',
                   }}>
@@ -138,7 +152,7 @@ const SellSpace = () => {
                         width: 20,
 
                       }} >
-                      <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', }}>-</Text>
+                      <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14,  }}>-</Text>
                     </Pressable>
 
                     <TextInput
@@ -151,9 +165,9 @@ const SellSpace = () => {
                       style={{
                         textAlign: 'center',
                         color: 'black',
-                        fontSize: 10,
+                        fontFamily: 'Rubik-Bold', fontSize: 10,
                         padding: 0,
-                        fontWeight: 'bold',
+                        
                         borderStyle: 'solid',
                         borderWidth: 1,
                         borderColor: '#CDD0D1',
@@ -171,19 +185,20 @@ const SellSpace = () => {
                         borderColor: '#CDD0D1',
                         width: 20
                       }}>
-                      <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', }}>+</Text>
+                      <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14,  }}>+</Text>
                     </Pressable>
                   </View>
                   <View style={{flexDirection: 'row'}}>
                     <MaterialIcons name="highlight-remove" size={15} color="#CDD0D1" />
-                    <Text style={{ color: quantity>1?'#000000':'#CDD0D1', fontSize: 12 }}> Remove </Text>
+                    <Text style={{ color: quantity>1?'#000000':'#CDD0D1', fontFamily: 'Rubik-Regular', fontSize: 12 }}> Remove </Text>
                   </View>
                 </View>
                 <View>
-                  <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', textAlign: 'right'}}>Total</Text>
-                  <Text style={{ color: 'black', fontSize: 16, fontWeight: 'bold', }}>{quantity*5000} Boo</Text>
+                  <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14,  textAlign: 'right'}}>Total</Text>
+                  <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 16,  }}>{quantity*65000} Boo</Text>
                   <Pressable style={[styles.claim, {width: '100%'}]} onPress={handleSellSpace}>
-                    <Text style={[styles.whitetext, {fontSize: 25, lineHeight: 30}]}>
+                    <Text style={[styles.whitetext, {    fontFamily: 'Rubik-Regular',
+    fontSize: 25, lineHeight: 30}]}>
                       SELL
                     </Text>
                   </Pressable>                
@@ -272,28 +287,28 @@ const styles = StyleSheet.create({
     width: '80%'
   },
   text: {
-    fontSize: 16,
+    fontFamily: 'Rubik-Regular', fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
   },
   whitetext: {
-    fontSize: 14,
+    fontFamily: 'Rubik-Bold', fontSize: 14,
     lineHeight: 21,
-    fontWeight: 'bold',
+    
     letterSpacing: 0.25,
     color: 'white',
   },
   normaltext: {
-    fontSize: 14,
+    fontFamily: 'Rubik-Bold', fontSize: 14,
     lineHeight: 21,
-    fontWeight: 'bold',
+    
     letterSpacing: 0.25,
     color: '#797D7F',
   },
   boldtext: {
-    fontSize: 18,
+    fontFamily: 'Rubik-Bold', fontSize: 18,
     lineHeight: 21,
-    fontWeight: 'bold',
+    
     letterSpacing: 0.25,
     color: 'black',
   },
@@ -301,10 +316,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   cloudText: {
-    fontSize: 14,
+    fontFamily: 'Rubik-Bold', fontSize: 14,
     lineHeight: 21,
     letterSpacing: 0.25,
-    fontWeight: 'bold',
+    
     color: '#33a1f9',
   },  
 });

@@ -355,7 +355,7 @@ const SelectableUploadWrapper = ({
               color="#49ACFA"
               onPress={uncheckAll}
             />
-            <Text style={{marginLeft: 17, color: 'black', fontSize: 16}}>
+            <Text style={{marginLeft: 17, color: 'black', fontFamily: 'Rubik-Regular', fontSize: 16}}>
               {selectedIds.length} Selected
             </Text>
           </>

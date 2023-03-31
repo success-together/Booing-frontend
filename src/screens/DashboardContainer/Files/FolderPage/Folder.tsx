@@ -438,12 +438,12 @@ const Folder = ({
           <Text
             style={{
               color: 'black',
-              fontSize: 16,
+              fontFamily: 'Rubik-Regular', fontSize: 16,
               fontWeight: '500',
             }}>
             {name}
           </Text>
-          <Text style={{color: '#C6D2E8', fontSize: 12, fontWeight: '500'}}>
+          <Text style={{color: '#C6D2E8', fontFamily: 'Rubik-Regular', fontSize: 12, fontWeight: '500'}}>
             {formatDate(createdAt)}
           </Text>
         </View>
@@ -452,7 +452,7 @@ const Folder = ({
         <Text
           style={{
             color: '#C6D2E8',
-            fontSize: 12,
+            fontFamily: 'Rubik-Regular', fontSize: 12,
             fontWeight: '500',
           }}>
           {items} Items
@@ -486,7 +486,7 @@ const Folder = ({
                     color: 'white',
                     flexShrink: 1,
                     textAlign: 'center',
-                    fontSize: 10,
+                    fontFamily: 'Rubik-Regular', fontSize: 10,
                   }}>
                   {item.title}
                 </Text>

@@ -17,11 +17,11 @@ export function Executor(config: ExecutorInterface): Promise<any> {
   return new Promise((resolve, reject) => {
     !config.isSilent && store.dispatch(setRootLoading(true));
     // Interceptor[config.method](config.url, config.data)
-    console.log(config.url);
+    console.log(config.isSilent, config.url);
     // console.log(config.data);
 
     axios[config.method](config.url, config.data, {
-      headers: {
+      headers: config.headers?config.headers:{
         // token: store.getState().authentication.token,
         'Content-Type': 'application/json',
         Accept: 'application/json',
@@ -49,7 +49,7 @@ export function Executor(config: ExecutorInterface): Promise<any> {
         // console.log(config.data);
         // console.log(Interceptor[config.method]);
 
-        console.log('excutor ', res.status);
+        console.log('excutor ', res.status, config.isSilent );
         !config.isSilent && store.dispatch(setRootLoading(false));
       })
       .catch((err: any) => {

@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {Pressable, StyleSheet, Text, View, BackHandler} from 'react-native';
 import {Input} from 'react-native-elements';
 import {updatePassword} from '../../../../shared/slices/Auth/AuthService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {store} from '../../../../shared';
 import AccountHeader from '../AccountHeader/AcountHeader';
+import Toast from 'react-native-toast-message';
 
 const UpdatePassword = ({navigation}: {navigation: any}) => {
   const [updatePasswordForm, setUpdatePasswordForm] = useState<{
@@ -33,7 +34,20 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
       }
     | undefined
   >(undefined);
+  useEffect(() => {
+    const backAction = (e) => {
+      console.log('backAction')
+      navigation.navigate("Account");
+      return true
+    };
 
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);  
   const changePassword = async () => {
     console.log(updatePasswordForm);
     console.log(loggedInUser?._id);
@@ -43,20 +57,43 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
       updatePasswordForm.currentPassword !== '' &&
       updatePasswordForm.newPassword !== '' &&
       loggedInUser?._id
-    )
-      updatePassword({
-        currentPassword: updatePasswordForm.currentPassword,
-        newPassword: updatePasswordForm.newPassword,
-        user_id: loggedInUser?._id,
-        isForgotPassword: false,
-      }).then(() => {
-        setUpdatePasswordForm({
-          confirmPassword: '',
-          currentPassword: '',
-          newPassword: '',
-        });
-        navigation.navigate('Account');
-      });
+    ) {
+      if (updatePasswordForm.confirmPassword !== updatePasswordForm.newPassword) {
+        Toast.show({
+          type: 'error',
+          text1: "new password doesn't match."
+        })
+      } else if (updatePasswordForm.currentPassword.length < 6) {
+        Toast.show({
+          type: 'error',
+          text1: "password mininumn lenght is 6 letters"
+        })
+      } else {
+        updatePassword({
+          currentPassword: updatePasswordForm.currentPassword,
+          newPassword: updatePasswordForm.newPassword,
+          user_id: loggedInUser?._id,
+          isForgotPassword: false,
+        }).then(() => {
+          setUpdatePasswordForm({
+            confirmPassword: '',
+            currentPassword: '',
+            newPassword: '',
+          });
+          navigation.navigate('Account');
+        }).catch((err: any) => {
+          Toast.show({
+            type:'error',
+            text1: err?.response?.data?.msg
+          })
+        })
+      }
+    } else {
+      Toast.show({
+        type: 'error', 
+        text1: 'Please fill all input.'
+      })
+    }
   };
 
   const onChnagePasswordForm = (value: string, type: string) => {
@@ -137,13 +174,7 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
           onChangeText={e => onChnagePasswordForm(e, 'confirmPassword')}
         />
         <Pressable
-          style={
-            updatePasswordForm.confirmPassword !== '' &&
-            updatePasswordForm.currentPassword !== '' &&
-            updatePasswordForm.newPassword !== ''
-              ? styles.button
-              : styles.disabled
-          }
+          style={styles.button}
           onPress={changePassword}>
           <Text style={styles.text}>Update Password</Text>
         </Pressable>
@@ -163,7 +194,7 @@ const styles = StyleSheet.create({
   containerHeader: {
     backgroundColor: "#33a1f9",
     width: "100%",
-    flex: 0.6,
+    // flex: 0.6,
   },
   Body: {
     flex: 1,
@@ -191,9 +222,9 @@ const styles = StyleSheet.create({
     height: 20,
   },
   title: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 16,
     lineHeight: 21,
-    fontWeight: "bold",
     letterSpacing: 0.25,
     color: "black",
     marginTop: 5,
@@ -202,11 +233,11 @@ const styles = StyleSheet.create({
 
   },
   text: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 18,
     lineHeight: 21,
     letterSpacing: 0.25,
-    fontWeight: "bold",
-    color: "#49ACFA",
+    color: "#ffffff",
     marginTop: 5,
     maxWidth: "100%",
   },

@@ -18,9 +18,10 @@ import {
   TextInput,
   TouchableHighlight,
   TouchableOpacity,
+  Dimensions,
   View,
 } from 'react-native';
-import {Logo} from '../../../../../images/export';
+import {small_logo} from '../../../../../images/export';
 import {threeVerticleDots} from '../../../../../images/export';
 import LinearGradient from 'react-native-linear-gradient';
 import Feather from 'react-native-vector-icons/Feather';
@@ -66,6 +67,8 @@ export default function LayoutWrapper({
     }
   }
 
+  const WIDTH = Dimensions.get('window').width;
+  const size = WIDTH;
   useEffect(() => {
     if (setPressHandlerRoot) {
       setPressHandlerRoot(() => setPressHandler);
@@ -81,7 +84,7 @@ export default function LayoutWrapper({
         <LinearGradient
           start={{x: 0, y: 0}}
           end={{x: 0, y: 1}}
-          colors={['#33A1F9', '#6DBDFE']}
+          colors={['#55A4F7', '#82BEFA']}
           style={styles.header}>
           <View
             style={{
@@ -91,19 +94,19 @@ export default function LayoutWrapper({
               width: '100%',
               justifyContent: 'center',
               alignItems: 'center',
-              marginBottom: 36,
+              marginBottom: 40,
             }}>
             <Image
-              source={Logo}
-              style={{width: 52, height: 35, position: 'absolute', left: 0}}
+              source={small_logo}
+              style={{width: 87, height: 30, position: 'absolute', left: 0}}
             />
-            <Text style={{color: 'white', fontSize: 20, fontWeight: 'bold'}}>
-              {title}
-            </Text>
           </View>
+          <Text style={{color: 'white', fontFamily: 'Rubik-Bold', fontSize: 18, marginBottom: 20}}>
+            {title}
+          </Text>
           <View
             style={{
-              display: 'flex',
+              display: 'flex',              
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -116,63 +119,30 @@ export default function LayoutWrapper({
             />
             <View
               style={{
-                display: 'flex',
                 flexDirection: 'row',
-                position: 'relative',
+                marginLeft: 25,
+                width: size
               }}>
               <Feather
                 name="search"
-                size={24}
-                style={{position: 'absolute', zIndex: 999, top: 10, left: 13}}
+                size={14}
+                style={{position: 'absolute', zIndex: 999, top: 15, left: 13}}
               />
               <TextInput
                 style={{
                   flexBasis: '70%',
                   height: 44,
                   backgroundColor: 'white',
+                  fontFamily: 'Rubik-Regular', fontSize: 12,
                   borderRadius: 8,
-                  paddingLeft: 44,
+                  paddingLeft: 33,
+                  color: 'black',
                 }}
                 placeholder="Search"
                 placeholderTextColor={'#9190A8'}
               />
             </View>
-            <View style={{position: 'relative'}}>
-              <TouchableOpacity
-                onPress={() => setIsHeaderMenuOpen(prev => !prev)}>
-                <Image
-                  source={threeVerticleDots}
-                  resizeMode={'contain'}
-                  style={{
-                    width: 10,
-                    height: 20,
-                    tintColor: 'white',
-                    marginLeft: 26,
-                  }}
-                />
-              </TouchableOpacity>
-              {isHeaderMenuOpen && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    minWidth: 100,
-                    right: 0,
-                    top: '60%',
-                    zIndex: 9999,
-                    backgroundColor: 'white',
-                    borderRadius: 10,
-                    elevation: 2,
-                    padding: 10,
-                  }}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      onHeaderDotsPress && onHeaderDotsPress();
-                    }}>
-                    {headerMenuContent}
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
+
           </View>
         </LinearGradient>
         <View style={{flex: 1, backgroundColor: '#F6F7FB'}}>
@@ -186,7 +156,7 @@ export default function LayoutWrapper({
 const styles = StyleSheet.create({
   header: {
     width: '100%',
-    paddingTop: 63,
+    paddingTop: 50,
     paddingBottom: 23,
     paddingLeft: 20,
     paddingRight: 36,

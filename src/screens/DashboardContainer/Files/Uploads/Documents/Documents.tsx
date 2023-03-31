@@ -1,4 +1,4 @@
-import {Dimensions, View, Text, TouchableOpacity} from 'react-native';
+import {Dimensions, View, Text, TouchableOpacity, BackHandler} from 'react-native';
 import {LayoutWrapper} from '../../../../exports';
 import ManageApps from '../../../../../utils/manageApps';
 import {useCallback, useEffect, useState} from 'react';
@@ -11,6 +11,7 @@ import {formatUri} from '../Videos/Videos';
 import RNFS from 'react-native-fs';
 import {useIsFocused} from '@react-navigation/native';
 import useSocket from '../../../../../shared/socket';
+import {successDownload} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 import * as Progress from 'react-native-progress';
 const Documents = ({navigation}: any) => {
   const [data, setData] = useState<any[]>([]);
@@ -34,6 +35,20 @@ const Documents = ({navigation}: any) => {
   const [fetchProcess, setFetchProcess] = useState(0);
   const WIDTH = Dimensions.get('window').width;
   const progressSize = WIDTH*0.8;  
+  useEffect(() => {
+    const backAction = (e) => {
+      console.log('backAction')
+      navigation.navigate("Files");
+      return true
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);    
   useEffect(() => {
     if (isFocused) {
       useGetUploadData('document')
@@ -117,7 +132,7 @@ const Documents = ({navigation}: any) => {
         if (!formated) {
           return Toast.show({
             type: 'error',
-            text1: `cannot play audio ${file['updates'][0]['fileName']}`,
+            text1: `cannot view document ${file['updates'][0]['fileName']}`,
           });
         } else {
           const {changed, path} = formated;
@@ -125,6 +140,7 @@ const Documents = ({navigation}: any) => {
           if (changed) {
             setRemoveFilesAfterFinish(prev => [...new Set([...prev, path])]);
           }
+          successDownload(file.id);
           setIsShowingFile({
             show: true,
             uri: path,
@@ -157,19 +173,20 @@ const Documents = ({navigation}: any) => {
               alignItems: 'center',
             }}>
             <Progress.Bar progress={fetchProcess} width={progressSize} />
-            <Text style={{marginTop: 20}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
+            <Text style={{marginTop: 20, color: '#000000'}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
             <TouchableOpacity
               style={{
                 width: 82,
                 height: 49,
-                backgroundColor: 'white',
-                borderRadius: 15,
+                backgroundColor: '#33a1f9',
+                color: '#FFFFFF',
+                borderRadius: 5,
                 justifyContent: 'center',
                 alignItems: 'center',
                 marginTop: 20
               }}
               onPress={handleAbort}>
-              <Text style={{color: '#49ACFA', fontWeight: '500'}}>Abort</Text>
+              <Text style={{color: '#FFFFFF', fontWeight: '500'}}>Abort</Text>
             </TouchableOpacity>              
           </View>
         ) : (            

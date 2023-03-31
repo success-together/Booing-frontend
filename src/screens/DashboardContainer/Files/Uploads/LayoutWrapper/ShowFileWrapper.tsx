@@ -111,21 +111,21 @@ const ShowFileWrapper = ({
           <Text
             style={{
               color: 'black',
-              fontSize: 16,
+              fontFamily: 'Rubik-Regular', fontSize: 16,
               fontWeight: '700',
               marginLeft: 15,
               flex: 1,
-            }}>
+            }} selectable>
             {title}
           </Text>
         </View>
         <View style={{display: 'flex', flexDirection: 'row'}}>
           {/* <AntDesign name="staro" size={20} color={'black'} /> */}
-          <Image
+{/*          <Image
             source={threeVerticleDots}
             resizeMode={'contain'}
             style={{width: 10, height: 20, tintColor: 'black', marginLeft: 20}}
-          />
+          />*/}
         </View>
       </View>
       <View

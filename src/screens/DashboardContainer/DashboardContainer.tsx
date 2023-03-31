@@ -1,7 +1,7 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {NavigationContainer} from '@react-navigation/native';
 import React, {useEffect} from 'react';
-import {Image} from 'react-native';
+import {Image, View} from 'react-native';
 import {
   Account,
   Apks,
@@ -21,10 +21,11 @@ import {
   SellSpace,
   Offer,
   InviteFriends,
-  StripePay,
+  Payments,
 } from '../exports';
-import {small_logo} from '../../images/export';
+import {eyeWhite} from '../../images/export';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import RegistredDevices from './Account/RegistredDevices/RegistredDevices';
 import {store} from '../../shared';
@@ -35,6 +36,7 @@ import {
 } from '../../shared/slices/Fragmentation/FragmentationService';
 import FolderPage from './Files/FolderPage/FolderPage';
 import useSocket from '../../shared/socket';
+import {HomeIcon, FilesIcon, AccountIcon} from '../../Components/TabbarIcon';
 const Stack = createBottomTabNavigator();
 const DashboardContainer =  () => {
   const {initSocket, createOffer} = useSocket();
@@ -49,7 +51,7 @@ const DashboardContainer =  () => {
     <>
       <NavigationContainer independent={true}>
         <Stack.Navigator
-          initialRouteName="Dashboard"
+          initialRouteName="Home"
           screenOptions={({route}) => ({
             tabBarIcon: ({focused, color, size}) => {
               let iconName;
@@ -58,7 +60,7 @@ const DashboardContainer =  () => {
                 case 'Files':
                   iconName = focused ? 'folder' : 'folder-outline';
                   break;
-                case 'Dashboard' || 'ClearData':
+                case 'Home' || 'ClearData':
                   iconName = focused ? 'ios-home' : 'ios-home-outline';
                   break;
                 case 'Account':
@@ -66,29 +68,39 @@ const DashboardContainer =  () => {
                   break;
               }
               // You can return any component that you like here!
-              if (rn == 'Booingcoin') {
-                return (
-                  <Image style={{width: 35, height: 20}} source={small_logo} />
-                );
-              }
+              if (rn == 'Home') return <HomeIcon active={iconName = focused} />
+              if (rn == 'Files') return <FilesIcon active={iconName = focused} />
+              if (rn == 'Booingcoin') return <Image style={{width: 35, height: 26}} source={eyeWhite}/> 
+              if (rn == 'Account') return <AccountIcon active={iconName = focused} />
+              
               return (
-                <Ionicons name={iconName as any} size={size} color={color} />
+                <Ionicons name={iconName as any} size={22} color={color} />
               );
             },
             headerShown: false,
-          })}
-          tabBarOptions={{
-            activeTintColor: 'white',
-            inactiveTintColor: 'whitesmoke',
-            inactiveBackgroundColor: '#33a1f9',
-            activeBackgroundColor: '#33a1f9',
-            labelStyle: {
-              paddingBottom: 3,
-              fontSize: 12,
+            "tabBarActiveTintColor": "white",
+            "tabBarInactiveTintColor": "whitesmoke",
+            "tabBarActiveBackgroundColor": "#33a1f9",
+            "tabBarInactiveBackgroundColor": "#33a1f9",
+            "tabBarLabelStyle": {
+              "fontFamily": 'Rubik-Regular',
+              "fontSize": 12,
+              "paddingBottom": 20
             },
-            style: {padding: 30, backgroundColor: '#33a1f9'},
-          }}>
-          <Stack.Screen name="Dashboard" component={Dashboard} />
+            "tabBarItemStyle": {
+              "backgroundColor": "#33a1f9",
+              "paddingTop": 20
+            },
+            "tabBarStyle": [
+              {
+                "display": "flex",
+                "height": 80
+              },
+              null
+            ]            
+          })}
+          >
+          <Stack.Screen name="Home" component={Dashboard} options={{headerShown: false}} />
           <Stack.Screen
             name="ClearData"
             component={ClearData}
@@ -114,7 +126,7 @@ const DashboardContainer =  () => {
             name="Offer"
             component={Offer}
             options={{
-              // headerShown: false,
+              headerShown: false,
               tabBarItemStyle: {display: 'none'},
             }}
           />
@@ -225,8 +237,8 @@ const DashboardContainer =  () => {
             }}
           />
           <Stack.Screen
-            name="StripePay"
-            component={StripePay}
+            name="Payments"
+            component={Payments}
             options={{
               tabBarItemStyle: {display: 'none'},
             }}

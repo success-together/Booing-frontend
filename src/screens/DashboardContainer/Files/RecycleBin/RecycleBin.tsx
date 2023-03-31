@@ -307,7 +307,6 @@ const RecycleBin = ({navigation}: any) => {
 
   return (
     <LayoutWrapper
-      setPressHandlerRoot={setPressHandler}
       onBackPress={() => navigation.navigate('Uploads')}>
         <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
           <View
@@ -328,7 +327,7 @@ const RecycleBin = ({navigation}: any) => {
                   color="#49ACFA"
                   onPress={uncheckAll}
                 />
-                <Text style={{marginLeft: 17, color: 'black', fontSize: 16}}>
+                <Text style={{marginLeft: 17, color: 'black', fontFamily: 'Rubik-Regular', fontSize: 16}}>
                   {selectedIds.length} Selected
                 </Text>
               </>
@@ -343,7 +342,7 @@ const RecycleBin = ({navigation}: any) => {
                 marginTop: -20,
                 marginBottom: -20
               }}>
-                <Text style={{color: 'red'}}>All files will be deleted permanantly after 24 hours.</Text>
+                <Text style={{color: 'red', fontFamily: 'Rubik-Regular'}}>All files will be deleted permanantly after 24 hours.</Text>
               </View>
             )}
           </View>
@@ -378,7 +377,7 @@ const RecycleBin = ({navigation}: any) => {
                   }}
                   disabled={HandleRemovePermanentlyBtnDisabled}
                   onPress={handleRemovePermanently}>
-                  <Text style={{color: '#49ACFA', fontWeight: '500'}}>
+                  <Text style={{color: '#49ACFA', fontWeight: '500', fontFamily: 'Rubik-Regular'}}>
                     Delete permanently
                   </Text>
                 </TouchableOpacity>
@@ -395,7 +394,7 @@ const RecycleBin = ({navigation}: any) => {
                   }}
                   disabled={HandleRestoreBtnDisabled}
                   onPress={handleRestore}>
-                  <Text style={{color: '#49ACFA', fontWeight: '500'}}>
+                  <Text style={{color: '#49ACFA', fontWeight: '500', fontFamily: 'Rubik-Regular'}}>
                     Restore
                   </Text>
                 </TouchableOpacity>

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BaseUrl, store} from '../..';
 import {Login} from '../../../models/Login';
 import {Executor} from '../../Executor';
-import {setLoggedInUser, setToken} from './AuthSlice';
+import {setLoggedInUser, setToken, saveUserAvatar} from './AuthSlice';
 
 export const login = (data: Login) => {
   return Executor({
@@ -11,6 +11,7 @@ export const login = (data: Login) => {
     data,
     isSilent: false,
     successFun: (data: Login) => {
+      console.log(data)
       saveUserData(data);
       saveToken(data);
     },
@@ -23,10 +24,10 @@ export const register = (data: any) => {
     method: 'post',
     url: BaseUrl + '/signup',
     data,
-    isSilent: false,
+    isSilent: true,
     withoutToast: false,
-    successFun: (data: any) => {
-      console.log('resgistration : ' + data);
+    successFun: (res: any) => {
+      console.log(res.data);
       // saveUserData(data);
     },
   });
@@ -42,11 +43,7 @@ export const mailVerification = (data: any) => {
   });
 };
 
-export const updateProfile = (data: {
-  name?: string;
-  phone?: string;
-  user_id: string;
-}) => {
+export const updateProfile = (data: any) => {
   return Executor({
     method: 'post',
     url: BaseUrl + '/logged-in-user/updateProfile',
@@ -54,13 +51,28 @@ export const updateProfile = (data: {
     withoutToast: false,
     data,
     successFun(data) {
-      console.log('here : ' + data.data);
-
-      // saveUserData(data.data.user);
+      console.log(data.data);
+      saveUserData(data.data.user);
+      // saveToken(data);
     },
   });
 };
-
+export const updateProfilePic = (data, user_id) => {
+  return Executor({
+    method: 'post',
+    url: `${BaseUrl}/logged-in-user/updateProfilePic/${user_id}`,
+    isSilent: false,
+    withoutToast: false,
+    data: data,
+    headers: {
+      accept: 'application/json',
+      'Content-Type': 'multipart/form-data',
+    },
+    successFun(data) {
+      store.dispatch(saveUserAvatar(data?.thumbnail));
+    },
+  });  
+};
 export const updatePassword = (data: {
   currentPassword: string;
   newPassword: string;
@@ -72,6 +84,18 @@ export const updatePassword = (data: {
   return Executor({
     method: 'post',
     url: BaseUrl + '/logged-in-user/updatePassword',
+    data,
+    isSilent: false,
+    withoutToast: false,
+  });
+};
+
+export const resendCode = (data: {
+  user_id: string;
+}) => {
+  return Executor({
+    method: 'post',
+    url: BaseUrl + '/resendCode',
     data,
     isSilent: false,
     withoutToast: false,

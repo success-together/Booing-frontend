@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Image,
   Pressable,
@@ -10,16 +10,20 @@ import {
   Alert,
   ToastAndroid,
   Modal,
+  Linking,
+  BackHandler
 } from 'react-native';
 import InviteFriendsHeader from './InviteFriendsHeader/InviteFriendsHeader';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import Clipboard from '@react-native-clipboard/clipboard';
+import Share from 'react-native-share';
+import { store, BaseUrl } from '../../../../shared';
 import {whatsapp, share, telegram, mail} from '../../../../images/export';
 
 const InviteFriends = ({navigation}: {navigation: any}) => {
   const [modalVisible, setModalVisible] = useState(false);
-
+  const [shareLink, setShareLink] = useState('Https://Booing.Com/Invite/Ath');
   const terms_cond = () => {
     Alert.alert(
       'Terms and Conditions of Booing',
@@ -34,11 +38,41 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
       ],
     );
   };
+  const getUserData = () => {
+    setShareLink('Https://Booing.Com/Invite/'+store.getState().authentication.loggedInUser._id);
+  };
 
+  useEffect(() => {
+    try {
+      getUserData();
+    } catch (error) {
+      console.log(error);
+    }
+  }, []);  
+  useEffect(() => {
+    const backAction = (e) => {
+      console.log('backAction')
+      navigation.navigate("Account");
+      return true
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);  
   const copied = () => {
     ToastAndroid.show('Link copied.', ToastAndroid.SHORT);
   };
-
+  const handleShare = async(where) => {
+    console.log('handleShare')
+      const shareOptions = {
+        message: `please join with us.\n ${shareLink}`,
+      };
+      Share.open(shareOptions);
+  }
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
@@ -305,7 +339,8 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
               />
               <Pressable style={styles.trackInvite}>
                 <Text
-                  style={{fontSize: 14, fontWeight: 'bold', color: 'white'}}>
+                  style={{fontFamily: 'Rubik-Bold',
+    fontSize: 14,  color: 'white'}}>
                   Track Invites
                 </Text>
               </Pressable>
@@ -320,8 +355,8 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
               <Text style={styles.whitetext}>Invite And Get</Text>
               <Text
                 style={{
-                  fontSize: 18,
-                  fontWeight: 'bold',
+              fontFamily: 'Rubik-Bold', fontSize: 18,
+                  
                   color: 'white',
                   letterSpacing: 0.25,
                   lineHeight: 21,
@@ -331,7 +366,8 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
               </Text>
             </View>
             <View style={{padding: 10, marginLeft: 20, marginTop: 10}}>
-              <Text style={{color: 'white', fontSize: 14}}>
+              <Text style={{color: 'white', fontFamily: 'Rubik-Regular',
+    fontSize: 14}}>
                 Share Your Link
               </Text>
               <View
@@ -345,12 +381,13 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
                   alignItems: 'center',
                   width: '90%',
                 }}>
-                <Text style={{color: 'white', fontSize: 14}}>
-                  Https://Booing.Com/Invite/Ath
+                <Text style={{color: 'white', fontFamily: 'Rubik-Regular',
+    fontSize: 14}}>
+                  {shareLink}
                 </Text>
                 <TouchableOpacity
                   onPress={() => {
-                    Clipboard.setString('Https://Booing.Com/Invite/Ath');
+                    Clipboard.setString(shareLink);
                     copied();
                   }}
                   style={{
@@ -368,10 +405,21 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
                   marginTop: 10,
                   marginBottom: 10,
                 }}>
-                <Image style={styles.image} source={whatsapp} />
-                <Image style={styles.image} source={telegram} />
-                <Image style={styles.image} source={mail} />
-                <Image style={styles.image} source={share} />
+{/*                <Pressable onPress={() => handleShare('whatsapp')}>
+                  <Image style={styles.image} source={whatsapp} />
+                </Pressable>
+                <Pressable onPress={() => handleShare('telegram')}>
+                  <Image style={styles.image} source={telegram} />
+                </Pressable>
+                <Pressable onPress={() => handleShare('mail')}>
+                  <Image style={styles.image} source={mail} />
+                </Pressable>
+                <Pressable onPress={() => handleShare('share')}>
+                  <Image style={styles.image} source={share} />
+                </Pressable>*/}
+                <TouchableOpacity onPress={() => handleShare()}>
+                  <Text style={styles.shareLink}>Click here to share this link with your friends.</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -387,7 +435,8 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
                   marginTop: 20,
                 }}>
                 <AntDesign name="checkcircleo" color={'green'} size={20} />
-                <Text style={{color: 'white', fontSize: 14}}>
+                <Text style={{color: 'white', fontFamily: 'Rubik-Regular',
+    fontSize: 14}}>
                   In Addition To Free 15GB, They Will Get An Additional Premium
                   Services For Free.
                 </Text>
@@ -404,7 +453,8 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
                   marginTop: 20,
                 }}>
                 <AntDesign name="checkcircleo" color={'green'} size={20} />
-                <Text style={{color: 'white', fontSize: 14, marginLeft: 20}}>
+                <Text style={{color: 'white', fontFamily: 'Rubik-Regular',
+    fontSize: 14, marginLeft: 20}}>
                   5 MM Boos When 3 Friends Buy More Space With "Plus Plan".
                 </Text>
               </View>
@@ -417,7 +467,8 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
                   marginTop: 20,
                 }}>
                 <Feather name="x-circle" color={'red'} size={20} />
-                <Text style={{color: 'white', fontSize: 14}}>
+                <Text style={{color: 'white', fontFamily: 'Rubik-Regular',
+    fontSize: 14}}>
                   Same Users On Multiple Device Don't Aplly.
                 </Text>
               </View>
@@ -425,7 +476,8 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
             <Pressable
               style={{padding: 20, marginLeft: 20}}
               onPress={() => setModalVisible(true)}>
-              <Text style={{fontSize: 14, color: '#33a1f9'}}>
+              <Text style={{fontFamily: 'Rubik-Regular',
+    fontSize: 14, color: '#33a1f9'}}>
                 Terms And Conditions
               </Text>
             </Pressable>
@@ -514,28 +566,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#33a1f9',
   },
   text: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
   },
   whitetext: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 22,
     lineHeight: 21,
-    fontWeight: 'bold',
+    
     letterSpacing: 0.25,
     color: 'white',
   },
   normaltext: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 14,
     lineHeight: 21,
-    fontWeight: 'bold',
+    
     letterSpacing: 0.25,
     color: '#797D7F',
   },
   boldtext: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 18,
     lineHeight: 21,
-    fontWeight: 'bold',
+    
     letterSpacing: 0.25,
     color: 'black',
   },
@@ -571,7 +627,7 @@ const styles = StyleSheet.create({
   },
   textStyle: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: 'Rubik-Bold',
     textAlign: 'center',
   },
   modalText: {
@@ -580,24 +636,32 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   modalnormaltext: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
     color: 'gray',
   },
   modalboldtext: {
+    fontFamily: 'Rubik-Bold',
     fontSize: 16,
     lineHeight: 21,
-    fontWeight: 'bold',
+    
     letterSpacing: 0.25,
     color: 'black',
   },
   modaltitletext: {
     marginTop: 10,
+    fontFamily: 'Rubik-Bold',
     fontSize: 18,
     lineHeight: 21,
-    fontWeight: 'bold',
+    
     letterSpacing: 0.25,
     color: 'black',
   },
+  shareLink: {
+    color: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: 'white'
+  }
 });

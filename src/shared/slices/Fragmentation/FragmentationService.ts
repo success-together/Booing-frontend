@@ -122,6 +122,14 @@ export const downloadFiles = async (data: {user_id: string; type: string}) => {
     withoutToast: true,
   });
 };
+export const successDownload = async (id: string) => {
+  return Executor({
+    method: 'get',
+    url: `${BaseUrl}/logged-in-user/successDownload/${id}`,
+    isSilent: true,
+    withoutToast: true,
+  });
+};
 
 export const uploadFiles = (
   data: FormData,
@@ -165,7 +173,7 @@ export const checkAutoDeleteFile = async (data: {user_id: string}) => {
   return Executor({
     method: 'get',
     url: `${BaseUrl}/logged-in-user/checkAutoDeleteFile/${data.user_id}`,
-    isSilent: false,
+    isSilent: true,
     withoutToast: true,
   });
 };

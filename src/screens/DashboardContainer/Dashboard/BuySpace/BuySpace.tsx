@@ -81,15 +81,21 @@ const BuySpace = ({navigation}: {navigation: any}) => {
     product.isMonth = isMonth;
     product.offer = false;
     product.left = membership.left;
-    if (membership?.m_id === "2TB-Booing-Space") {
+    if (membership?.m_id === "2TB-Booing-Space" || membership?.m_id === "Free") {
       product.leftPrice = 0
     } else {
-      let leftPrice = membership.left*(membership.isMonth?membership.info.monthly:(membership.info.yearly/12));
-      let upgate = (product.isMonth?(product.quantity*product.monthly):(product.quantity*product.yearly))-leftPrice;
-      if (upgate > 0) product.leftPrice = Math.trunc(leftPrice*100)/100;
-      else product.leftPrice = 0;
+      try {
+        let leftPrice = membership.left*(membership.isMonth?membership.info.monthly:(membership.info.yearly/12));
+        let upgate = (product.isMonth?(product.quantity*product.monthly):(product.quantity*product.yearly))-leftPrice;
+        if (upgate > 0) product.leftPrice = Math.trunc(leftPrice*100)/100;
+        else product.leftPrice = 0;
+      } catch {
+        product.leftPrice = 0;        
+      }
     }
-    navigation.navigate("StripePay", product);
+    product.total = Math.trunc(((product.isMonth?(product.quantity*product.monthly):(product.quantity*product.yearly))-product.leftPrice)*100)/100;
+
+    navigation.navigate("Payments", product);
   }
   const setQuantity = (ind, plus) => {
     const data = [...products]
@@ -118,7 +124,7 @@ const BuySpace = ({navigation}: {navigation: any}) => {
       </View>
       <ScrollView style={styles.scrollView}>
         <View style={styles.body}>
-        {membership?.m_id !== "Free" && membership?.m_id !== "2TB-Booing-Space" && (
+        {membership.m_id && membership?.m_id !== "Free" && membership?.m_id !== "2TB-Booing-Space" && (
           <View style={styles.cardContainer} key="membership">
             <View style={styles.cardHeader1}>
               <Text style={styles.whitetext}> CURRENT MEMBERSHIP</Text>
@@ -129,9 +135,9 @@ const BuySpace = ({navigation}: {navigation: any}) => {
                 <Text style={styles.boldtext}>{membership.info?.space}</Text>
               </View>
               <View style={{flexDirection:'row'}}>
-               <Text style={{color:'black', fontSize:16, fontWeight:'bold', letterSpacing:0.5}}> € {membership.info?.monthly}/ </Text>
+               <Text style={{color:'black', fontFamily: 'Rubik-Bold', fontSize:16, letterSpacing:0.5}}> € {membership.info?.monthly}/ </Text>
                <Text style={styles.normaltext}> Month </Text> 
-               <Text style={{color:'black', fontSize:16, fontWeight:'bold', letterSpacing:0.5}}> Or {membership.info?.yearly}€ / </Text>
+               <Text style={{color:'black', fontFamily: 'Rubik-Bold', fontSize:16, letterSpacing:0.5}}> Or {membership.info?.yearly}€ / </Text>
                <Text style={styles.normaltext}> Year </Text> 
               </View>  
               <View style={{marginTop:8}}>
@@ -169,9 +175,9 @@ const BuySpace = ({navigation}: {navigation: any}) => {
                     <Text style={styles.boldtext}>{product.space}</Text>
                   </View>
                   <View style={{flexDirection:'row'}}>
-                   <Text style={{color:'black', fontSize:16, fontWeight:'bold', letterSpacing:0.5}}> € {product.monthly}/ </Text>
+                   <Text style={{color:'black', fontFamily: 'Rubik-Bold', fontSize:16, letterSpacing:0.5}}> € {product.monthly}/ </Text>
                    <Text style={styles.normaltext}> Month </Text> 
-                   <Text style={{color:'black', fontSize:16, fontWeight:'bold', letterSpacing:0.5}}> Or {product.yearly}€ / </Text>
+                   <Text style={{color:'black', fontFamily: 'Rubik-Bold', fontSize:16, letterSpacing:0.5}}> Or {product.yearly}€ / </Text>
                    <Text style={styles.normaltext}> Year </Text> 
                   </View>
                   <View style={{marginTop:8}}>
@@ -180,7 +186,7 @@ const BuySpace = ({navigation}: {navigation: any}) => {
                     <Text style={styles.normaltext}>Revert Any Change Within 30 Days</Text>
                   </View>
                   <View style={{ flexDirection: 'row', marginTop: 20 }}>
-                    <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', marginRight: 10}}>Period</Text>
+                    <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14,  marginRight: 10}}>Period</Text>
                     <View style={{
                       justifyContent: 'center', alignItems: 'center', flexDirection: 'row',
                     }}>
@@ -195,13 +201,13 @@ const BuySpace = ({navigation}: {navigation: any}) => {
                           width: 20,
 
                         }} >
-                        <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', }}>-</Text>
+                        <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14,  }}>-</Text>
                       </Pressable>
                       <Text style={{
                         textAlign: 'center',
                         color: 'black',
-                        fontSize: 14,
-                        fontWeight: 'bold',
+                        fontFamily: 'Rubik-Bold', fontSize: 14,
+                        
                         borderStyle: 'solid',
                         borderWidth: 1,
                         borderColor: '#CDD0D1',
@@ -217,11 +223,11 @@ const BuySpace = ({navigation}: {navigation: any}) => {
                           borderColor: '#CDD0D1',
                           width: 20
                         }}>
-                        <Text style={{ color: 'black', fontSize: 14, fontWeight: 'bold', }}>+</Text>
+                        <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14,  }}>+</Text>
                       </Pressable>
                     </View>
                     <View style={{ flexDirection: 'row' }}>
-                      <Text style={{ color: '#000000', fontSize: 14, marginLeft: 10 }}> {product.quantity>1?'months/years':'month/year'} </Text>
+                      <Text style={{ color: '#000000', fontFamily: 'Rubik-Regular', fontSize: 14, marginLeft: 10 }}> {product.quantity>1?'months/years':'month/year'} </Text>
                     </View>
                   </View>                  
                   <View style={styles.action}>
@@ -302,28 +308,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
-    fontSize: 16,
+    fontFamily: 'Rubik-Regular', fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
   },
   whitetext: {
-    fontSize: 14,
+    fontFamily: 'Rubik-Bold', fontSize: 14,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'white',
   },
   normaltext: {
-    fontSize: 14,
+    fontFamily: 'Rubik-Bold', fontSize: 14,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: '#797D7F',
   },
   boldtext: {
-    fontSize: 18,
+    fontFamily: 'Rubik-Bold', fontSize: 18,
     lineHeight: 21,
-    fontWeight: 'bold',
     letterSpacing: 0.25,
     color: 'black',
   },

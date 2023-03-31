@@ -23,6 +23,7 @@ import {
   forgetPassword,
   mailVerification,
   updatePassword,
+  resendCode
 } from '../../../shared/slices/Auth/AuthService';
 
 interface SegmentedAutoMovingInputProps {
@@ -143,7 +144,12 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
       if (res.success) navigation.navigate('Login');
     });
   };
-
+  const handleResend = async () => {
+    console.log(userId)
+    await resendCode({
+      user_id: userId,
+    })   
+  }
   useEffect(() => {
     const {user_id, isSignup} = route.params;
     console.log(user_id);
@@ -299,6 +305,9 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
                 <Text style={{textAlign: 'center'}}>
                   A mail was send to your address
                 </Text>
+                <Text style={{textAlign: 'center'}}>
+                  Enter Verification Code
+                </Text>
                 <SegmentedAutoMovingInput
                   segments={4}
                   containerStyle={{
@@ -320,9 +329,9 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
                   })}
                   onChange={val => setCode(Number(val))}
                 />
-                <Text style={{textAlign: 'center'}}>
-                  Enter Verification Code
-                </Text>
+                <Pressable onPress={handleResend} style={{width: '100%', alignItems: 'flex-end', marginTop: 10, marginBottom: 30}}>
+                  <Text style={{ color: "#33a1f9"}}>Resend verification code.</Text>
+                </Pressable>
               </View>
               <LinearGradient
                 colors={['#33A1F9', '#6DBDFE']}
@@ -363,6 +372,8 @@ const styles = StyleSheet.create({
   image: {
     alignItems: 'center',
     justifyContent: 'center',
+    width: '90%',
+    resizeMode: "contain"    
   },
   button: {
     marginTop: 40,
@@ -378,12 +389,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#33a1f9',
   },
   text: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 20,
     lineHeight: 21,
     letterSpacing: 0.25,
     color: 'white',
   },
   createAccount: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
@@ -395,6 +408,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   forgetPassword: {
+    fontFamily: 'Rubik-Regular',
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,

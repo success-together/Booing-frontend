@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {Dimensions, Image, StyleSheet, View, Text, TouchableOpacity} from 'react-native';
+import {Dimensions, Image, StyleSheet, View, Text, TouchableOpacity, BackHandler} from 'react-native';
 import {LayoutWrapper} from '../../../../exports';
 import ManageApps from '../../../../../utils/manageApps';
 import useGetUploadData from '../LayoutWrapper/getUploadedDataHook';
@@ -13,6 +13,7 @@ import RNFS from 'react-native-fs';
 import useSocket from '../../../../../shared/socket';
 import {store} from '../../../../../shared';
 import {setRootLoading} from '../../../../../shared/slices/rootSlice';
+import {successDownload} from '../../../../../shared/slices/Fragmentation/FragmentationService';
 import * as Progress from 'react-native-progress';
 let isFileFetching = false;
 const Audio = ({navigation}: any) => {
@@ -37,6 +38,20 @@ const Audio = ({navigation}: any) => {
   const [fetchProcess, setFetchProcess] = useState(0);
   const WIDTH = Dimensions.get('window').width;
   const progressSize = WIDTH*0.8;  
+  useEffect(() => {
+    const backAction = (e) => {
+      console.log('backAction')
+      navigation.navigate("Files");
+      return true
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);    
   useEffect(() => {
     if (isFocused) {
       useGetUploadData('audio')
@@ -128,6 +143,7 @@ const Audio = ({navigation}: any) => {
           if (changed) {
             setRemoveFilesAfterFinish(prev => [...new Set([...prev, path])]);
           }
+          successDownload(file.id);
           setIsShowingFile({
             show: true,
             uri: path,
@@ -159,19 +175,20 @@ const Audio = ({navigation}: any) => {
               alignItems: 'center',
             }}>
             <Progress.Bar progress={fetchProcess} width={progressSize} />
-            <Text style={{marginTop: 20}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
+            <Text style={{marginTop: 20,}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
             <TouchableOpacity
               style={{
                 width: 82,
                 height: 49,
-                backgroundColor: 'white',
-                borderRadius: 15,
+                backgroundColor: '#33a1f9',
+                color: '#FFFFFF',
+                borderRadius: 5,
                 justifyContent: 'center',
                 alignItems: 'center',
                 marginTop: 20
               }}
               onPress={handleAbort}>
-              <Text style={{color: '#49ACFA', fontWeight: '500'}}>Abort</Text>
+              <Text style={{color: '#FFFFFF', fontWeight: '500'}}>Abort</Text>
             </TouchableOpacity>              
           </View>
         ) : (      
