@@ -121,8 +121,7 @@ function CounterDown({navigation}: {navigation: any}) {
             color="#6DBDFE" 
             borderWidth={0} 
             unfilledColor="#ffffff"
-            textStyle={{fontFamily: 'Rubik-Bold',
-    fontSize: 18}}
+            textStyle={{fontFamily: 'Rubik-Bold', fontSize: 18}}
             formatText={(progress)=>{
               return date.day
             }}
@@ -138,8 +137,7 @@ function CounterDown({navigation}: {navigation: any}) {
             color="#6DBDFE" 
             borderWidth={0} 
             unfilledColor="#ffffff"
-            textStyle={{fontFamily: 'Rubik-Bold',
-    fontSize: 18}}
+            textStyle={{fontFamily: 'Rubik-Bold', fontSize: 18}}
             formatText={(progress)=>{
               return date.hour
             }}
@@ -155,8 +153,7 @@ function CounterDown({navigation}: {navigation: any}) {
             color="#6DBDFE" 
             borderWidth={0} 
             unfilledColor="#ffffff"
-            textStyle={{fontFamily: 'Rubik-Bold',
-    fontSize: 18}}
+            textStyle={{fontFamily: 'Rubik-Bold', fontSize: 18}}
             formatText={(progress)=>{
               return date.minute
             }}
@@ -172,8 +169,7 @@ function CounterDown({navigation}: {navigation: any}) {
             color="#6DBDFE" 
             borderWidth={0} 
             unfilledColor="#ffffff"
-            textStyle={{fontFamily: 'Rubik-Bold',
-    fontSize: 18}}
+            textStyle={{fontFamily: 'Rubik-Bold', fontSize: 18}}
             formatText={(progress)=>{
               return date.second
             }}

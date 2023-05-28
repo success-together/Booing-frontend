@@ -469,7 +469,7 @@ const InviteFriends = ({navigation}: {navigation: any}) => {
                 <Feather name="x-circle" color={'red'} size={20} />
                 <Text style={{color: 'white', fontFamily: 'Rubik-Regular',
     fontSize: 14}}>
-                  Same Users On Multiple Device Don't Aplly.
+                  Same Users On Multiple Device Don't apply.
                 </Text>
               </View>
             </View>

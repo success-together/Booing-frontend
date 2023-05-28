@@ -6,11 +6,6 @@ const Interceptor = axios.create({
 });
 
 Interceptor.interceptors.request.use((config: any) => {
-  // if (localStorage.getItem("supernova_token")) {
-  //   config.headers.common = {
-  //     Authorization: `Bearer ${localStorage.getItem("token")}`,
-  //   };
-  // }
   config.headers.common = {
     ...config.headers.common,
     'Content-Type': 'application/json',

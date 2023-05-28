@@ -56,7 +56,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       console.log(error.code, error.message)
       Toast.show({
         type: 'error',
-        text1: 'there was an error with logging with google',
+        text1: 'There was an error connecting with your Google account!',
       });
     }
   }, [navigation]);
@@ -72,7 +72,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
 
         return Toast.show({
           type: 'error',
-          text1: 'there was an error with logging with twitter',
+          text1: 'There was an error connecting with your Twitter account!',
           text2: data,
         });
       }
@@ -91,7 +91,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       } catch (e: any) {
         return Toast.show({
           type: 'error',
-          text1: 'there was an error with logging with twitter',
+          text1: 'There was an error connecting with your Twitter account!',
           text2: e.message,
         });
       } finally {
@@ -146,7 +146,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
       console.log(e);
       Toast.show({
         type: 'error',
-        text1: 'there was an error with logging with facebook',
+        text1: 'There was an error connecting with your Facebook account!',
         text2: e.message,
       });
     }
@@ -173,7 +173,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
     <View style={styles.container}>
       <Dialog isVisible={loginWithTwitterDialog.show}>
         <Dialog.Title
-          title="please enter your email to continue logging with twitter"
+          title="Please enter your email to continue logging with twitter"
           titleStyle={{color: 'black'}}
         />
         <TextInput
@@ -187,6 +187,7 @@ const SocialMediaAuth = ({navigation}: {navigation: any}) => {
             borderRadius: 8,
             marginBottom: '5.18%',
             marginTop: 4,
+            color: "black"
           }}
           placeholderTextColor="#716D6D"
         />

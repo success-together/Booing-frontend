@@ -164,7 +164,7 @@ const Audio = ({navigation}: any) => {
   );
 
   return (
-    <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
+    <LayoutWrapper navigation={navigation} onBackPress={() => navigation.navigate('Uploads')}>
       {
         isFetching ? (
           <View
@@ -175,7 +175,7 @@ const Audio = ({navigation}: any) => {
               alignItems: 'center',
             }}>
             <Progress.Bar progress={fetchProcess} width={progressSize} />
-            <Text style={{marginTop: 20,}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
+            <Text style={{marginTop: 20,color: '#000000'}}>fetching file ... {fetchProcess?(fetchProcess*100).toFixed(2):0}%</Text>
             <TouchableOpacity
               style={{
                 width: 82,

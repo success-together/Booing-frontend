@@ -13,6 +13,7 @@ import {Logo} from '../../../images/export';
 import {login} from '../../../shared/slices/Auth/AuthService';
 import {Toast} from 'react-native-toast-message/lib/src/Toast';
 import SocialMediaAuth from '../../../Components/SocialMediaAuth/SocialMediaAuth';
+import PasswordInput from '../../../Components/PasswordInput/PasswordInput';
 import LinearGradient from 'react-native-linear-gradient';
 
 const Login = ({navigation}: {navigation: any}) => {
@@ -20,6 +21,7 @@ const Login = ({navigation}: {navigation: any}) => {
   const [password, setPassword] = useState<string>('');
 
   const submit = async () => {
+    console.log(password)
     if (email && password)
       await login({email, password}).then(res => {
         if (res.success) navigation.navigate('DashboardContainer');
@@ -60,7 +62,7 @@ const Login = ({navigation}: {navigation: any}) => {
           autoComplete={'email'}
           onChangeText={e => setEmail(e)}
           style={{
-            color: '#B6B0B0',
+            color: 'black',
             backgroundColor: '#F8F8F8',
             borderRadius: 8,
             paddingLeft: 15,
@@ -87,21 +89,12 @@ const Login = ({navigation}: {navigation: any}) => {
             Forget password?
           </Text>
         </View>
-        <TextInput
-          placeholder="Password"
-          autoComplete={'password'}
-          secureTextEntry={true}
-          onChangeText={e => setPassword(e)}
-          style={{
-            color: '#B6B0B0',
-            backgroundColor: '#F8F8F8',
-            borderRadius: 8,
-            paddingLeft: 15,
-            marginBottom: '5.18%',
-            marginTop: 4,
-          }}
-          placeholderTextColor="#716D6D"
+        <PasswordInput 
+          setPassword={setPassword} 
+          password={password} 
         />
+
+
         <LinearGradient
           colors={['#33A1F9', '#6DBDFE']}
           style={{borderRadius: 8}}>
@@ -151,7 +144,7 @@ const styles = StyleSheet.create({
   image: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: '90%',
+    // width: '90%',
     resizeMode: "contain"
   },
   button: {

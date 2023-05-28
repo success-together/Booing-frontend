@@ -6,7 +6,8 @@ import { updateProfile } from "../../../../shared/slices/Auth/AuthService";
 import AntDesign from "react-native-vector-icons/AntDesign";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import AccountHeader from "../AccountHeader/AcountHeader";
-import DatePicker from 'react-native-date-picker'
+import DatePicker from 'react-native-date-picker';
+import Toast from 'react-native-toast-message';
 
 const UpdateProfile = ({ navigation }: any) => {
   const [loggedInUser, setLoggedUser] = useState<
@@ -107,7 +108,8 @@ const UpdateProfile = ({ navigation }: any) => {
             placeholder="Email"
             autoComplete={'email'}
             defaultValue={loggedInUser?.email}
-            disabled={true}
+            editable={false} 
+            selectTextOnFocus={false} 
             style={{
               fontFamily: 'Rubik-Regular',
               color: '#402B51',
@@ -141,7 +143,7 @@ const UpdateProfile = ({ navigation }: any) => {
             placeholder="Enter Phone Number"
             autoCompleteType={"phone"}
             defaultValue={formUpdateUser?.phone}
-            onChangeText={(e) => onUpdateForm(e, "phone")}
+            onChangeText={(e) => onUpdateForm(e.replace(/[^0-9]/g, ''), "phone")}
             keyboardType="numeric"
             style={{
               fontFamily: 'Rubik-Regular',
@@ -204,9 +206,17 @@ const UpdateProfile = ({ navigation }: any) => {
           date={formUpdateUser.birth?new Date(formUpdateUser.birth):new Date()}
           maximumDate={new Date()}
           onConfirm={(date) => {
-            console.log(date)
-            setOnDatePicker(false)
-            onUpdateForm(date, "birth")
+            console.log(date.toISOString().slice(0,10), (new Date()).toISOString().slice(0,10))
+            if (date.toISOString().slice(0,10) === (new Date()).toISOString().slice(0,10)) {
+              Toast.show({
+                type: 'error',
+                text1: 'Sorry, you cannot select the current date'
+              })
+              setOnDatePicker(false)
+            } else {
+              setOnDatePicker(false)
+              onUpdateForm(date, "birth")
+            }
           }}
           onCancel={() => {
             setOnDatePicker(false)

@@ -52,7 +52,8 @@ export const updateProfile = (data: any) => {
     data,
     successFun(data) {
       console.log(data.data);
-      saveUserData(data.data.user);
+      // saveUserData(data);
+      setLoggedInUser({isLoggedInUser: true, user: data.data});
       // saveToken(data);
     },
   });
@@ -112,7 +113,7 @@ export const socialMediaSignIn = (data: {
     url: BaseUrl + '/socialMediaSignup',
     data,
     isSilent: false,
-    withoutToast: true,
+    withoutToast: false,
     successFun(data) {
       saveToken(data);
       store.dispatch(

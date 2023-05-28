@@ -19,6 +19,7 @@ import {
   TouchableHighlight,
   TouchableOpacity,
   Dimensions,
+  Pressable,
   View,
 } from 'react-native';
 import {small_logo} from '../../../../../images/export';
@@ -26,7 +27,7 @@ import {threeVerticleDots} from '../../../../../images/export';
 import LinearGradient from 'react-native-linear-gradient';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
+import {useIsFocused} from '@react-navigation/native';
 interface LayoutWrapperProps {
   onBackPress: () => void;
   children?: ReactNode;
@@ -34,8 +35,10 @@ interface LayoutWrapperProps {
     fn: Dispatch<SetStateAction<(() => void) | undefined>>,
   ) => void;
   title?: string;
+  navigation: any;
   onHeaderDotsPress?: () => void;
   headerMenuContent?: ReactNode;
+  search?: string;
 }
 
 interface RefWithPressHandler extends MutableRefObject<TouchableHighlight> {
@@ -48,12 +51,16 @@ export default function LayoutWrapper({
   onBackPress,
   onHeaderDotsPress,
   headerMenuContent,
+  navigation,
+  search,
   title = 'MY FILES',
 }: LayoutWrapperProps) {
   const rootRef = useRef() as RefWithPressHandler;
   const [pressHandler, setPressHandler] = useState<() => void>();
   const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
-
+  const [searchVal, setSearchVal] = useState('');
+  const isFocused = useIsFocused();
+  console.log("search", search)
   let clonedChildren = children;
   if (clonedChildren) {
     if (!['string', 'number', 'boolean'].includes(typeof clonedChildren)) {
@@ -67,14 +74,29 @@ export default function LayoutWrapper({
     }
   }
 
+  const handleSearch = () => {
+    navigation.navigate('Search', {
+      search: searchVal,
+      return: 'Files'
+    })    
+    console.log(navigation)
+    console.log('handleSearch LayoutWrapper')
+  }
+
   const WIDTH = Dimensions.get('window').width;
-  const size = WIDTH;
+  const width = WIDTH;
   useEffect(() => {
     if (setPressHandlerRoot) {
       setPressHandlerRoot(() => setPressHandler);
     }
   }, []);
-
+  useEffect(() => {
+    if (search) {
+      setSearchVal(search);
+    } else {
+      setSearchVal('')
+    }
+  }, [search])
   return (
     <TouchableHighlight
       style={styles.main}
@@ -108,7 +130,7 @@ export default function LayoutWrapper({
             style={{
               display: 'flex',              
               flexDirection: 'row',
-              justifyContent: 'space-between',
+              justifyContent: 'flex-start',
               alignItems: 'center',
             }}>
             <MaterialIcons
@@ -121,23 +143,41 @@ export default function LayoutWrapper({
               style={{
                 flexDirection: 'row',
                 marginLeft: 25,
-                width: size
+                width: width*0.7
               }}>
-              <Feather
-                name="search"
-                size={14}
-                style={{position: 'absolute', zIndex: 999, top: 15, left: 13}}
-              />
+              <Pressable
+                onPress={() => handleSearch()}
+                style={{
+                  height: 44,
+                  position: 'absolute', 
+                  zIndex: 999, 
+                  justifyContent: 'center',
+                  right: 0,
+                  paddingHorizontal: 15,
+                  backgroundColor: '#edf0f3',
+                  borderTopRightRadius: 8,
+                  borderBottomRightRadius: 8
+                }}
+              >
+                <Feather
+                  name="search"
+                  size={14}
+                />
+              </Pressable>
               <TextInput
                 style={{
-                  flexBasis: '70%',
                   height: 44,
                   backgroundColor: 'white',
-                  fontFamily: 'Rubik-Regular', fontSize: 12,
+                  fontFamily: 'Rubik-Regular', 
+                  fontSize: 12,
                   borderRadius: 8,
                   paddingLeft: 33,
                   color: 'black',
+                  width: '100%',
+                  paddingRight: 50,
                 }}
+                value={searchVal}
+                onChangeText={e => setSearchVal(e)}
                 placeholder="Search"
                 placeholderTextColor={'#9190A8'}
               />

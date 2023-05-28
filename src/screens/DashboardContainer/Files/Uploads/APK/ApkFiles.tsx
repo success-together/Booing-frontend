@@ -59,7 +59,7 @@ const ApkFiles = ({navigation}: any) => {
   );
 
   return (
-    <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
+    <LayoutWrapper navigation={navigation} onBackPress={() => navigation.navigate('Uploads')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

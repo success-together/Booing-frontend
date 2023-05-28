@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {
+  PermissionsAndroid,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +17,7 @@ import {AXIOS_ERROR, BaseUrl, MAX_SIZE, store, types} from '../../../../shared';
 import Toast from 'react-native-toast-message';
 import Folder, {FolderProps} from './Folder';
 import {FileProps} from './File';
+import ImagePlusIcon from '../../../../Components/ImagePlusIcon/ImagePlusIcon';
 import NoDataFound from '../../../../Components/NoDataFound/NoDataFound';
 import {setRootLoading} from '../../../../shared/slices/rootSlice';
 import {useIsFocused} from '@react-navigation/native';
@@ -555,9 +557,33 @@ const FolderPage = ({navigation, route}: any) => {
       navigation.navigate('Files');
     }
   }, [route, folderData, navigation]);
+  async function requestPermissions() {
+    try {
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+      ], {
+        title: 'Permission Required',
+        message: 'This app needs access to device storage to function properly.'
+      });
 
+      if (
+        granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED &&
+        granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED
+      ) {
+        console.log('All permissions granted');
+      return true;
+      } else {
+        console.log('Some permissions denied');
+        return false;
+      }
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  }
   const handleUpload = useCallback(async () => {
-    if (!(await ManageApps.checkAllFilesAccessPermission())) {
+    if (!(await requestPermissions())) {
       Toast.show({
         type: 'error',
         text1: 'cannot upload, you need to enable all files access permission',
@@ -665,7 +691,7 @@ const FolderPage = ({navigation, route}: any) => {
 
       Toast.show({
         type: 'error',
-        text1: 'something went wrong cannot uplaod files',
+        text1: 'something went wrong cannot upload files',
       });
     }
 
@@ -828,7 +854,7 @@ const FolderPage = ({navigation, route}: any) => {
   }, [isFocused]);
 
   return (
-    <LayoutWrapper
+    <LayoutWrapper navigation={navigation}
       title={folderData.name}
       onBackPress={goBack}
       headerMenuContent={
@@ -898,6 +924,11 @@ const FolderPage = ({navigation, route}: any) => {
                       marginBottom: 42,
                       minHeight: 24,
                     }}>
+                     
+                    <Pressable style={styles.button} onPress={() => setIsAddingFolders(true)}>
+                      <ImagePlusIcon style={{marginRight: 10}} />
+                      <Text style={styles.buttonText}>Folder</Text>
+                    </Pressable>                                 
                     {selectedIds.length > 0 && (
                       <>
                         <AntDesign
@@ -1012,6 +1043,20 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     paddingTop: 18,
   },
+  button: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    marginRight: 10,
+    borderRadius: 15,
+    backgroundColor: 'white',
+    flexDirection: 'row',
+  },
+  buttonText: {
+    color: '#9F9EB3',
+    fontFamily: 'Rubik-Regular', fontSize: 16,
+    fontWeight: '500',
+  },  
 });
 
 export default FolderPage;

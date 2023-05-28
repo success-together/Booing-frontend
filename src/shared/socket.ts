@@ -157,10 +157,9 @@ export default function useSocket() {
       peer.setRemoteDescription(new RTCSessionDescription(res.offer)).then(function() {
         peer.createAnswer().then(function (answer) { 
           peer.setLocalDescription(answer); 
-          // console.log("answer->send answer")
           socket.emit('answer', {from: user_id, to: res.from, answer: answer})
         }, function (error) { 
-          alert("Error when creating an answer"); 
+          console.log('Error when creating an answer')
         })
       })      
     })
@@ -183,12 +182,12 @@ export default function useSocket() {
       const name = `${fragmentID}-${uid}-${res.user_id}.json`;
       const isExist = await ManageApps.isFileExist(name);
       if (!isExist) {
-        if (user_id !== res.user_id) {
-          Toast.show({
-            type: 'success',
-            text1: 'received fragment! '+ name
-          });
-        }
+        // if (user_id !== res.user_id) {
+        //   Toast.show({
+        //     type: 'success',
+        //     text1: 'received fragment! '+ name
+        //   });
+        // }
         await ManageApps.saveFile(name, res.fragment);
       }
     })

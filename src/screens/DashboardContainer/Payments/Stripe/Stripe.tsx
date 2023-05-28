@@ -11,7 +11,6 @@ import {
   ScrollView,
   BackHandler
 } from "react-native";
-import { StripeProvider } from "@stripe/stripe-react-native";
 import { initStripe, useStripe } from "@stripe/stripe-react-native";
 import {getStripeSheet} from '../../../../shared/slices/wallet/walletService';
 import Toast from 'react-native-toast-message';
@@ -229,9 +228,7 @@ const AppContent = ({product, navigation}) => {
 
 export default function StripPay({route, navigation}) {
   return (
-    <StripeProvider>
       <AppContent product={route.params} navigation={navigation} />
-    </StripeProvider>
   );
 }
 

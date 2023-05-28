@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Pressable, ScrollView, StyleSheet, View, Dimensions, TextInput } from 'react-native'
 import { Text } from 'react-native-elements'
 import { SellSpaceHeader } from './SellSpaceHeader/SellSpaceHeader'
@@ -20,15 +20,35 @@ const SellSpace = () => {
   const WIDTH = Dimensions.get('window').width;
   const progressSize = WIDTH*0.5;
 
-  const handleQuantity = (plus) => {
-    if (quantity*1 + plus != 0) setQuantity(quantity*1 + plus)
-      console.log(quantity)
-  }
-  const handleQuantityInput = (val) => {
-    let cval = val.replace(/[^0-9]/g, '')*1;
-    if (cval > 1) setQuantity(cval)
-    else setQuantity(1);
-  }
+  const handleQuantity = useCallback((plus) => {
+    const available = Math.trunc((freeSpace.freeStorage/1000000000-freeSpace.occupyCloud)*10)/10;
+    const valid = quantity*1 + plus;
+    if (valid != -1) {
+      if (valid > available) showOverFlowMessage();
+      else setQuantity(valid);
+    }
+  }, [isFocused, quantity])
+  const handleQuantityInput = useCallback((val) => {
+    if (val === '') {
+      setQuantity('');
+      return ;
+    }
+    const valid = !isNaN(val) && !isNaN(parseFloat(val));
+    const available = Math.trunc((freeSpace.freeStorage/1000000000-freeSpace.occupyCloud)*10)/10;
+    if (valid) {
+      if (val > 0) {
+        if (val > available) showOverFlowMessage();
+        else setQuantity(val)
+      } else setQuantity(0);
+    }
+  }, [isFocused, quantity])
+  const showOverFlowMessage = useCallback(() => {
+    Toast.show({
+      type: 'error',
+      text1: `You can only sell a maximum of ${Math.trunc((freeSpace.freeStorage/1000000000-freeSpace.occupyCloud)*10)/10}GB of storage`,
+      text2: `Available storage is about ${Math.trunc(freeSpace.freeStorage/100000000)/10}GB and already solded ${freeSpace.occupyCloud}GB`
+    })
+  }, [isFocused]);
   const getTrafficData = async () => {
     await getTraffic({user_id}).then(res => {
       if (res.data) setTraffic(res.data/1000000000)
@@ -53,13 +73,15 @@ const SellSpace = () => {
   }
 
   const handleSellSpace = async () => {
-    const available = Math.trunc(freeSpace.freeStorage/1000000000-freeSpace.occupyCloud);
-    if (quantity > available) {
-      Toast.show({
+    if (quantity === '' || quantity === 0) {
+      return Toast.show({
         type: 'error',
-        text1: `You don't have available ${quantity}GB storage`,
-        text2: `Available storage is about ${Math.trunc(freeSpace.freeStorage/1000000000)}GB and already solded ${freeSpace.occupyCloud}GB`
-      })
+        text1: 'Please enter the amount of storage you would like to sell.'
+      });
+    }
+    const available = Math.trunc((freeSpace.freeStorage/1000000000-freeSpace.occupyCloud)*10)/10;
+    if (quantity > available) {
+      showOverFlowMessage();
     } else {
       await sellSpace({user_id, quantity}).then(res => {
         if (res.success) {
@@ -188,10 +210,10 @@ const SellSpace = () => {
                       <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14,  }}>+</Text>
                     </Pressable>
                   </View>
-                  <View style={{flexDirection: 'row'}}>
+                  <Pressable style={{flexDirection: 'row'}} onPress={() => setQuantity(1)}>
                     <MaterialIcons name="highlight-remove" size={15} color="#CDD0D1" />
                     <Text style={{ color: quantity>1?'#000000':'#CDD0D1', fontFamily: 'Rubik-Regular', fontSize: 12 }}> Remove </Text>
-                  </View>
+                  </Pressable>
                 </View>
                 <View>
                   <Text style={{ color: 'black', fontFamily: 'Rubik-Bold', fontSize: 14,  textAlign: 'right'}}>Total</Text>

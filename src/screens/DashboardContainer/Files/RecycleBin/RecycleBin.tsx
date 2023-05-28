@@ -1,6 +1,6 @@
 import axios from 'axios';
 import React, {useCallback, useEffect, useState} from 'react';
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {ScrollView, Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {AXIOS_ERROR, BaseUrl, store} from '../../../../shared';
 import LayoutWrapper from '../Uploads/LayoutWrapper/LayoutWrapper';
 import Toast from 'react-native-toast-message';
@@ -207,7 +207,7 @@ const RecycleBin = ({navigation}: any) => {
         store.dispatch(setRootLoading(false));
         return Toast.show({
           type: 'error',
-          text1: 'cannot create folder, you are not logged in !',
+          text1: 'cannot delete file, you are not logged in !',
         });
       }
       const response = await axios({
@@ -306,61 +306,64 @@ const RecycleBin = ({navigation}: any) => {
   }, [user_id, selectedIds]);
 
   return (
-    <LayoutWrapper
+    <LayoutWrapper navigation={navigation} currentStack="RecycleBin"
       onBackPress={() => navigation.navigate('Uploads')}>
         <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
-          <View
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: "center",
-              marginTop: 34,
-              marginBottom: 42,
-              minHeight: 24,
-            }}>
-            {selectedIds.length > 0 ? (
-              <>
-                <AntDesign
-                  name="close"
-                  size={20}
-                  color="#49ACFA"
-                  onPress={uncheckAll}
-                />
-                <Text style={{marginLeft: 17, color: 'black', fontFamily: 'Rubik-Regular', fontSize: 16}}>
-                  {selectedIds.length} Selected
-                </Text>
-              </>
-            ) : (
-              <View style={{
-                borderColor: '#FF0000',
-                borderWidth: 3,
-                borderStyle: 'solid',
-                width: "90%",
-                textAlign: 'center',
-                padding: 10,
-                marginTop: -20,
-                marginBottom: -20
+          <ScrollView 
+            style={styles.scrollView}
+          >
+            <View
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: "center",
+                marginTop: 34,
+                marginBottom: 42,
+                minHeight: 24,
               }}>
-                <Text style={{color: 'red', fontFamily: 'Rubik-Regular'}}>All files will be deleted permanantly after 24 hours.</Text>
-              </View>
+              {selectedIds.length > 0 ? (
+                <>
+                  <AntDesign
+                    name="close"
+                    size={20}
+                    color="#49ACFA"
+                    onPress={uncheckAll}
+                  />
+                  <Text style={{marginLeft: 17, color: 'black', fontFamily: 'Rubik-Regular', fontSize: 16}}>
+                    {selectedIds.length} Selected
+                  </Text>
+                </>
+              ) : (
+                <View style={{
+                  borderColor: '#FF0000',
+                  borderWidth: 3,
+                  borderStyle: 'solid',
+                  width: "90%",
+                  textAlign: 'center',
+                  padding: 10,
+                  marginTop: -20,
+                  marginBottom: -20
+                }}>
+                  <Text style={{color: 'red', fontFamily: 'Rubik-Regular'}}>All files will be deleted permanantly after 24 hours.</Text>
+                </View>
+              )}
+            </View>
+            {groupByCategory(data).map(
+              ({data: categoryData, name}: {data: any[]; name: string}) => (
+                <SelectableItems
+                  data={categoryData}
+                  handleSelect={handleSelect}
+                  selectedIds={selectedIds}
+                  text={name + 's'}
+                  setSelectedIds={setSelectedIds}
+                  key={name}
+                  setPressHandler={pressHandler}
+                  showFile={showFile}
+                />
+              ),
             )}
-          </View>
-          {groupByCategory(data).map(
-            ({data: categoryData, name}: {data: any[]; name: string}) => (
-              <SelectableItems
-                data={categoryData}
-                handleSelect={handleSelect}
-                selectedIds={selectedIds}
-                text={name + 's'}
-                setSelectedIds={setSelectedIds}
-                key={name}
-                setPressHandler={pressHandler}
-                showFile={showFile}
-              />
-            ),
-          )}
-
+          </ScrollView>
           <View style={styles.uploadContainer}>
             {selectedIds.length > 0 && (
               <>
@@ -401,6 +404,7 @@ const RecycleBin = ({navigation}: any) => {
               </>
             )}
           </View>
+          
         </View>
     </LayoutWrapper>
   );

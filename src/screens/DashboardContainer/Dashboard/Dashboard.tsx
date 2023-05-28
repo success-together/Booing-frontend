@@ -31,8 +31,10 @@ import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import EvilIcons from 'react-native-vector-icons/EvilIcons';
 
+import {setStorage} from '../../../shared/slices/Auth/AuthSlice';
 import ManageApps from '../../../utils/manageApps';
 import NoDataFound from '../../../Components/NoDataFound/NoDataFound';
+import RecentFiles from './RecentFiles/RecentFiles';
 import {useIsFocused} from '@react-navigation/native';
 import {userUsedStorage, checkAutoDeleteFile} from '../../../shared/slices/Fragmentation/FragmentationService';
 import {setFreeStorage, setOccupy} from '../../../shared/slices/Devices/DevicesSlice';
@@ -126,11 +128,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       available: 1,
       usedPerGiga: 0
   })
-  // const [usedStorage, setUsedStorage] = useState<number>(0);
-  // const [availabledStorage, setAvailableStorage] = useState<number>(1);
-  // const [usedStoragePerGiga, setUsedStoragePerGiga] = useState<number>(0);
-
-  const [position, setPosition] = useState<{lat: number; lon: number}>();
+  
   const [recentFiles, setRecentFiles] = useState<
     {name: string; id: string}[]
   >([]);
@@ -161,7 +159,8 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   });
   const isFocused = useIsFocused();
   const user_id = store.getState().authentication.userId;
-  const storage = store.getState().authentication.storage;
+  const storageStats = store.getState().authentication.storage;
+  const [storage, setStorage] = useState(storageStats)
   const [sdCardStats, setSdCardStats] = useState({
     present: false,
     fullSize: 0,
@@ -201,49 +200,16 @@ const Dashboard = ({navigation}: {navigation: any}) => {
   const requestLocationPermission = async () => {
     try {
       const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Geolocation Permission',
-          message: 'Can we access your location?',
-          // buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
-          buttonPositive: 'OK',
-        },
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
       );
-      // console.log('granted', granted);
       if (granted === 'granted') {
-        // console.log('You can use Geolocation');
         return true;
       } else {
-        // console.log('You cannot use Geolocation');
         return false;
       }
     } catch (err) {
       return false;
     }
-  };
-
-  const getLocation = () => {
-    const result = requestLocationPermission();
-    result.then(res => {
-      // console.log('res is:', res);
-      if (res) {
-        Geolocation.getCurrentPosition(
-          position => {
-            // console.log(position);
-            setPosition({
-              lat: position.coords.latitude,
-              lon: position.coords.longitude,
-            });
-          },
-          error => {
-            // See error code charts below.
-            // console.log(error.code, error.message);
-          },
-          {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-        );
-      }
-    });
   };
 
   const getUserData = () => {
@@ -257,15 +223,12 @@ const Dashboard = ({navigation}: {navigation: any}) => {
 
   useEffect(() => {
     try {
-      getLocation();
       getUserData();
     } catch (error) {
       console.log(error);
     }
 
     let totalStorage = 0;
-    // let isEmulator = DeviceInfo.isEmulator();
-    // if (!isEmulator) {
     DeviceInfo.getTotalDiskCapacity().then(capacity => {
       totalStorage = capacity;
       setTotalDiskStorage(Number((capacity / Math.pow(1024, 3)).toFixed(2)));
@@ -297,32 +260,14 @@ const Dashboard = ({navigation}: {navigation: any}) => {
     console.log(DeviceInfo.getDeviceId())
     DeviceInfo.getUniqueId().then(uniqueId => {
       deviceId = uniqueId;
-      // console.log(DeviceInfo.getDeviceId())
-      // console.log(DeviceInfo.getModel())
 
       DeviceInfo.getDeviceName().then(deviceName => {
         system = DeviceInfo.getSystemName();
-        console.log("deviceName: ", deviceName)
         const result = requestLocationPermission();
         result.then(res => {
-          // console.log('res is:', res);
           if (res) {
             Geolocation.getCurrentPosition(
               position => {
-                // console.log(position);
-                setPosition({
-                  lat: position.coords.latitude,
-                  lon: position.coords.longitude,
-                });
-
-                console.log({
-                  user_id: userData?._id,
-                  device_ref: deviceId,
-                  lat: position.coords.latitude,
-                  lon: position.coords.longitude,
-                  name: deviceName,
-                  type: system,
-                });
 
                 addNewDevice({
                   user_id: userData?._id,
@@ -339,6 +284,15 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               },
               {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
             );
+          } else {
+                addNewDevice({
+                  user_id: userData?._id,
+                  device_ref: deviceId,
+                  lat: 0,
+                  lon: 0,
+                  name: deviceName,
+                  type: system,
+                });
           }
         });
       });
@@ -407,19 +361,52 @@ const Dashboard = ({navigation}: {navigation: any}) => {
       await ManageApps.checkNotificationPermission();
     })();
   }, []);
-  useEffect(() => {
-    if (storage && totalDiskStorage) {
-      let media =  storage.media?(storage.media / Math.pow(1024, 3))/(totalDiskStorage):0;
-      media = Math.ceil(media*100)/100;
-      let cache =  storage.cache?(storage.cache / Math.pow(1024, 3))/(totalDiskStorage):0;
-      cache = Math.ceil(cache*100)/100;
-      const other =  100 - freeSpacePerCent - media - cache;
-      console.log('storage detail: ', media, cache, other);
-      setStorageDetail({media: media, cache: cache, other: other})
-    } else {
-      setStorageDetail({media: 0, cache: 0, other: freeSpacePerCent});
+  async function requestPermissions() {
+    try {
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+      ], {
+        title: 'Permission Required',
+        message: 'This app needs access to device storage to function properly.'
+      });
+
+      if (
+        granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED &&
+        granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED
+      ) {
+        console.log('All permissions granted');
+      return true;
+      } else {
+        console.log('Some permissions denied');
+        return false;
+      }
+    } catch (err) {
+      console.warn(err);
+      return false;
     }
-  }, [storage, totalDiskStorage]);
+  }
+
+  useEffect(() => {
+    (async() => {
+      if (freeSpacePerCent && isFocused) {
+        const permission = await requestPermissions();
+        if (permission) {
+          let media = await ManageApps.getTotalMediaSize();
+          let cache = await ManageApps.getTotalCacheSize();
+          console.log('get cache size', media, cache)
+          media =  media?(media / Math.pow(1024, 3))/(totalDiskStorage):0;
+          media = Math.ceil(media*100)/100;
+          cache =  cache?(cache / Math.pow(1024, 3))/(totalDiskStorage):0;
+          cache = Math.ceil(cache*100)/100;
+          const other =  100 - freeSpacePerCent - media - cache;
+          setStorageDetail({media: media, cache: cache, other: other})
+        } else {
+          setStorageDetail({media: 0, cache: 0, other: (100 - freeSpacePerCent)})
+        }
+      }
+    })();
+  }, [isFocused, freeSpacePerCent]);
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -556,41 +543,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
               Recent
             </Text>
           </View>
-          <View
-            style={{
-              width: '100%',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            {recentFiles.length !== 0 ? (
-              <View style={styles.recentFilesContainer}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    width: '100%',
-                    justifyContent: 'flex-start',
-                    flexWrap: 'wrap',
-                    paddingBottom: 20,
-                  }}>
-                  {recentFiles.map((file, ind) => {
-                    return <View key={ind} style={{
-                        alignItems: 'center',
-                        padding: 25,
-                        borderRadius: 25,
-                        width: '33%',
-                        height: 100,
-                      }}>
-                      {file.isDirectory?(<DirectoireView file={file} navigation={navigation} />):(<FileView file={file} navigation={navigation} />)}
-                      </View>
-                  })}
-                </View>
-              </View>
-            ) : (
-              <NoDataFound style={{marginBottom: 20}} />
-            )}            
-
-          </View>
+          <RecentFiles navigation={navigation} />
 
           <View>
             <Text style={styles.title}>
@@ -695,6 +648,7 @@ const Dashboard = ({navigation}: {navigation: any}) => {
           </View>          
         </View>
       </ScrollView>
+  
     </View>
   );
 };
@@ -717,7 +671,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     justifyContent: 'space-between',
-    width: 120,
+    // width: 120,
     height: 40,
     position: 'absolute',
     right: 9,

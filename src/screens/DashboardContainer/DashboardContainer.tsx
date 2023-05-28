@@ -1,7 +1,7 @@
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, useNavigation, createNavigationContainerRef } from '@react-navigation/native';
 import React, {useEffect} from 'react';
-import {Image, View} from 'react-native';
+import {Image, View, Linking, NativeEventEmitter, NativeModules} from 'react-native';
 import {
   Account,
   Apks,
@@ -35,21 +35,67 @@ import {
   checkForUploads,
 } from '../../shared/slices/Fragmentation/FragmentationService';
 import FolderPage from './Files/FolderPage/FolderPage';
+import SearchPage from './Files/SearchPage/SearchPage';
 import useSocket from '../../shared/socket';
 import {HomeIcon, FilesIcon, AccountIcon} from '../../Components/TabbarIcon';
+import PushNotification from 'react-native-push-notification';
+
 const Stack = createBottomTabNavigator();
 const DashboardContainer =  () => {
   const {initSocket, createOffer} = useSocket();
   const device = store.getState().devices;
   const user_id = store.getState().authentication.userId;
+
   useEffect(() => {
-    console.log("_!______________!______________!_!______________!______________!_")
     initSocket();
   }, [])
- 
+  const navigationRef = createNavigationContainerRef()
+
+  const navigate = (name, params) => {
+    if (navigationRef.isReady()) {
+      navigationRef.navigate(name, params);
+    }
+  }
+  useEffect(() => {
+    console.log('create notifications confgure.'); // Initialize the notification service
+    PushNotification.configure({
+      onRegister: function (token) {
+        console.log("TOKEN:", token);
+      },    
+      onNotification: function (notification) {
+        console.log(notification.data)
+        if (notification.data.navigate) {
+          navigate(notification.data.navigate, {notification: true});
+        }
+      },
+     onAction: function (notification) {
+        console.log("ACTION:", notification.action);
+        console.log("NOTIFICATION:", notification);
+      },
+
+      // (optional) Called when the user fails to register for remote notifications. Typically occurs when APNS is having issues, or the device is a simulator. (iOS)
+      onRegistrationError: function(err) {
+        console.error(err.message, err);
+      },
+
+    });
+    // Set up the notification channel (Android only)
+    PushNotification.createChannel(
+      {
+        channelId: 'booing-channel',
+        channelName: 'Booing Cloud Channel.',
+        channelDescription: 'This is Booing notification.',
+        playSound: true,
+        importance: 4,
+      },
+      (created) => console.log(`Channel ${created ? '' : 'not '}created`),
+    );    
+  }, [])  
+
+
   return (
     <>
-      <NavigationContainer independent={true}>
+      <NavigationContainer independent={true} ref={navigationRef}>
         <Stack.Navigator
           initialRouteName="Home"
           screenOptions={({route}) => ({
@@ -70,7 +116,7 @@ const DashboardContainer =  () => {
               // You can return any component that you like here!
               if (rn == 'Home') return <HomeIcon active={iconName = focused} />
               if (rn == 'Files') return <FilesIcon active={iconName = focused} />
-              if (rn == 'Booingcoin') return <Image style={{width: 35, height: 26}} source={eyeWhite}/> 
+              if (rn == 'Booingcoin') return <Image style={{width: 26}} source={eyeWhite}/> 
               if (rn == 'Account') return <AccountIcon active={iconName = focused} />
               
               return (
@@ -141,6 +187,14 @@ const DashboardContainer =  () => {
           <Stack.Screen
             name="Uploads"
             component={Uploads}
+            options={{
+              // headerShown: false,
+              tabBarItemStyle: {display: 'none'},
+            }}
+          />
+          <Stack.Screen
+            name="Search"
+            component={SearchPage}
             options={{
               // headerShown: false,
               tabBarItemStyle: {display: 'none'},

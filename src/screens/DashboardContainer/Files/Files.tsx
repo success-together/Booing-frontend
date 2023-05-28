@@ -400,7 +400,7 @@ const Files = ({navigation}: {navigation: any}) => {
   return (
     <View style={styles.container}>
       <View style={styles.containerImage}>
-        <FilesHeader onBackPress={() => navigation.navigate('Home')} />
+        <FilesHeader onBackPress={() => navigation.navigate('Home')} navigation={navigation} />
       </View>
       <View style={styles.body}>
         <View style={styles.recentFilesContainer}>

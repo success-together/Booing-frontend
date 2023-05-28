@@ -15,3 +15,5 @@ project(':react-native-fs').projectDir = new File(settingsDir, '../node_modules/
 
 // include ':react-native-paypal'
 // project(':react-native-paypal').projectDir = new File(settingsDir, '../node_modules/react-native-paypal/android')
+include ':react-native-push-notification'
+project(':react-native-push-notification').projectDir = new File(settingsDir, '../node_modules/react-native-push-notification/android')

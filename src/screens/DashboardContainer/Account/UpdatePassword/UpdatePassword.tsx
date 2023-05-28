@@ -1,11 +1,87 @@
-import React, {useEffect, useState} from 'react';
-import {Pressable, StyleSheet, Text, View, BackHandler} from 'react-native';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
+import {Pressable, StyleSheet, Text, View, BackHandler, ScrollView, TouchableOpacity, TextInput} from 'react-native';
 import {Input} from 'react-native-elements';
-import {updatePassword} from '../../../../shared/slices/Auth/AuthService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {store} from '../../../../shared';
 import AccountHeader from '../AccountHeader/AcountHeader';
 import Toast from 'react-native-toast-message';
+import LinearGradient from 'react-native-linear-gradient';
+import Entypo from 'react-native-vector-icons/Entypo';
+import {
+  mailVerification,
+  updatePassword,
+  resendCode
+} from '../../../../shared/slices/Auth/AuthService';
+import PasswordInput from '../../../../Components/PasswordInput/PasswordInput';
+
+interface SegmentedAutoMovingInputProps {
+  segments: number;
+  onChange?: (value: string) => void;
+  containerStyle?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle> | ((index: number) => StyleProp<TextStyle>);
+}
+export const SegmentedAutoMovingInput = ({
+  segments,
+  onChange,
+  containerStyle,
+  inputStyle,
+}: SegmentedAutoMovingInputProps) => {
+  const [segmentsString, setSegmentsString] = useState<string[]>([]);
+  const refs: MutableRefObject<TextInput>[] = Array.from(
+    {length: segments},
+    () => useRef() as MutableRefObject<TextInput>,
+  );
+
+  const changeSegment = useCallback(
+    (val: string, index: number) => {
+      if (!/^\d$/.test(val)) {
+        return Toast.show({
+          type: 'error',
+          text1: `${val} : must be of type number`,
+        });
+      }
+
+      setSegmentsString(prev => {
+        if (val !== '') {
+          refs[index + 1] && refs[index + 1].current.focus();
+        }
+
+        prev[index] = val;
+        return [...prev];
+      });
+    },
+    [segments, refs],
+  );
+
+  useEffect(() => {
+    if (onChange) {
+      onChange(segmentsString.join(''));
+    }
+  }, [segmentsString]);
+
+  return (
+    <View style={containerStyle}>
+      {Array.from({length: segments}, (_, index) => (
+        <TextInput
+          keyboardType="numeric"
+          maxLength={1}
+          key={index}
+          ref={refs[index]}
+          style={
+            typeof inputStyle === 'object'
+              ? inputStyle
+              : typeof inputStyle === 'function'
+              ? inputStyle(index)
+              : undefined
+          }
+          
+          onChangeText={val => changeSegment(val, index)}
+        />
+      ))}
+    </View>
+  );
+};
+
 
 const UpdatePassword = ({navigation}: {navigation: any}) => {
   const [updatePasswordForm, setUpdatePasswordForm] = useState<{
@@ -17,8 +93,12 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
     newPassword: '',
     confirmPassword: '',
   });
-  const [isValidPasswordForm, setIsValidPasswordForm] =
-    useState<boolean>(false);
+  const [strongCond, setStrongCond] = useState({length: false, digit: false, lower: false, upper: false, special: false, include: 0});  
+  const [isValidPasswordForm, setIsValidPasswordForm] = useState<boolean>(false);
+  const [seePassword, setSeePassword] = useState<boolean>(false);
+  const [code, setCode] = useState<number>(0);
+  const [verifyCode, setVerifyCode] = useState<boolean>(false);
+  const [seeConfirmPassword, setSeeConfirmPassword] = useState<boolean>(false);    
   const [loggedInUser, setLoggedUser] = useState<
     | {
         name: string;
@@ -48,9 +128,29 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
 
     return () => backHandler.remove();
   }, []);  
+
+  const handleResend = async () => {
+    console.log(loggedInUser?._id)
+    await resendCode({
+      user_id: loggedInUser?._id,
+    })   
+  }
+
+  const submitCode = async () => {
+    if (code > 999 && loggedInUser?._id) {
+      // setRootLoading(true);
+      await mailVerification({
+        user_id: loggedInUser?._id,
+        code: code,
+        isSignup: true,
+      }).then(res => {
+        setVerifyCode(false);
+        navigation.navigate('Account');
+      });
+    }
+  };
+
   const changePassword = async () => {
-    console.log(updatePasswordForm);
-    console.log(loggedInUser?._id);
 
     if (
       updatePasswordForm.confirmPassword !== '' &&
@@ -61,12 +161,17 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
       if (updatePasswordForm.confirmPassword !== updatePasswordForm.newPassword) {
         Toast.show({
           type: 'error',
-          text1: "new password doesn't match."
+          text1: "Confirm password doesn't match."
         })
-      } else if (updatePasswordForm.currentPassword.length < 6) {
+      } else if (!strongCond.length) {
         Toast.show({
           type: 'error',
-          text1: "password mininumn lenght is 6 letters"
+          text1: "New password length must be between 9 and 18 characters."
+        })
+      } else if ( strongCond.include < 2 ) {
+        Toast.show({
+          type: 'error',
+          text1: "Please check the new password condition."
         })
       } else {
         updatePassword({
@@ -80,7 +185,8 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
             currentPassword: '',
             newPassword: '',
           });
-          navigation.navigate('Account');
+          setVerifyCode(true);
+        
         }).catch((err: any) => {
           Toast.show({
             type:'error',
@@ -95,8 +201,22 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
       })
     }
   };
-
+  const handlePassword = (val) => {
+    const patterndigits = /\d/;
+    const patternlower = /[a-z]/;
+    const patternupper = /[A-Z]/;
+    const patternnonWords = /\W/;
+    let requireCond = {length: false, digit: false, lower: false, upper: false, special: false, include: 0};
+    if (val.length > 8 && val.length < 19) requireCond.length = true;
+    if (patterndigits.test(val)) {requireCond.digit = true; requireCond.include += 1};
+    if (patternlower.test(val)) {requireCond.lower = true; requireCond.include += 1};
+    if (patternupper.test(val)) {requireCond.upper = true; requireCond.include += 1};
+    if (patternnonWords.test(val)) {requireCond.special = true; requireCond.include += 1};
+    setUpdatePasswordForm({...updatePasswordForm, newPassword: val});
+    setStrongCond(requireCond);
+  }
   const onChnagePasswordForm = (value: string, type: string) => {
+    console.log(value, type)
     switch (type) {
       case 'newPassword':
         setUpdatePasswordForm({
@@ -117,13 +237,6 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
         });
         break;
     }
-    if (
-      updatePasswordForm.confirmPassword !== '' &&
-      updatePasswordForm.currentPassword !== '' &&
-      updatePasswordForm.newPassword !== ''
-    )
-      setIsValidPasswordForm(true);
-    else setIsValidPasswordForm(false);
   };
 
   const getUserData = () => {
@@ -137,7 +250,9 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
       console.log(error);
     }
   }, []);
-
+setCode
+handleResend
+submitCode
   return (
     <View style={styles.container}>
       <View style={styles.containerHeader}>
@@ -151,39 +266,126 @@ const UpdatePassword = ({navigation}: {navigation: any}) => {
           />
         </View> */}
       </View>
-      <View style={styles.Body}>
-        <Input
-          placeholder="Enter your current Password"
-          autoCompleteType={'password'}
-          secureTextEntry={true}
-          defaultValue=""
-          onChangeText={e => onChnagePasswordForm(e, 'currentPassword')}
-        />
-        <Input
-          placeholder="Enter new Password"
-          autoCompleteType={'password'}
-          secureTextEntry={true}
-          defaultValue=""
-          onChangeText={e => onChnagePasswordForm(e, 'newPassword')}
-        />
-        <Input
-          placeholder="Confirm Password"
-          autoCompleteType={'password'}
-          secureTextEntry={true}
-          defaultValue=""
-          onChangeText={e => onChnagePasswordForm(e, 'confirmPassword')}
-        />
-        <Pressable
-          style={styles.button}
-          onPress={changePassword}>
-          <Text style={styles.text}>Update Password</Text>
-        </Pressable>
-      </View>
+      {verifyCode ? (
+            <View
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                justifyContent: 'space-between',
+                backgroundColor: 'white',
+                width: '100%',
+                paddingLeft: '2.15%',
+                paddingRight: '2.15%',
+                paddingTop: '12.85%',
+                paddingBottom: '4.97%',
+                flex: 1,
+              }}>
+              <View
+                style={{width: '100%', display: 'flex', alignItems: 'stretch'}}>
+                <Text style={{textAlign: 'center'}}>
+                  A mail was send to your address
+                </Text>
+                <Text style={{textAlign: 'center'}}>
+                  Enter Verification Code
+                </Text>
+                <SegmentedAutoMovingInput
+                  segments={4}
+                  containerStyle={{
+                    display: 'flex',
+                    alignItems: 'stretch',
+                    flexDirection: 'row',
+                    justifyContent: 'space-evenly',
+                    width: '100%',
+                    marginTop: 16,
+                    marginBottom: 16,
+                  }}
+                  inputStyle={index => ({
+                    color: 'black',
+                    backgroundColor: '#F8F8F8',
+                    borderRadius: 8,
+                    flex: 1,
+                    marginRight: index !== 3 ? 20 : undefined,
+                    textAlign: 'center',
+                  })}
+                  onChange={val => setCode(Number(val))}
+                />
+                <Pressable onPress={handleResend} style={{width: '100%', alignItems: 'flex-end', marginTop: 10, marginBottom: 30}}>
+                  <Text style={{ color: "#33a1f9"}}>Resend verification code.</Text>
+                </Pressable>
+              </View>
+              <LinearGradient
+                colors={['#33A1F9', '#6DBDFE']}
+                style={{borderRadius: 8}}>
+                <Pressable
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    height: 60,
+                  }}
+                  onPress={submitCode}>
+                  <Text style={styles.text}>Verify</Text>
+                </Pressable>
+              </LinearGradient>
+            </View>
+      ) : (
+        <ScrollView style={styles.scrollView}>      
+          <View style={styles.Body}>
+            <View style={{flexDirection: 'row', justifyContent:'space-between'}}>
+              <Text style={styles.title}>Create your password </Text>
+            </View>
+            <PasswordInput 
+              placeholder="Enter your current password"
+              setPassword={onChnagePasswordForm} 
+              password={updatePasswordForm.currentPassword}
+              type="currentPassword"
+            />
+
+
+            <Text style={styles.title}>Create your password </Text>
+            <PasswordInput 
+              setPassword={handlePassword} 
+              password={updatePasswordForm.newPassword} 
+              placeholder="Enter new password"
+            />
+            <View style={{marginTop: 15, marginBottom: 25, marginLeft: 10}}>
+              <Text style={[styles.title]}>New password must:</Text>
+              <Text style={[styles.normaltext, updatePasswordForm.newPassword.length>0?(strongCond.length?styles.active:styles.error):{}]}>● Be between 9 and 18 characters</Text>
+              <Text style={[styles.normaltext, updatePasswordForm.newPassword.length>0?(strongCond.include>1?styles.active:styles.error):{}]}>● Include at least two of the following:</Text>
+              <Text style={[styles.normaltext, updatePasswordForm.newPassword.length>0?(strongCond.upper?styles.active:(strongCond.include<2?styles.error:{})):{}]}>     • An uppercase character</Text>
+              <Text style={[styles.normaltext, updatePasswordForm.newPassword.length>0?(strongCond.lower?styles.active:(strongCond.include<2?styles.error:{})):{}]}>     • A lowercase character</Text>
+              <Text style={[styles.normaltext, updatePasswordForm.newPassword.length>0?(strongCond.digit?styles.active:(strongCond.include<2?styles.error:{})):{}]}>     • A number</Text>
+              <Text style={[styles.normaltext, updatePasswordForm.newPassword.length>0?(strongCond.special?styles.active:(strongCond.include<2?styles.error:{})):{}]}>     • A special character</Text>
+            </View>        
+
+            <Text style={styles.title}>Confirm your password </Text>
+            <PasswordInput 
+              setPassword={onChnagePasswordForm} 
+              password={updatePasswordForm.confirmPassword} 
+              type="confirmPassword"
+              placeholder="Confirm your new password"
+              error={updatePasswordForm.newPassword!==updatePasswordForm.confirmPassword&&updatePasswordForm.confirmPassword}
+            />
+
+            <Pressable
+              style={styles.button}
+              onPress={changePassword}>
+              <Text style={styles.text}>Update Password</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    width: '100%'
+  },
   container: {
     flex: 1,
     backgroundColor: "#F2F6F7",   
@@ -198,8 +400,8 @@ const styles = StyleSheet.create({
   },
   Body: {
     flex: 1,
-    marginTop: 20,
-    padding: 20
+    padding: 20,
+    backgroundColor: 'white'
   },
   DashboardHeader: {
     padding: 40,
@@ -222,16 +424,23 @@ const styles = StyleSheet.create({
     height: 20,
   },
   title: {
-    fontFamily: 'Rubik-Bold',
+    fontFamily: 'Rubik-Regular',
     fontSize: 16,
     lineHeight: 21,
     letterSpacing: 0.25,
-    color: "black",
+    color: "#716D6D",
     marginTop: 5,
     // marginLeft: 70,
     // marginRight: 70,
 
   },
+  normaltext: {
+    fontFamily: 'Rubik-Regular',
+    fontSize: 17,
+    lineHeight: 21,
+    letterSpacing: 0.25,
+    color: '#797D7F',
+  },  
   text: {
     fontFamily: 'Rubik-Bold',
     fontSize: 18,
@@ -265,6 +474,12 @@ const styles = StyleSheet.create({
     elevation: 4,
     backgroundColor: "white",
   },
+  active: {
+    color: 'green',
+  },
+  error: {
+    color: 'red'
+  },  
 });
 
 export default UpdatePassword;

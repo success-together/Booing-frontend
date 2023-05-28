@@ -34,7 +34,7 @@ const DashboardHeader = ({navigation, amount}: {navigation: any, amount: number}
       </View>
       <View style={styles.coins}>
         <Text style={styles.title}>Booing Balance</Text>
-        <Text style={styles.amount}>{amount} Boo</Text>
+        <Text style={styles.amount}>{amount?amount:'0'} Boo</Text>
         {/* <Text style={styles.title}>12 | +E 56.03</Text> */}
       </View>
       <View style={styles.bottomBar}>

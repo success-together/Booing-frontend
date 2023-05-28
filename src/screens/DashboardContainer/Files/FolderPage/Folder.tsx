@@ -397,6 +397,53 @@ const contents = [
   },
 ];
 
+export const EditDialog = ({handleHide, id, reload}) => {
+  console.log(id)
+  const [index, setIndex] = useState(0);
+  const Component = contents[index].Content;
+  return (
+      <Dialog isVisible={true}>
+        <View
+          style={{
+            alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            backgroundColor: '#33A1F9',
+            borderRadius: 10,
+            marginBottom: 10,
+            padding: 5,
+          }}>
+          {contents.map((item, i) => (
+            <Pressable
+              key={i}
+              onPress={() => setIndex(i)}
+              style={{
+                padding: 5,
+                justifyContent: 'center',
+                alignItems: 'center',
+                flex: 1,
+              }}>
+              {item.icon}
+              <Text
+                style={{
+                  color: 'white',
+                  flexShrink: 1,
+                  textAlign: 'center',
+                  fontFamily: 'Rubik-Regular', fontSize: 10,
+                }}>
+                {item.title}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <View
+          style={{padding: 10, borderRadius: 10, backgroundColor: '#E7E0E0'}}>
+          {<Component handleHide={handleHide} id={id} reload={reload} />}
+        </View>
+      </Dialog>
+  )  
+}
+
 const Folder = ({
   showFolder,
   createdAt,
@@ -406,8 +453,7 @@ const Folder = ({
   reload,
 }: FolderProps & {showFolder: () => void; reload: () => void}) => {
   const [showEditOptions, setShowEditOptions] = useState(false);
-  const [index, setIndex] = useState(0);
-  const Component = contents[index].Content;
+
 
   const handleShow = useCallback(() => {
     setShowEditOptions(true);
@@ -459,45 +505,11 @@ const Folder = ({
         </Text>
       </View>
       {showEditOptions && (
-        <Dialog isVisible={true}>
-          <View
-            style={{
-              alignItems: 'center',
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              backgroundColor: '#33A1F9',
-              borderRadius: 10,
-              marginBottom: 10,
-              padding: 5,
-            }}>
-            {contents.map((item, i) => (
-              <Pressable
-                key={i}
-                onPress={() => setIndex(i)}
-                style={{
-                  padding: 5,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  flex: 1,
-                }}>
-                {item.icon}
-                <Text
-                  style={{
-                    color: 'white',
-                    flexShrink: 1,
-                    textAlign: 'center',
-                    fontFamily: 'Rubik-Regular', fontSize: 10,
-                  }}>
-                  {item.title}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          <View
-            style={{padding: 10, borderRadius: 10, backgroundColor: '#E7E0E0'}}>
-            {<Component handleHide={handleHide} id={id} reload={reload} />}
-          </View>
-        </Dialog>
+        <EditDialog
+          handleHide={handleHide}
+          id={id}
+          reload={reload}
+        />
       )}
     </TouchableOpacity>
   );

@@ -63,7 +63,6 @@ const SelectableItems = ({
     item: {name, id, progress, hasTriedToUpload, thumbnail, category},
     index,
   }: any) => {
-    console.log(category)
     return (
       <Item
         name={name}
@@ -86,6 +85,7 @@ const SelectableItems = ({
   }, [selectedIds]);
 
   const checkAll = useCallback(() => {
+    setIsSelecting(true);
     setSelectedIds((prev: string[]) => {
       return [
         ...new Set([
@@ -114,36 +114,45 @@ const SelectableItems = ({
   return (
     <TouchableWithoutFeedback ref={listWrapperRef}>
       <View style={{marginBottom: 10}}>
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 10,
+          }}>
+          <CheckBox
+            checked={checked}
+            handleCheck={handleCheck}
+            onCheck={checkAll}
+            onUncheck={uncheckAll}
+          />
+          <Text
+            style={{
+              marginLeft: 13,
+              fontFamily: 'Rubik-Bold', 
+              fontSize: 16,
+              color: 'black',
+            }}>
+            {text}
+          </Text>
+        </View>    
         <FlatList
           data={data}
           renderItem={renderItem}
-          numColumns={4}
           extraData={selectedIds}
-          ListHeaderComponent={
-            <View
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 10,
-              }}>
-              <CheckBox
-                checked={checked}
-                handleCheck={handleCheck}
-                onCheck={checkAll}
-                onUncheck={uncheckAll}
-              />
-              <Text
-                style={{
-                  marginLeft: 13,
-                  fontFamily: 'Rubik-Bold', 
-                  fontSize: 16,
-                  color: 'black',
-                }}>
-                {text}
-              </Text>
-            </View>
-          }
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          initialNumToRender={5}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={5}
+          // viewabilityConfigCallbackPairs={
+          //   viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
+          // }
+          viewabilityConfig={{
+           minimumViewTime: 200,
+          }}          
+
         />
       </View>
     </TouchableWithoutFeedback>

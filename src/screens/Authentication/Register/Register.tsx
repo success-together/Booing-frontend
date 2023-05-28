@@ -15,10 +15,12 @@ import {
 import {Logo} from '../../../images/export';
 import {register} from '../../../shared/slices/Auth/AuthService';
 import {SocialMediaAuth} from '../../../Components/exports';
+import {store} from '../../../shared';
 import {setRootLoading} from '../../../shared/slices/rootSlice';
 import LinearGradient from 'react-native-linear-gradient';
 import Toast from 'react-native-toast-message'
 import Entypo from 'react-native-vector-icons/Entypo';
+import PasswordInput from '../../../Components/PasswordInput/PasswordInput';
 
 function Register({navigation}: {navigation: any}) {
   const [formRegister, setFormRegister] = useState({
@@ -54,28 +56,56 @@ function Register({navigation}: {navigation: any}) {
     // else setMatchPassword(false);
     setFormRegister({...formRegister, cpassword: val});
   }
+  const showErrorMessage = (msg) => {
+    Toast.show({
+      type: 'error',
+      text1: msg.title,
+      text2: msg.text?msg.text:"",
+      visibilityTime: 5000
+    })
+    return false;
+  }
   const onSubmit = () => {
-    if (formRegister.password !== formRegister.cpassword) return 'check confirm password';
-    if (!strongCond.length) return 'check password length';
-    if ( strongCond.include < 2 ) return 'check at least cond'
-    setIsSubmit(true);
-    if (
-      !isSubmit &&
-      formRegister.email &&
-      formRegister.name &&
-      formRegister.password &&
-      formRegister.phone
-    ) {
-      register(formRegister).then(res => {
-        console.log(res)
-        setRootLoading(true);
-        navigation.navigate('Verification', {
-          user_id: res.data._id,
-          isSignup: true,
-        });
-      });
+    if (!terms) return showErrorMessage({title: "You must agree the Booing Privacy Policy to start."})
+    if (formRegister.email) {
+      const pattern = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+
+      const matchResult = formRegister.email.match(pattern);
+
+      if (!matchResult) {
+        console.log("Valid email address");
+        return showErrorMessage({title: "Invalid email address.", text: "Please double-check your email address."})
+      }    
     }
-    setIsSubmit(false);
+    console.log(formRegister.phone)
+    if (formRegister.phone) {
+      const pattern = /^[0-9]+$/; // matches a 10-digit number
+
+      const matchResult = formRegister.phone.match(pattern);
+
+      if (!matchResult) {
+        console.log("Invalid phone number");
+        return showErrorMessage({title: "Invalid phone number.", text: "Please enter a valid 10-digit phone number."})
+      }
+    }
+    let message = '';
+    if (!formRegister.email) message += "Email field is required. \n";
+    if (!formRegister.name) message += "Name field is required. \n";
+    if (strongCond.include < 2 ) message += 'Please set strong password. \n';
+    if (message !== '') return showErrorMessage({title: 'Please fill all required field.', text: message})
+    if (formRegister.password !== formRegister.cpassword) return showErrorMessage({title: 'Please check confirm password.'});
+
+    store.dispatch(setRootLoading(true));
+    register(formRegister).then(res => {
+      console.log(res)
+      store.dispatch(setRootLoading(false));
+      navigation.navigate('Verification', {
+        user_id: res.data._id,
+        isSignup: true,
+      });
+    }).catch(error => {
+      store.dispatch(setRootLoading(false));
+    });
   };
 
   return (
@@ -90,7 +120,6 @@ function Register({navigation}: {navigation: any}) {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
-          Alert.alert('Modal has been closed.');
           setModalVisible(!modalVisible);
         }}>
         <View style={styles.centeredView}>
@@ -342,7 +371,7 @@ function Register({navigation}: {navigation: any}) {
           paddingBottom: 30,
           flex: 1,
         }}>
-          <Text style={styles.title}>Username </Text>
+          <Text style={styles.title}>Username * </Text>
           <TextInput
             placeholder="Enter User Name"
             autoComplete={'name'}
@@ -356,7 +385,7 @@ function Register({navigation}: {navigation: any}) {
             }}
             placeholderTextColor="#716D6D"
           />
-          <Text style={styles.title}>Email </Text>
+          <Text style={styles.title}>Email * </Text>
           <TextInput
             placeholder="Enter Email Adress"
             autoComplete={'email'}
@@ -374,7 +403,9 @@ function Register({navigation}: {navigation: any}) {
           <TextInput
             placeholder="Enter Phone Number"
             autoComplete={'tel'}
-            onChangeText={e => setFormRegister({...formRegister, phone: e})}
+            keyboardType={'numeric'}
+            value={formRegister.phone}
+            onChangeText={e => setFormRegister({...formRegister, phone: e.replace(/[^0-9]/g, '')})}
             style={{
               color: 'black',
               backgroundColor: '#F8F8F8',
@@ -385,26 +416,10 @@ function Register({navigation}: {navigation: any}) {
             placeholderTextColor="#716D6D"
           />
           <View style={{flexDirection: 'row', justifyContent:'space-between'}}>
-            <Text style={styles.title}>Create your password </Text>
-            <TouchableOpacity style={{flexDirection: 'row', alignItems:'center'}} onPress={() => setSeePassword(!seePassword)}>
-              <Entypo name={seePassword?'eye-with-line':'eye'} size={25} color="grey" />
-              <Text style={[styles.normaltext, {marginLeft: 5}]}>{seePassword?'Hide':'Show'}</Text>
-            </TouchableOpacity>
+            <Text style={styles.title}>Create your password * </Text>
           </View>
-          <TextInput
-            placeholder="Enter Password"
-            autoComplete={'password'}
-            secureTextEntry={seePassword?false:true}
-            onChangeText={e => handlePassword(e)}
-            style={{
-              color: 'black',
-              backgroundColor: '#F8F8F8',
-              borderRadius: 8,
-              marginBottom: '3.24%',
-              marginTop: 4,
-            }}
-            placeholderTextColor="#716D6D"
-          />
+          <PasswordInput setPassword={handlePassword} password={formRegister.password} />
+
           <View style={{marginTop: 15, marginBottom: 25}}>
             <Text style={[styles.title]}>Password must:</Text>
             <Text style={[styles.normaltext, formRegister.password.length>0?(strongCond.length?styles.active:styles.error):{}]}>● Be between 9 and 18 characters</Text>
@@ -415,25 +430,11 @@ function Register({navigation}: {navigation: any}) {
             <Text style={[styles.normaltext, formRegister.password.length>0?(strongCond.special?styles.active:(strongCond.include<2?styles.error:{})):{}]}>     • A special character</Text>
           </View>
           <View style={{flexDirection: 'row', justifyContent:'space-between'}}>
-            <Text style={styles.title}>Confirm your password </Text>
-            <TouchableOpacity style={{flexDirection: 'row', alignItems:'center'}} onPress={() => setSeeConfirmPassword(!seeConfirmPassword)}>
-              <Entypo name={seeConfirmPassword?'eye-with-line':'eye'} size={25} color="grey" />
-              <Text style={[styles.normaltext, {marginLeft: 5}]}>{seeConfirmPassword?'Hide':'Show'}</Text>
-            </TouchableOpacity>
-          </View>          
-          <TextInput
-            placeholder="Confirm Password"
-            secureTextEntry={seeConfirmPassword?false:true}
-            onChangeText={e => handleConfirmPassword(e)}
-            style={{
-              color: 'black',
-              backgroundColor: formRegister.password===formRegister.cpassword||!formRegister.cpassword?'#F8F8F8':'#ffdddd',
-              borderRadius: 8,
-              marginBottom: '3.24%',
-              marginTop: 4,
-            }}
-            placeholderTextColor="#716D6D"
-          />
+            <Text style={styles.title}>Confirm your password * </Text>
+       
+          </View>
+          <PasswordInput setPassword={handleConfirmPassword} password={formRegister.cpassword} error={formRegister.password!==formRegister.cpassword&&formRegister.cpassword}/>
+        
           <View style={{flexDirection: 'row', alignItems: 'flex-start'}}>
 {/*            <CheckBox 
               value={terms}
@@ -446,8 +447,16 @@ function Register({navigation}: {navigation: any}) {
                 ios_backgroundColor="#33a1f9"
                 onValueChange={(value) => setTerms(value)}
                 value={terms}
-              />          
-            <Text style={[styles.normaltext, {marginLeft:10, lineHeight: 25, marginBottom: 10}]}>I agree to <Pressable onPress={() => setModalVisible(true)}><Text style={{color: '#33a1f9'}}>Booing Privacy Policy</Text></Pressable> and {'\n'} <Pressable onPress={() => setModalVisible(true)}><Text style={{color: '#33a1f9'}}>Terms of service</Text></Pressable></Text>
+              />  
+              <View style={{marginBottom: 10}}>
+                <View style={{flexDirection: 'row'}}>
+                  <Text style={[styles.normaltext, {marginLeft:10, lineHeight: 25, marginBottom: 10 }]}>I agree to </Text>
+  
+                  <Pressable onPress={() => setModalVisible(true)} style={{paddingTop: 1}}><Text style={{color: '#33a1f9', fontSize: 15}}>Booing Privacy Policy</Text></Pressable>   
+                  <Text style={[styles.normaltext, {marginLeft:10, lineHeight: 25, marginBottom: 10}]}>and</Text>
+                </View>             
+                <Pressable onPress={() => setModalVisible(true)}><Text style={{color: '#33a1f9', fontSize: 15}}>Terms of service</Text></Pressable>
+              </View>        
           </View>
         <LinearGradient
           colors={['#33A1F9', '#6DBDFE']}
@@ -460,9 +469,8 @@ function Register({navigation}: {navigation: any}) {
               alignItems: 'center',
               height: 60,
             }}
-            onPress={onSubmit}
-            disabled={!terms}>
-            <Text style={[styles.text, terms?{color: 'white'}:{color: '#ffdddd'}]}>Sign Up</Text>
+            onPress={onSubmit}>
+            <Text style={[styles.text, {color: '#fff'}]}>Sign Up</Text>
           </Pressable>
         </LinearGradient>
       </View>
@@ -483,7 +491,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   containerImage: {
-    backgroundColor: '#33a1f9',
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
@@ -492,7 +499,7 @@ const styles = StyleSheet.create({
   image: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: '90%',
+    // width: '90%',
     resizeMode: "contain"    
   },
   button: {
@@ -510,14 +517,12 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: 'Rubik-Regular',
-    fontFamily: 'Rubik-Regular',
     fontSize: 20,
     lineHeight: 21,
     letterSpacing: 0.25,
     color: 'white',
   },
   title: {
-    fontFamily: 'Rubik-Regular',
     fontFamily: 'Rubik-Regular',
     fontSize: 17,
     lineHeight: 21,
@@ -528,7 +533,6 @@ const styles = StyleSheet.create({
     // marginRight: 70,
   },
   normaltext: {
-    fontFamily: 'Rubik-Regular',
     fontFamily: 'Rubik-Regular',
     fontSize: 17,
     lineHeight: 21,

@@ -23,7 +23,7 @@ const ShowFileWrapper = ({
   uri,
   image
 }: ShowFileWrapperProps) => {
-
+  // console.log(title, displayComponent, setIsShowingFile, uri.length, image)
   const sharing = async () => {
     const shareOptions = {
       message: ' ',
@@ -69,7 +69,7 @@ const ShowFileWrapper = ({
       }
       Toast.show({
         type: 'success',
-        text1: 'successfuly file donwloaded to BooingApp directory.',
+        text1: 'The file was successfully downloaded to the BooingApp directory.',
       });
     } catch  {
         Toast.show({

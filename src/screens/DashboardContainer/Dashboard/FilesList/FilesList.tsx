@@ -40,7 +40,7 @@ const icons = {
   Manually: (size: number, color = '#8F8F8F') => (
     <AntDesign name="picture" size={size} color={color} />
   ),
-  Duplicate: (size: number, color = '#8F8F8F') => (
+  'Duplicated Files': (size: number, color = '#8F8F8F') => (
     <AntDesign name="picture" size={size} color={color} />
   ),
   Downloads: (size: number, color = '#8F8F8F') => (
@@ -89,7 +89,7 @@ interface FilesListProps {
   type?: string;
   setTriggerRerender?: Function;
   refetchByLabel: Function;
-  isCategoryView?: Function;
+  setCategoryView?: Function;
   categoryView: string;
 }
 
@@ -124,17 +124,17 @@ const DeleteBtn = ({onPress, disabled}: DeleteBtnProps) => {
   );
 };
 
-export default function FilesList({
+export function FilesList({
   data,
   label,
   type,
   size,
   refetchByLabel,
   removeDeletedItems,
-  isCategoryView,
+  setCategoryView,
   categoryView
 }: FilesListProps) {
-  console.log(label)
+  console.log(type)
   const [selectedFilesIds, setSelectedFilesIds] = useState<string[]>([]);
   const [deleteBtnProps, setDeleteBtnProps] = useState({
     disabled: false,
@@ -143,32 +143,7 @@ export default function FilesList({
   const WIDTH = Dimensions.get('window').width;
   const minHeight = Dimensions.get('window').height/3;
   const FlatWidth = WIDTH/4;
-  // const [items, setItems] = useState([]);
-  // const [iterator, setIterator] = useState<Iterator<[]>>();
-  // const [viewedItems, setViewedItems] = useState<
-  //   {id: string; isLoaded: boolean}[]
-  // >([]);
-  // const [loadedItemsIds, setLoadedItemsIds] = useState<string[]>([]);
-
-  // const onViewableItemsChanged = ({
-  //   viewableItems,
-  // }: {
-  //   viewableItems: ViewToken[];
-  // }) => {
-  //   setViewedItems(prev => {
-  //     const newViewedItems = [];
-  //     for (const viewToken of viewableItems) {
-  //       const isExist = prev.findIndex(e => e.id === viewToken.item.id) !== -1;
-  //       if (!isExist) {
-  //         newViewedItems.push({id: viewToken.item.id, isLoaded: false});
-  //       }
-  //     }
-
-  //     return newViewedItems.length > 0 ? [...prev, ...newViewedItems] : prev;
-  //   });
-  // };
-  // const viewabilityConfigCallbackPairs = useRef([{onViewableItemsChanged}]);
-
+  
   const onPress = useCallback(
     (id: string) => {
       setSelectedFilesIds(prev => {
@@ -180,7 +155,6 @@ export default function FilesList({
   );
 
   const onDeleteFilesPress = useCallback(async () => {
-    // setItems([]);
     if (label === 'Manually') {
       let pathArr = {};
       selectedFilesIds.map((id) => {
@@ -214,13 +188,13 @@ export default function FilesList({
 
       let isDeleted;
 
-      if (label === 'Pictures') {
+      if (type === 'images') {
         isDeleted = await ManageApps.deleteImages(paths);
       }
-      if (label === 'Videos') {
+      if (type === 'videos') {
         isDeleted = await ManageApps.deleteVideos(paths);
       }
-      if (label === 'Music') {
+      if (type === 'audios') {
         isDeleted = await ManageApps.deleteAudios(paths);
       }
       if (label === 'Empty folders' || label === 'Thumbnails') {
@@ -243,7 +217,7 @@ export default function FilesList({
         label !== 'Thumbnails' &&
         label !== 'Not installed apks'
       ) {
-        await refetchByLabel(label);
+        await refetchByLabel(selectedFilesIds, type);
       }
 
       setSelectedFilesIds([]);
@@ -310,20 +284,6 @@ export default function FilesList({
     [selectedFilesIds, onPress, data],
   );
 
-  // useEffect(() => {
-  //   setViewedItems(prev => {
-  //     let changed = false;
-  //     for (const item of prev) {
-  //       if (loadedItemsIds.includes(item.id) && !item.isLoaded) {
-  //         item.isLoaded = true;
-  //         changed = true;
-  //       }
-  //     }
-
-  //     return changed ? [...prev] : prev;
-  //   });
-  // }, [viewedItems, loadedItemsIds]);
-
   useEffect(() => {
     if (selectedFilesIds.length !== 0 && !deleteBtnProps.show) {
       setDeleteBtnProps({show: true, disabled: false});
@@ -339,143 +299,94 @@ export default function FilesList({
     };
   }, [selectedFilesIds]);
 
-  // const nextSet = useCallback(
-  //   (initial?: Iterator<[]>) => {
-  //     console.log(items.length, data.length);
-  //     if (items.length === data.length) {
-  //       return;
-  //     }
-
-  //     if (viewedItems.filter(item => !item.isLoaded).length !== 0) {
-  //       return Toast.show({
-  //         type: 'info',
-  //         text1: label,
-  //         text2: 'please wait until full content is loaded',
-  //       });
-  //     }
-
-  //     if (initial) {
-  //       const next = initial.next();
-  //       if (next && !next.done) {
-  //         setTimeout(() => {
-  //           setItems(next.value);
-  //         }, 100);
-  //       } else {
-  //         setItems([]);
-  //       }
-  //       return;
-  //     }
-
-  //     const next = iterator!.next();
-  //     if (next && !next.done) {
-  //       setTimeout(() => {
-  //         setItems(next.value);
-  //       }, 100);
-  //     } else {
-  //       setItems([]);
-  //     }
-  //   },
-  //   [items, data, iterator],
-  // );
-
-  // useEffect(() => {
-  //   setItems([]);
-  //   const iterator = (function* () {
-  //     const dataCopy: typeof data = [];
-  //     let prevPos = 0;
-
-  //     while (dataCopy.length !== data.length) {
-  //       dataCopy.push(...data.slice(prevPos, prevPos + 5));
-  //       prevPos += 5;
-  //       yield dataCopy;
-  //     }
-  //   })();
-
-  //   setIterator(iterator);
-  //   nextSet(iterator);
-  // }, [data]);
   const ShowCategory = () => {
     if (data.length > 0)
-      isCategoryView(type?type+label:label)
+      setCategoryView(type)
   }
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTitle}>
-          {icons[label](20)}
-          <View>
-            <Text
-              style={{
-                marginLeft: 10,
-                color: '#A0A0A0',
-                fontFamily: 'Rubik-Regular', fontSize: 16,
-                marginRight: 10,
-              }}>
-              {type} {label}
-            </Text>
-          </View>
-          {/* {viewedItems.filter(item => !item.isLoaded).length !== 0 && (
-            <Circle size={16} indeterminate={true} />
-          )} */}
-        </View>
-        <Pressable
-          onPress={() => ShowCategory()}
-          style={{
-            height: 30,
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          {/*<Text style={{marginRight: 10}}>{bytes(size)}</Text>*/}
-          <Text style={{marginRight: 10, color: '#6DBDFE'}}>{data.length === 0?'Add':'Open'}</Text>
-          {deleteBtnProps.show && (
-            <DeleteBtn
-              onPress={
-                label !== 'Cache' ? onDeleteFilesPress : onDeleteAppsPress
-              }
-              disabled={deleteBtnProps.disabled}
-            />
-          )}
-        </Pressable>
-      </View>
-      <SafeAreaView style={{paddingTop: 10, paddingBottom: 10}}>
-        {data.length === 0 ? (
-          <NoDataFound />
-        ) : (
-          categoryView===(type?type:''+label)?(
-            <FlatList
-              key={"duple"}
-              data={data}
-              scrollEnabled={false}
-              renderItem={renderFile}
-              keyExtractor={item => item.id}
-              horizontal={false}
-              numColumns={5}
-            />
-          ):(
-            <FlatList
-              data={data}
-              renderItem={renderFile}
-              scrollEnabled={false}
-              keyExtractor={item => item.id}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              initialNumToRender={5}
-              removeClippedSubviews={true}
-              maxToRenderPerBatch={5}
-              // viewabilityConfigCallbackPairs={
-              //   viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
-              // }
-              viewabilityConfig={{
-                minimumViewTime: 200,
-              }}
-            />
-          )
 
-        )}
-      </SafeAreaView>
-    </View>
+  return (
+    <>
+      {data.length > 0 && (
+        (categoryView === 'All' || categoryView === type) && (
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <View style={styles.headerTitle}>
+                {icons[label](20)}
+                <View>
+                  <Text
+                    style={{
+                      marginLeft: 10,
+                      color: '#A0A0A0',
+                      fontFamily: 'Rubik-Regular', fontSize: 16,
+                      marginRight: 10,
+                    }}>
+                    {label}
+                  </Text>
+                </View>
+                {/* {viewedItems.filter(item => !item.isLoaded).length !== 0 && (
+                  <Circle size={16} indeterminate={true} />
+                )} */}
+              </View>
+              <Pressable
+                onPress={() => ShowCategory()}
+                style={{
+                  height: 30,
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                {categoryView === 'All' ? (
+                  <Text style={{marginRight: 10, color: '#6DBDFE'}}>{data.length === 0?'Add':'Open'}</Text>
+                ) : (
+                  <Text style={{marginRight: 10}}>{bytes(size)}</Text>
+                )}
+                {deleteBtnProps.show && (
+                  <DeleteBtn
+                    onPress={
+                      label !== 'Cache' ? onDeleteFilesPress : onDeleteAppsPress
+                    }
+                    disabled={deleteBtnProps.disabled}
+                  />
+                )}
+              </Pressable>
+            </View>
+            <SafeAreaView style={{paddingTop: 10, paddingBottom: 10}}>
+
+               { categoryView===type?(
+                 <FlatList
+                   key={"duple"}
+                   data={data}
+                   scrollEnabled={false}
+                   columnWrapperStyle={{justifyContent: data.length>3?'space-between':'flex-start', marginTop: 5 }}
+                   renderItem={renderFile}
+                   keyExtractor={item => item.id}
+                   horizontal={false}
+                   numColumns={4}
+                 />
+               ):(
+                 <FlatList
+                   data={data}
+                   renderItem={renderFile}
+                   keyExtractor={item => item.id}
+                   horizontal
+                   showsHorizontalScrollIndicator={false}
+                   initialNumToRender={5}
+                   removeClippedSubviews={true}
+                   maxToRenderPerBatch={5}
+                   // viewabilityConfigCallbackPairs={
+                   //   viewabilityConfigCallbackPairs.current as unknown as ViewabilityConfigCallbackPair[]
+                   // }
+                   viewabilityConfig={{
+                     minimumViewTime: 200,
+                   }}
+                 />
+               )}
+            </SafeAreaView>
+          </View>
+        )
+      )}
+    </>
   );
 }
 

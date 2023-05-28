@@ -41,24 +41,26 @@ export const getCategoryInfo = async (data: {user_id: string}) => {
         document: {count: 0},
         other: {count: 0},
       }
-
+      console.log(res.data)
       for (let i = 0; i < res.data.length; i++) {
         if (res.data[i]['_id'] === 'image') category['image'] = {updated: res.data[i]['updated'], count: res.data[i]['count']}
         else if (res.data[i]['_id'] === 'document') category['document'] = {updated: res.data[i]['updated'], count: res.data[i]['count']}
         else if (res.data[i]['_id'] === 'video') category['video'] = {updated: res.data[i]['updated'], count: res.data[i]['count']}
         else if (res.data[i]['_id'] === 'audio') category['audio'] = {updated: res.data[i]['updated'], count: res.data[i]['count']}
+        else if (res.data[i]['id'] === 'others') category['other'] = {updated: res.data[i]['updated'], count: res.data[i]['count']}
         else {
-          if (category['other']['count']) {
-            category['other'] = {
-              updated: Math.max(category['other']['updated'], res.data[i]['updated']), 
-              count: res.data[i]['count'] + (category['other']['count']*1)
-            }
-          } else {
-            category['other'] = {
-              updated: res.data[i]['updated'], 
-              count: res.data[i]['count']
-            }
-          }
+          console.log(res.data[i])
+          // if (category['other']['count']) {
+          //   category['other'] = {
+          //     updated: Math.max(category['other']['updated'], res.data[i]['updated']), 
+          //     count: res.data[i]['count'] + (category['other']['count']*1)
+          //   }
+          // } else {
+          //   category['other'] = {
+          //     updated: res.data[i]['updated'], 
+          //     count: res.data[i]['count']
+          //   }
+          // }
         }
       }
       store.dispatch(setCategoryInfo(category));

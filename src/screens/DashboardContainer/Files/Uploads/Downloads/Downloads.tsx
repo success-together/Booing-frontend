@@ -61,7 +61,7 @@ const Downloads = ({navigation}: any) => {
   );
 
   return (
-    <LayoutWrapper onBackPress={() => navigation.navigate('Uplaods')}>
+    <LayoutWrapper navigation={navigation} onBackPress={() => navigation.navigate('Uplaods')}>
       {isShowingFile.show ? (
         <ShowFileWrapper
           title={isShowingFile.title}

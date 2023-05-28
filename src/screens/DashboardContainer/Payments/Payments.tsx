@@ -221,9 +221,7 @@ const AppContent = ({product, navigation}) => {
 
 export default function StripPay({route, navigation}) {
   return (
-    <StripeProvider>
       <AppContent product={route.params} navigation={navigation} />
-    </StripeProvider>
   );
 }
 

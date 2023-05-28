@@ -128,7 +128,7 @@ const SelectableUploadWrapper = ({
     if (!user_id) {
       return Toast.show({
         type: 'error',
-        text1: 'cannot upload you are not logged in !',
+        text1: 'You cannot upload the file because you are not logged in.',
       });
     }
     setIsUploadButtonDisabled(true);
@@ -182,8 +182,8 @@ const SelectableUploadWrapper = ({
             setIsUploadButtonDisabled(false);
             return Toast.show({
               type: 'info',
-              text1: 'cannot upload file(s)',
-              text2: `file (${fileDesc.name}) has exceeded the max size (16mb)`,
+              text1: 'You can not upload file(s)',
+              text2: `File (${fileDesc.name}) has exceeded the max size (16mb)`,
             });
           }
 
@@ -249,7 +249,7 @@ const SelectableUploadWrapper = ({
 
       Toast.show({
         type: 'error',
-        text1: 'something went wrong cannot uplaod files',
+        text1: "Something went wrong and the file couldn't be uploaded.",
       });
     } finally {
       setIsUploadButtonDisabled(false);
@@ -293,12 +293,6 @@ const SelectableUploadWrapper = ({
     }
     store.dispatch(setRootLoading(false));
   }, [data, selectedIds]);
-
-  console.log({
-    groups: groupByDateUploaded(data).forEach(group =>
-      console.log({label: group.label, items: group.items.length}),
-    ),
-  });
 
   return (
     <View style={{paddingLeft: 10, paddingRight: 10, flex: 1}}>
@@ -369,7 +363,7 @@ const SelectableUploadWrapper = ({
           groupByDateUploaded(data).map((group, index) => {
             return (
               <SelectableItems
-                key={index}
+                key={group.label+index}
                 data={group.items}
                 handleSelect={handleSelect}
                 selectedIds={selectedIds}

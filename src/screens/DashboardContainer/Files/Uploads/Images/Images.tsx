@@ -52,6 +52,7 @@ const Images = ({navigation}: {navigation: any}) => {
     if (isFocused) {
       useGetUploadData('image')
         .then(fetchedData => {
+          console.log(fetchedData)
           setData(fetchedData as any[]);
           if (fetchedData.length === 0) {
             return Toast.show({
@@ -137,7 +138,7 @@ const Images = ({navigation}: {navigation: any}) => {
     }
 
   return (
-    <LayoutWrapper onBackPress={() => navigation.navigate('Uploads')}>
+    <LayoutWrapper navigation={navigation} onBackPress={() => navigation.navigate('Uploads')}>
       {
         isFetching ? (
           <View

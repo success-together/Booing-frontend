@@ -22,6 +22,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
+import android.Manifest;
 
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.Promise;
@@ -109,10 +110,11 @@ import java.util.concurrent.Executors;
 public class ManageApps extends ReactContextBaseJavaModule {
 
     static Promise promise;
+    private static Promise sPromise;
     private FirebaseAuth firebaseAuth;
     ExecutorService executorService = Executors.newFixedThreadPool(1);
     Handler mainThreadHandler = HandlerCompat.createAsync(Looper.getMainLooper());
-    static int MAX_ITEMS = 25;
+    static int MAX_ITEMS = 9999;
     private static boolean canSendNotifications = false;
     public static boolean getCanSendNotification() {
         return canSendNotifications;
@@ -129,8 +131,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
     public String getName() {
         return "ManageApps";
     }
-
-
     public String getThumbnailBase64(Uri uri, int mediaType)  {
         int size = 80;
         ContentResolver cr = getReactApplicationContext().getContentResolver();
@@ -183,6 +183,33 @@ public class ManageApps extends ReactContextBaseJavaModule {
         String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
         return "data:image/jpeg;base64," + encoded;
     }
+
+
+    boolean isApkFileInstalled(String apkFilePath) {
+        if(apkFilePath == null) {
+            return false;
+        }
+        PackageManager packageManager = getReactApplicationContext().getPackageManager();
+        PackageInfo info = packageManager.getPackageArchiveInfo(apkFilePath,
+                PackageManager.GET_ACTIVITIES);
+        if(info == null) {
+            return false;
+        }
+
+        ApplicationInfo appInfo = info.applicationInfo;
+        String packageName = appInfo.packageName;
+
+        try {
+            PackageInfo packageInfo =packageManager.getPackageInfo(packageName,PackageManager.GET_META_DATA);
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+        return true;
+
+
+    }
+
+
     // get media files and downloads
     interface ScanStorage {
         void onComplete(WritableArray result);
@@ -192,12 +219,32 @@ public class ManageApps extends ReactContextBaseJavaModule {
         void onComplete(WritableMap result);
     }
 
+    @ReactMethod
+    public void getThumbnailBase64FromPath(String path, Boolean isImage, Promise promise) {
+        int size = 80;
+        Bitmap bitmap = null;
+        if(isImage == true) {
+            bitmap = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(path), size, size);
+        } else {
+            bitmap = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
+        }
+
+        if (bitmap != null) {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+            byte[] byteArray = byteArrayOutputStream.toByteArray();
+            String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+            promise.resolve("data:image/jpeg;base64," + encoded);
+            return ;
+        }
+        promise.resolve(null);
+    }
 
     @ReactMethod
     public void getImages(Promise promise)  {
                 Uri uri;
                 Cursor cursor;
-                int i = 0, total = 0, column_index_data, column_index_title, column_index_size, column_index_id;
+                int i = 0, total = 0, column_index_data, column_index_title, column_index_size, column_index_id, column_index_date_taken, column_index_date_modified;
                 WritableArray listOfAllImages = new WritableNativeArray();
                 uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
@@ -205,53 +252,50 @@ public class ManageApps extends ReactContextBaseJavaModule {
                         MediaStore.MediaColumns.DATA,
                         MediaStore.Images.Media.TITLE,
                         MediaStore.Images.Media.SIZE,
-                        MediaStore.Images.Media._ID
+                        MediaStore.Images.Media._ID,
+                        MediaStore.Images.ImageColumns.DATE_ADDED,
+                        MediaStore.Images.ImageColumns.DATE_MODIFIED                        
                 };
+                String sortOrder = MediaStore.Images.ImageColumns.DATE_ADDED + " DESC";
 
-                cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
-                        null, null);
+                cursor = getCurrentActivity().getContentResolver().query(uri, projection, null, null, sortOrder);
 
                 if(cursor != null) {
                     total = cursor.getCount();
                 }
-
 
                 if(total == 0) {
                     promise.resolve(listOfAllImages);
                     return;
                 }
 
-
                 column_index_data = cursor.getColumnIndex(MediaStore.MediaColumns.DATA);
                 column_index_title = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
                 column_index_size = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE);
                 column_index_id = cursor.getColumnIndex(MediaStore.MediaColumns._ID);
+                column_index_date_taken = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATE_ADDED);
+                column_index_date_modified = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATE_MODIFIED);
 
                 while (cursor.moveToNext()) {
                     i++;
-                    if(i == MAX_ITEMS) {
-                        break;
-                    }
                     WritableMap map = new WritableNativeMap();
                     map.putString("path", cursor.getString(column_index_data));
                     map.putString("name", cursor.getString(column_index_title));
                     map.putInt("size", cursor.getInt(column_index_size));
+                    map.putDouble("created", cursor.getLong(column_index_date_taken));
+                    map.putDouble("modified", cursor.getLong(column_index_date_modified));
+
                     Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                             cursor.getInt(column_index_id));
-                    String base64Thumbnail = getThumbnailBase64(imageUri, MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE);
-                    map.putString("thumbnail", base64Thumbnail);
+                    if (i < MAX_ITEMS) {
+                        String base64Thumbnail = getThumbnailBase64(imageUri, MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE);
+                        map.putString("thumbnail", base64Thumbnail);
+                    }
+                    map.putString("uri", imageUri.toString());
 
                     listOfAllImages.pushMap(map);
                 }
 
-                if(total > MAX_ITEMS) {
-                    WritableMap map = new WritableNativeMap();
-                    map.putString("path", null);
-                    map.putString("name", "+ " + String.valueOf(total - MAX_ITEMS) + " others");
-                    map.putInt("size", 0);
-
-                    listOfAllImages.pushMap(map);
-                }
                 cursor.close();
 
                 promise.resolve(listOfAllImages);
@@ -262,18 +306,22 @@ public class ManageApps extends ReactContextBaseJavaModule {
     public void getVideos(Promise promise) {
                 Uri uri;
                 Cursor cursor;
-                int i = 0, total = 0, column_index_data, column_index_title, column_index_size, column_index_id;
+                int i = 0, total = 0, column_index_data, column_index_title, column_index_size, column_index_id, column_index_date_taken, column_index_date_modified;
                 WritableArray listOfAllVideos = new WritableNativeArray();
                 uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
 
-                String[] projection = { MediaStore.Video.Media.DATA
-                        ,MediaStore.Video.Media.TITLE
-                        ,MediaStore.Video.Media.SIZE
-                        ,MediaStore.Video.Media._ID
+                String[] projection = {
+                     MediaStore.Video.Media.DATA
+                    ,MediaStore.Video.Media.TITLE
+                    ,MediaStore.Video.Media.SIZE
+                    ,MediaStore.Video.Media._ID
+                    ,MediaStore.Video.VideoColumns.DATE_ADDED
+                    ,MediaStore.Video.VideoColumns.DATE_MODIFIED
                 };
+                String sortOrder = MediaStore.Video.VideoColumns.DATE_ADDED + " DESC";
 
                 cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
-                        null, null);
+                        null, sortOrder);
 
                 if(cursor != null) {
                     total = cursor.getCount();
@@ -289,30 +337,26 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 column_index_title = cursor.getColumnIndex(MediaStore.Video.Media.TITLE);
                 column_index_size = cursor.getColumnIndex(MediaStore.Video.Media.SIZE);
                 column_index_id = cursor.getColumnIndex(MediaStore.Video.Media._ID);
+                column_index_date_taken = cursor.getColumnIndex(MediaStore.Video.VideoColumns.DATE_ADDED);
+                column_index_date_modified = cursor.getColumnIndex(MediaStore.Video.VideoColumns.DATE_MODIFIED);
 
                 while (cursor.moveToNext()) {
                     i++;
-                    if(i == MAX_ITEMS) {
-                        break;
-                    }
+
                     WritableMap map = new WritableNativeMap();
                     map.putString("path", cursor.getString(column_index_data));
                     map.putString("name", cursor.getString(column_index_title));
                     map.putInt("size", cursor.getInt(column_index_size));
+                    map.putDouble("created", cursor.getLong(column_index_date_taken));
+                    map.putDouble("modified", cursor.getLong(column_index_date_modified));
+
                     Uri videoUri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                             cursor.getInt(column_index_id));
                     map.putString("uri", videoUri.toString());
-                    String base64Thumbnail = getThumbnailBase64(videoUri, MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO);
-                    map.putString("thumbnail", base64Thumbnail);
-
-                    listOfAllVideos.pushMap(map);
-                }
-
-                if(total > MAX_ITEMS) {
-                    WritableMap map = new WritableNativeMap();
-                    map.putString("path", null);
-                    map.putString("name", "+ " + String.valueOf(total - MAX_ITEMS) + " others");
-                    map.putInt("size", 0);
+                    if (i < MAX_ITEMS) {
+                        String base64Thumbnail = getThumbnailBase64(videoUri, MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO);
+                        map.putString("thumbnail", base64Thumbnail);
+                    }
 
                     listOfAllVideos.pushMap(map);
                 }
@@ -325,18 +369,21 @@ public class ManageApps extends ReactContextBaseJavaModule {
     public void getAudios(Promise promise) {
                 Uri uri;
                 Cursor cursor;
-                int i = 0, total = 0,column_index_data, column_index_title, column_index_size, column_index_albumId;
+                int i = 0, total = 0,column_index_data, column_index_title, column_index_size, column_index_albumId, column_index_date_taken, column_index_date_modified;
                 WritableArray listOfAudios = new WritableNativeArray();
                 uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
 
-                String[] projection = { MediaStore.Audio.Media.DATA
-                        ,MediaStore.Audio.Media.TITLE
-                        ,MediaStore.Audio.Media.SIZE
-                        ,MediaStore.Audio.Media.ALBUM_ID
+                String[] projection = { 
+                    MediaStore.Audio.Media.DATA
+                    ,MediaStore.Audio.Media.TITLE
+                    ,MediaStore.Audio.Media.SIZE
+                    ,MediaStore.Audio.Media.ALBUM_ID
+                    ,MediaStore.Audio.AudioColumns.DATE_ADDED
+                    ,MediaStore.Audio.AudioColumns.DATE_MODIFIED
                 };
+                String sortOrder = MediaStore.Audio.AudioColumns.DATE_ADDED + " DESC";
 
-                cursor = getCurrentActivity().getContentResolver().query(uri, projection, null,
-                        null, null);
+                cursor = getCurrentActivity().getContentResolver().query(uri, projection, null, null, sortOrder);
 
                 if(cursor != null) {
                     total = cursor.getCount();
@@ -351,32 +398,238 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 column_index_data = cursor.getColumnIndex(MediaStore.Audio.Media.DATA);
                 column_index_title = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
                 column_index_size = cursor.getColumnIndex(MediaStore.Audio.Media.SIZE);
+                column_index_date_taken = cursor.getColumnIndex(MediaStore.Audio.AudioColumns.DATE_ADDED);
+                column_index_date_modified = cursor.getColumnIndex(MediaStore.Audio.AudioColumns.DATE_MODIFIED);
 
                 while (cursor.moveToNext()) {
                     i++;
-                    if(i == MAX_ITEMS) {
-                        break;
-                    }
                     WritableMap map = new WritableNativeMap();
                     String path = cursor.getString(column_index_data);
                     map.putString("path", path);
                     map.putString("name", cursor.getString(column_index_title));
                     map.putInt("size", cursor.getInt(column_index_size));
-                    map.putString("thumbnail",  getAudioThumbnailBase64(path));
-                    listOfAudios.pushMap(map);
-                }
+                    map.putDouble("created", cursor.getLong(column_index_date_taken));
+                    map.putDouble("modified", cursor.getLong(column_index_date_modified));
 
-                if(total > MAX_ITEMS) {
-                    WritableMap map = new WritableNativeMap();
-                    map.putString("path", null);
-                    map.putString("name", "+ " + String.valueOf(total - MAX_ITEMS) + " others");
-                    map.putInt("size", 0);
-
+                    // map.putString("thumbnail",  getAudioThumbnailBase64(path));
                     listOfAudios.pushMap(map);
                 }
 
                 cursor.close();
                 promise.resolve(listOfAudios);
+    }
+
+    @ReactMethod
+    public void getMediaThumbnails(ReadableArray uris, Boolean isImage, Promise promise) {
+        WritableArray thumbnailsMap = new WritableNativeArray();
+
+        for (int i = 0; i < uris.size(); i++) {
+            Uri uri = Uri.parse(uris.getString(i));
+            WritableMap map = new WritableNativeMap();
+            String base64Thumbnail;
+            if (isImage) {
+                base64Thumbnail = getThumbnailBase64(uri, MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE);
+            } else {
+                base64Thumbnail = getThumbnailBase64(uri, MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO);
+            }
+            map.putString("uri", uris.getString(i));
+            map.putString("thumbnail", base64Thumbnail);
+            map.putBoolean("isImage", isImage);
+            thumbnailsMap.pushMap(map);
+        }
+
+        promise.resolve(thumbnailsMap);
+    }
+
+    @ReactMethod
+    public void getTotalMediaSize(Promise promise) {
+        long totalSize = 0;
+        Cursor cursor;
+        String[] projection = {MediaStore.Files.FileColumns.SIZE};
+        String selection = MediaStore.Files.FileColumns.MEDIA_TYPE + "=? OR " + MediaStore.Files.FileColumns.MEDIA_TYPE + "=? OR " + MediaStore.Files.FileColumns.MEDIA_TYPE + "=?";
+        String[] selectionArgs = new String[]{String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE), String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO), String.valueOf(MediaStore.Files.FileColumns.MEDIA_TYPE_AUDIO)};
+
+        cursor = getCurrentActivity().getContentResolver().query(MediaStore.Files.getContentUri("external"), projection, selection, selectionArgs, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                totalSize += cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE));
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        promise.resolve((double) totalSize);
+    }
+
+    public long getPackageCacheSize(String packageName) throws PackageManager.NameNotFoundException {
+        Context packageContext = getReactApplicationContext().createPackageContext(packageName, 0);
+        List<File> directories = new ArrayList<>();
+        
+        // if(packageName == getReactApplicationContext().getPackageName()) {
+        //     directories.add(packageContext.getCacheDir());
+        // }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Collections.addAll(directories, packageContext.getExternalCacheDirs());
+        } else {
+            directories.add(packageContext.getExternalCacheDir());
+        }
+
+        long cacheSize = 0;
+
+        for(File f :directories) {
+            if(f != null && f.exists()) {
+                cacheSize += dirSize(f);
+            }
+        }
+        return cacheSize;
+    }
+
+    @ReactMethod
+    public void getTotalCacheSize(Promise promise) {
+        long totalCacheSize = 0;
+
+        PackageManager pm = getCurrentActivity().getPackageManager();
+        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+
+        for (ApplicationInfo packageInfo : packages) {
+            try {
+                long cacheSize = getPackageCacheSize(packageInfo.packageName);
+                totalCacheSize += cacheSize;
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        promise.resolve((double) totalCacheSize);
+    }
+
+    @ReactMethod
+    public void getAllApks(Promise promise) {
+        Uri queryUri;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            queryUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
+        } else {
+            queryUri = Uri.parse("content://media/external/file");
+        }        
+        String[] projection = {
+                MediaStore.Files.FileColumns._ID,
+                MediaStore.Files.FileColumns.DISPLAY_NAME,
+                MediaStore.Files.FileColumns.DATA,
+                MediaStore.Files.FileColumns.DATE_ADDED,
+                MediaStore.Files.FileColumns.DATE_MODIFIED,
+                MediaStore.Files.FileColumns.SIZE
+        };
+        String selection = MediaStore.Files.FileColumns.MIME_TYPE + "=?";
+        String[] selectionArgs = new String[]{"application/vnd.android.package-archive"};
+        String sortOrder = MediaStore.Files.FileColumns.DATE_ADDED + " DESC";
+
+        Cursor cursor = getCurrentActivity().getContentResolver().query(queryUri, projection, selection, selectionArgs, sortOrder);
+
+        WritableArray listOfApks = new WritableNativeArray();
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                WritableMap apkInfo = new WritableNativeMap();
+                apkInfo.putString("name", cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)));
+                String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA));
+                apkInfo.putString("path", path);
+                apkInfo.putInt("size", cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)));
+                apkInfo.putString("uri", ContentUris.withAppendedId(queryUri, cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID))).toString());
+                apkInfo.putDouble("created", cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED)));
+                apkInfo.putDouble("modified", cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)));
+                apkInfo.putBoolean("isInstalled", isApkFileInstalled(path));
+                // getPackageCacheSize()
+                listOfApks.pushMap(apkInfo);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+
+        promise.resolve(listOfApks);
+    }
+
+    @ReactMethod
+    public void getAllFiles(Promise promise) {
+        Uri queryUri;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            queryUri = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
+        } else {
+            queryUri = Uri.parse("content://media/external/file");
+        }
+        String[] projection = {
+                MediaStore.Files.FileColumns._ID,
+                MediaStore.Files.FileColumns.DISPLAY_NAME,
+                MediaStore.Files.FileColumns.DATA,
+                MediaStore.Files.FileColumns.DATE_ADDED,
+                MediaStore.Files.FileColumns.DATE_MODIFIED,
+                MediaStore.Files.FileColumns.SIZE
+        };
+
+        Cursor cursor = getCurrentActivity().getContentResolver().query(queryUri, projection, null, null, null);
+
+        WritableArray listOfFiles = new WritableNativeArray();
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                WritableMap fileInfo = new WritableNativeMap();
+                fileInfo.putString("name", cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)));
+                fileInfo.putString("path", cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATA)));
+                fileInfo.putInt("size", cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.SIZE)));
+                fileInfo.putString("uri", ContentUris.withAppendedId(queryUri, cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID))).toString());
+                fileInfo.putDouble("created", cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED)));
+                fileInfo.putDouble("modified", cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_MODIFIED)));
+                listOfFiles.pushMap(fileInfo);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+
+        promise.resolve(listOfFiles);
+    }
+
+    @ReactMethod
+    public void getThumbnails(Promise promise) {
+        WritableMap thumbnailsInfo = new WritableNativeMap();
+
+        File imageDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES + "/.thumbnails");
+        if (imageDirectory.exists()) {
+            String imagePath = imageDirectory.getAbsolutePath();
+            long imageSize = dirSize(imageDirectory);
+            WritableMap imageMap = new WritableNativeMap();
+            imageMap.putString("path", imagePath);
+            imageMap.putDouble("size", imageSize);
+            thumbnailsInfo.putMap("Image", imageMap);
+        }
+
+        File dcimDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM + "/.thumbnails");
+        if (dcimDirectory.exists()) {
+            String dcimPath = dcimDirectory.getAbsolutePath();
+            long dcimSize = dirSize(dcimDirectory);
+            WritableMap dcimMap = new WritableNativeMap();
+            dcimMap.putString("path", dcimPath);
+            dcimMap.putDouble("size", dcimSize); 
+            thumbnailsInfo.putMap("DCIM", dcimMap);
+        }
+
+        File audioDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC + "/.thumbnails");
+        if (audioDirectory.exists()) {
+            String audioPath = audioDirectory.getAbsolutePath();
+            long audioSize = dirSize(audioDirectory);
+            WritableMap audioMap = new WritableNativeMap();
+            audioMap.putString("path", audioPath);
+            audioMap.putDouble("size", audioSize); 
+            thumbnailsInfo.putMap("Audio", audioMap);
+        }
+
+        File videoDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES + "/.thumbnails");
+        if (videoDirectory.exists()) {
+            String videoPath = videoDirectory.getAbsolutePath();
+            long videoSize = dirSize(videoDirectory);
+            WritableMap videoMap = new WritableNativeMap();
+            videoMap.putString("path", videoPath);
+            videoMap.putDouble("size", videoSize); 
+            thumbnailsInfo.putMap("Video", videoMap);
+        }
+
+        promise.resolve(thumbnailsInfo);
     }
 
     @ReactMethod
@@ -784,48 +1037,78 @@ public class ManageApps extends ReactContextBaseJavaModule {
     }
 
 
-    boolean isApkFileInstalled(String apkFilePath) {
-        if(apkFilePath == null) {
-            return false;
-        }
-        PackageManager packageManager = getReactApplicationContext().getPackageManager();
-        PackageInfo info = packageManager.getPackageArchiveInfo(apkFilePath,
-                PackageManager.GET_ACTIVITIES);
-        if(info == null) {
-            return false;
-        }
-
-        ApplicationInfo appInfo = info.applicationInfo;
-        String packageName = appInfo.packageName;
-
-        try {
-            PackageInfo packageInfo =packageManager.getPackageInfo(packageName,PackageManager.GET_META_DATA);
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-        return true;
-
-
-    }
-
     @ReactMethod
     public void checkAllFilesAccessPermission(Promise promise) {
+        // sPromise = promise;
         MainActivity.setPromise(promise);
-
-        // If you have access to the external storage, do whatever you need
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (Environment.isExternalStorageManager()){
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (Environment.isExternalStorageManager()) {
+                    promise.resolve(true);
+                } else {
+                    Intent intent = new Intent();
+                    intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                    Uri uri = Uri.fromParts("package", getCurrentActivity().getPackageName(), null);
+                    intent.setData(uri);
+                    getCurrentActivity().startActivityForResult(intent, 22);
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(getCurrentActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                    promise.resolve(true);
+                } else {
+                    ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 23);
+                }
+            } else {
                 promise.resolve(true);
-            }else{
-                Intent intent = new Intent();
-                intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                Uri uri = Uri.fromParts("package", getCurrentActivity().getPackageName(), null);
-                intent.setData(uri);
-
-                getCurrentActivity().startActivityForResult(intent, 22);
             }
+        } catch (Exception e) {
+            // import android.util.Log;
+            Log.e("MyApp", "Error: " + e.getMessage());
+            promise.resolve(false);
         }
     }
+
+    // @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (sPromise != null && requestCode == 23) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                sPromise.resolve(true);
+            } else {
+                sPromise.resolve(false);
+            }
+            sPromise = null;
+        }
+        // super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+
+    // @ReactMethod
+    // public void checkAllFilesAccessPermission(Promise promise) {
+    //     MainActivity.setPromise(promise);
+
+    //     // If you have access to the external storage, do whatever you need
+    //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+    //         if (Environment.isExternalStorageManager()){
+    //             promise.resolve(true);
+    //         }else{
+    //             Intent intent = new Intent();
+    //             intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+    //             Uri uri = Uri.fromParts("package", getCurrentActivity().getPackageName(), null);
+    //             intent.setData(uri);
+
+    //             getCurrentActivity().startActivityForResult(intent, 22);
+    //         }
+    //     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    //         if (ContextCompat.checkSelfPermission(getCurrentActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+    //             promise.resolve(true);
+    //         } else {
+    //             // ActivityCompat.requestPermissions(getCurrentActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 23);
+    //             promise.resolve(false);
+    //         }
+    //     } else {
+    //         promise.resolve(true);
+    //     }
+    // }
 
     @ReactMethod
     public void checkNotificationPermission(Promise p) {
@@ -879,13 +1162,14 @@ public class ManageApps extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void showNotification(String textTitle, String textContent, Boolean isSilent) {
+    public void showNotification(String textTitle, String textContent, int progress_max, int progress_current, Boolean isSilent) {
         if(!ManageApps.getCanSendNotification()) {
             return;
         }
         createNotificationChannel();
       
         Intent intent = new Intent(getCurrentActivity(), getCurrentActivity().getClass());
+        intent.putExtra("stackName", "ClearData");
         PendingIntent sender = PendingIntent.getActivity(getCurrentActivity(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getReactApplicationContext(), "123")
@@ -894,6 +1178,7 @@ public class ManageApps extends ReactContextBaseJavaModule {
                 .setContentText(textContent)
                 .setSilent(isSilent?true:false)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setProgress(progress_max, progress_current, false)
                 .setContentIntent(sender);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getReactApplicationContext());
@@ -1392,7 +1677,6 @@ public class ManageApps extends ReactContextBaseJavaModule {
         if(!dir.exists() || !dir.canRead()) {
          return;
         }
-        showNotification( "Hey, I'm optimizing your device's space.", "fetching " + dir.getAbsolutePath(), true);
         if(isDirectory(dir)) {
             if(isEmpty(dir)) {
                 WritableMap item = new WritableNativeMap();

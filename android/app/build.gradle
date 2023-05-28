@@ -143,8 +143,8 @@ android {
         applicationId 'com.rr.booingapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
-        versionName '2.0'
+        versionCode 3
+        versionName '1.0'
         buildConfigField 'boolean', 'IS_NEW_ARCHITECTURE_ENABLED', isNewArchitectureEnabled().toString()
         multiDexEnabled true
         if (isNewArchitectureEnabled()) {
@@ -264,6 +264,15 @@ dependencies {
     implementation('com.facebook.android:facebook-android-sdk:latest.release')
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation 'com.google.firebase:firebase-auth'
+    
+    // Import the BoM for the Firebase platform
+    implementation platform('com.google.firebase:firebase-bom:31.4.0')
+
+    // Add the dependencies for the Dynamic Links and Analytics libraries
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation 'com.google.firebase:firebase-dynamic-links-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'    
+    
     //noinspection GradleDynamicVersion
     implementation 'com.facebook.react:react-native:+'  // From node_modules
 
@@ -294,6 +303,7 @@ dependencies {
         implementation jscFlavor
     }
     implementation project(':react-native-fs')
+    implementation project(':react-native-push-notification')
     // implementation project(':react-native-paypal')
 }
 

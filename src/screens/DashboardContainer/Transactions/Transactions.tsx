@@ -394,7 +394,7 @@ const Transactions = ({navigation}: any) => {
           <View style={{padding: 4, marginTop: 10}}>
             {!!isFilter && (
               <>
-                <Text style={{fontFamily: 'Rubik-Bold', fontSize: 15, marginTop: 10, marginLeft: 10}}>PERIOD</Text>
+                <Text style={{fontFamily: 'Rubik-Bold', fontSize: 15, marginTop: 10, marginLeft: 10, color: 'grey'}}>PERIOD</Text>
                 <View style={styles.filterView}>
                   <TouchableOpacity style={[styles.filterBtn, styles.leftRadius, filterCond.period==='week'?styles.active:{}]} onPress={() => handleFilter('week', true)}>
                     <Text style={[styles.filterBtnText, filterCond.period==='week'?styles.colorWhite:{}]}>
@@ -415,11 +415,11 @@ const Transactions = ({navigation}: any) => {
                 <View style={styles.filterView}>
                   <Text style={{color: 'black'}}>From : </Text>
                   <Pressable  onPress={() => setDatePicker({to: false, from: true})} style={styles.datePickerBtn} >
-                    <Text style={{fontFamily: 'Rubik-Regular'}}>{filterCond.from?(new Date(filterCond.from).toISOString().slice(0,10)):''}</Text>
+                    <Text style={{fontFamily: 'Rubik-Regular', color: 'grey', fontSize: 12}}>{filterCond.from?(new Date(filterCond.from).toISOString().slice(0,10)):''}</Text>
                   </Pressable>
                   <Text style={{color: 'black'}}>To : </Text>
                   <Pressable onPress={() => setDatePicker({to: true, from: false})} style={styles.datePickerBtn} >
-                    <Text style={{fontFamily: 'Rubik-Regular'}}>{filterCond.to?(new Date(filterCond.to).toISOString().slice(0,10)):''}</Text>
+                    <Text style={{fontFamily: 'Rubik-Regular', color: 'grey', fontSize: 12}}>{filterCond.to?(new Date(filterCond.to).toISOString().slice(0,10)):''}</Text>
                   </Pressable>
                   <DatePicker
                     modal
@@ -453,7 +453,7 @@ const Transactions = ({navigation}: any) => {
                     </Text>
                   </TouchableOpacity>
                 </View>                
-                <Text style={{fontFamily: 'Rubik-Bold', fontSize: 15, marginTop: 10, marginLeft: 10}}>AMOUNT</Text>
+                <Text style={{fontFamily: 'Rubik-Bold', fontSize: 15, marginTop: 10, marginLeft: 10, color: 'grey'}}>AMOUNT</Text>
                 <View style={styles.filterView}>
                   <TouchableOpacity style={[styles.filterBtn, styles.leftRadius, filterCond.amount==='entry'?styles.active:{borderRightWidth: 1}]} onPress={() => handleFilter('entry', false)}>
                     <Text style={[styles.filterBtnText, filterCond.amount==='entry'?styles.colorWhite:{}]}>
@@ -475,28 +475,38 @@ const Transactions = ({navigation}: any) => {
                   <Text style={[styles.normaltext, styles.textRight, {textAlign: 'center', fontFamily: 'Rubik-Regular', fontSize: 20}]}>{viewTransaction.title}</Text>
                 </View>
                 <View style={{flexDirection: "row", marginTop: 4}}>
-                  <Text style={[styles.normaltext, styles.textLeft]}>Amount: </Text>
-                  <Text style={styles.normaltext, styles.textRight}> {coinWithComma(viewTransaction.amount)} BOO</Text>
+                  <Text style={[styles.normaltext, styles.textLeft]}>Tx_id: </Text>
+                  <Text style={[styles.normaltext, styles.textRight]}> tx_{viewTransaction._id.slice(5, 24)}</Text>
                 </View>
+                <View style={{flexDirection: "row", marginTop: 4}}>
+                  <Text style={[styles.normaltext, styles.textLeft]}>Amount: </Text>
+                  <Text style={[styles.normaltext, styles.textRight]}> {coinWithComma(viewTransaction.amount)} BOO</Text>
+                </View>
+                {!!viewTransaction.quantity && 
+                  <View style={{flexDirection: "row", marginTop: 4}}>
+                    <Text style={[styles.normaltext, styles.textLeft]}>Space : </Text>
+                    <Text style={[styles.normaltext, styles.textRight]}> {coinWithComma(viewTransaction.quantity)} GB</Text>
+                  </View>
+                }
                 {(viewTransaction.status !== 0 && viewTransaction.status !== 4) && 
                   <>
                     <View style={{flexDirection: "row", marginTop: 4}}>
                       <Text style={[styles.normaltext, styles.textLeft]}>Before: </Text>
-                      <Text style={styles.normaltext, styles.textRight}> {coinWithComma(viewTransaction.before)} BOO</Text>
+                      <Text style={[styles.normaltext, styles.textRight]}> {coinWithComma(viewTransaction.before)} BOO</Text>
                     </View>
                     <View style={{flexDirection: "row", marginTop: 4}}>
                       <Text style={[styles.normaltext, styles.textLeft]}>After: </Text>
-                      <Text style={styles.normaltext, styles.textRight}> {coinWithComma(viewTransaction.after)} BOO</Text>
+                      <Text style={[styles.normaltext, styles.textRight]}> {coinWithComma(viewTransaction.after)} BOO</Text>
                     </View>
                   </>
                 }
                 <View style={{flexDirection: "row", marginTop: 4}}>
                   <Text style={[styles.normaltext, styles.textLeft]}>Date: </Text>
-                  <Text style={styles.normaltext, styles.textRight}>{formatDate(viewTransaction.date)}</Text>
+                  <Text style={[styles.normaltext, styles.textRight]}>{formatDate(viewTransaction.date)}</Text>
                 </View>
                 <View style={{flexDirection: "row", marginTop: 4}}>
                   <Text style={[styles.normaltext, styles.textLeft]}>Info: </Text>
-                  <Text style={styles.normaltext, styles.textRight}>{viewTransaction.info}</Text>
+                  <Text style={[styles.normaltext, styles.textRight]}>{viewTransaction.info}</Text>
                 </View>
                 <View style={styles.buttonContainer}>
                   <Pressable style={styles.button} onPress={() => setViewTransaction(null)}>
@@ -511,7 +521,7 @@ const Transactions = ({navigation}: any) => {
                 filterData?.map((transactionArr, ind )=> {
                   return (
                     <View key={ind+'group'}>
-                      <Text style={{fontFamily: 'Rubik-Bold', fontSize: 15, marginTop: 10, marginLeft: 10}}>{transactionArr.label}</Text>
+                      <Text style={{fontFamily: 'Rubik-Bold', fontSize: 15, marginTop: 10, marginLeft: 10, color: 'grey'}}>{transactionArr.label}</Text>
                       {transactionArr.items.map((item, index) => {
                         return <Transaction key={index} transaction={item} />
                       })}

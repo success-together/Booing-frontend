@@ -17,7 +17,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {Toast} from 'react-native-toast-message/lib/src/Toast';
+import Toast from 'react-native-toast-message'
 import {Logo} from '../../../images/export';
 import {
   forgetPassword,
@@ -99,8 +99,10 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
   const [userId, setUserId] = useState<any>(null);
   const [isSignup, setIsSignup] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
+  const [redirectPath, setRedirectPath] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   let [step, setStep] = useState<number>(0);
+  const [strongCond, setStrongCond] = useState({length: false, digit: false, lower: false, upper: false, special: false, include: 0})
 
   const submit = async () => {
     if (code > 999 && userId) {
@@ -128,8 +130,32 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
         }
       });
   };
-
+  const handlePassword = (val) => {
+    const patterndigits = /\d/;
+    const patternlower = /[a-z]/;
+    const patternupper = /[A-Z]/;
+    const patternnonWords = /\W/;
+    let requireCond = {length: false, digit: false, lower: false, upper: false, special: false, include: 0};
+    if (val.length > 8 && val.length < 19) requireCond.length = true;
+    if (patterndigits.test(val)) {requireCond.digit = true; requireCond.include += 1};
+    if (patternlower.test(val)) {requireCond.lower = true; requireCond.include += 1};
+    if (patternupper.test(val)) {requireCond.upper = true; requireCond.include += 1};
+    if (patternnonWords.test(val)) {requireCond.special = true; requireCond.include += 1};
+    setStrongCond(requireCond);
+    setPassword(val)
+  }
   const onUpdatePassword = async () => {
+    let message = "";
+    if (strongCond.include < 2 ) message = 'Please set strong password.';
+    if (!strongCond.length) message = 'Password must be between 9 and 18 characters.';
+    if (message) {
+      console.log(message)
+      Toast.show({
+        type: 'error',
+        text1: message
+      })
+      return false;
+    }
     console.log({
       isForgotPassword: true,
       newPassword: password,
@@ -188,9 +214,10 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
                 <TextInput
                   placeholder="Enter your new password"
                   autoComplete={'password'}
-                  onChangeText={e => setPassword(e)}
+                  onChangeText={e => handlePassword(e)}
                   secureTextEntry={true}
                   style={{
+                    color: 'black',
                     backgroundColor: '#F8F8F8',
                     borderRadius: 8,
                     marginBottom: '3.24%',
@@ -199,6 +226,15 @@ function VerificationCode({route, navigation}: {route: any; navigation: any}) {
                   placeholderTextColor="#716D6D"
                 />
               </View>
+            <View style={{marginLeft: 5, marginBottom: 25}}>
+              <Text style={[styles.title]}>new password must:</Text>
+              <Text style={[styles.normaltext, password.length>0?(strongCond.length?styles.active:styles.error):{}]}>● Be between 9 and 18 characters</Text>
+              <Text style={[styles.normaltext, password.length>0?(strongCond.include>1?styles.active:styles.error):{}]}>● Include at least two of the following:</Text>
+              <Text style={[styles.normaltext, password.length>0?(strongCond.upper?styles.active:(strongCond.include<2?styles.error:{})):{}]}>     • An uppercase character</Text>
+              <Text style={[styles.normaltext, password.length>0?(strongCond.lower?styles.active:(strongCond.include<2?styles.error:{})):{}]}>     • A lowercase character</Text>
+              <Text style={[styles.normaltext, password.length>0?(strongCond.digit?styles.active:(strongCond.include<2?styles.error:{})):{}]}>     • A number</Text>
+              <Text style={[styles.normaltext, password.length>0?(strongCond.special?styles.active:(strongCond.include<2?styles.error:{})):{}]}>     • A special character</Text>
+            </View>              
               <LinearGradient
                 colors={['#33A1F9', '#6DBDFE']}
                 style={{borderRadius: 8}}>
@@ -415,6 +451,29 @@ const styles = StyleSheet.create({
     marginBottom: 35,
     color: '#8F9395',
   },
+  title: {
+    fontFamily: 'Rubik-Regular',
+    fontSize: 17,
+    lineHeight: 21,
+    letterSpacing: 0.25,
+    color: '#797D7F',
+    fontWeight: 'bold'
+    // marginLeft: 70,
+    // marginRight: 70,
+  },
+  normaltext: {
+    fontFamily: 'Rubik-Regular',
+    fontSize: 17,
+    lineHeight: 21,
+    letterSpacing: 0.25,
+    color: '#797D7F',
+  },
+  active: {
+    color: 'green',
+  },
+  error: {
+    color: 'red'
+  },  
 });
 
 export default VerificationCode;

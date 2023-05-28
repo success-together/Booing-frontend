@@ -74,7 +74,7 @@ const Offer = ({navigation}) => {
                     </View>
                     <View style={{ marginTop: 0, marginBottom: 20, paddingBottom: 20, paddingLeft: 20, paddingRight: 20, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                         <Text style={styles.bottomText}>
-                            No Monthly Or Year Patments, No Further Costs, Just One
+                            No Monthly Or Year Payments, No Further Costs, Just One
                         </Text>
                         <Text style={styles.bottomText}>
                         Payment To Get Your Secure Lifetime Cloud Storage .

@@ -1,12 +1,26 @@
-import React from 'react';
-import {StyleSheet, Text, TextInput, View, Image, Dimensions} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {StyleSheet, Text, TextInput, View, Image, Dimensions, Pressable} from 'react-native';
 import {Logo, small_logo, threeVerticleDots} from '../../../../images/export';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {useIsFocused} from '@react-navigation/native';
 
-const FilesHeader = ({onBackPress}: any) => {
-  const width =  Dimensions.get('window').width
+
+const FilesHeader = ({onBackPress, navigation}: {onBackPress: any, navigation: any}) => {
+  const width =  Dimensions.get('window').width;
+  const [searchVal, setSearchVal] = useState<string>('');
+  const isFocused = useIsFocused();
+  const handleSearch = () => {
+    console.log('handleSearch', searchVal)
+    navigation.navigate('Search', {
+      search: searchVal,
+      returnStack: 'Files'
+    })
+  }
+  useEffect(() => {
+    setSearchVal('')
+  }, [isFocused])
   return (
     <LinearGradient
       start={{x: 0, y: 0}}
@@ -35,7 +49,7 @@ const FilesHeader = ({onBackPress}: any) => {
         style={{
           display: 'flex',
           flexDirection: 'row',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-start',
           alignItems: 'center',
         }}>
         <MaterialIcons
@@ -49,24 +63,42 @@ const FilesHeader = ({onBackPress}: any) => {
             flexDirection: 'row',
             marginLeft: 25,
             alignItems: 'center',
-            width: width
+            width: width*0.7
           }}>
-          <Feather
-            name="search"
-            size={14}
-            style={{position: 'absolute', zIndex: 999, top: 15, left: 13}}
-          />
+          <Pressable
+            onPress={() => handleSearch()}
+            style={{
+              height: 44,
+              position: 'absolute', 
+              zIndex: 999, 
+              justifyContent: 'center',
+              right: 0,
+              paddingHorizontal: 15,
+              backgroundColor: '#edf0f3',
+              borderTopRightRadius: 8,
+              borderBottomRightRadius: 8
+            }}
+          >
+            <Feather
+              name="search"
+              size={14}
+            />
+          </Pressable>
           <TextInput
             style={{
-              flexBasis: '70%',
               height: 44,
               backgroundColor: 'white',
-              fontFamily: 'Rubik-Regular', fontSize: 12,
+              fontFamily: 'Rubik-Regular', 
+              fontSize: 12,
               borderRadius: 8,
               paddingLeft: 33,
               color: 'black',
+              width: '100%',
+              paddingRight: 50,
             }}
             placeholder="Search"
+            value={searchVal}
+            onChangeText={(e) => setSearchVal(e)}
             placeholderTextColor={'#9190A8'}
           />
         </View>
