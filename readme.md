@@ -4,13 +4,13 @@ Booing is a new green, secure, and decentralized cloud service that recycles was
 
 ## Download App !
 <a href="https://play.google.com/store/apps/details?id=com.rr.booingapp"><img src="https://playerzon.com/asset/download.png" width="200"></img></a>
-<img src="https://raw.githubusercontent.com/oleksandr-harvart/Booing-frontend/main/screenshot/screenshot1.png"  /> 
+<img src="https://raw.githubusercontent.com/oleksandr-harvart/Booing-frontend/main/screenshots/screenshot1.png"  /> 
 
 ## Screenshots
 
   HomePage                 |   Files Page        |  View Page
 :-------------------------:|:-------------------------:|:-------------------------:
-![](https://raw.githubusercontent.com/oleksandr-harvart/Booing-frontend/main/screenshots/Home.png)|![](https://raw.githubusercontent.com/oleksandr-harvart/Booing-frontend/main/screenshots/My files (1).png)|![](https://raw.githubusercontent.com/oleksandr-harvart/Booing-frontend/main/screenshots/My files (2).png)
+![](https://raw.githubusercontent.com/oleksandr-harvart/Booing-frontend/main/screenshots/Home.png)|![](https://raw.githubusercontent.com/oleksandr-harvart/Booing-frontend/main/screenshots/MyFile1.png)|![](https://raw.githubusercontent.com/oleksandr-harvart/Booing-frontend/main/screenshots/MyFile2.png)
 
 
 ## Description about the Booing App
