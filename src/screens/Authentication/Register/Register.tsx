@@ -470,7 +470,7 @@ function Register({navigation}: {navigation: any}) {
               height: 60,
             }}
             onPress={onSubmit}>
-            <Text style={[styles.text, {color: '#fff'}]}>Sign Up</Text>
+            <Text style={[styles.text, {color: '#fff'}]}>SIGN UP</Text>
           </Pressable>
         </LinearGradient>
       </View>
